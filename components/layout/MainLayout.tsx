@@ -86,15 +86,19 @@ export default function MainLayout({ children }) {
 
   // Latch: once WebGL is ready, never unmount it (avoids GPU context destruction during transitions)
   const [webglReady, setWebglReady] = useState(false);
-  useEffect(() => {
-    if (animationsComplete && !webglReady) setWebglReady(true);
-  }, [animationsComplete, webglReady]);
+  if (animationsComplete && !webglReady) {
+    setWebglReady(true);
+  }
 
   // 移动端：拉杆激活后直接充电（桌面端由 TesseractExperience 组件负责充电）
   const chargeBatteryRef = useRef(chargeBattery);
-  chargeBatteryRef.current = chargeBattery;
   const deactivateTesseractRef = useRef(deactivateTesseract);
-  deactivateTesseractRef.current = deactivateTesseract;
+  useEffect(() => {
+    chargeBatteryRef.current = chargeBattery;
+  }, [chargeBattery]);
+  useEffect(() => {
+    deactivateTesseractRef.current = deactivateTesseract;
+  }, [deactivateTesseract]);
 
   useEffect(() => {
     if (!isDesktop && isTesseractActivated) {

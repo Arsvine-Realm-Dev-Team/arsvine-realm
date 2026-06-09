@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import gsap from 'gsap';
 import type { GetStaticPaths, GetStaticProps } from 'next';
 import styles from '../../styles/Minecraft.module.scss';
@@ -293,7 +294,7 @@ function LifeDetailContent({ item }: PageProps) {
           {/* ===== STORY ===== */}
           {paragraphs.length > 0 && (
             <section className={styles.timelineSection} ref={(el) => { sectionRefs.current['story'] = el; }} data-nav-id="story">
-              <h2 className={styles.sectionHeader}>// STORY_LOG</h2>
+              <h2 className={styles.sectionHeader}>{'// STORY_LOG'}</h2>
               {paragraphs.map((para, i) => {
                 const currentRevealIdx = revealIdx++;
                 return (
@@ -313,7 +314,7 @@ function LifeDetailContent({ item }: PageProps) {
           {/* ===== GALLERY ===== */}
           {galleryImages.length > 0 && (
             <section className={styles.gallerySection} ref={(el) => { sectionRefs.current['archive'] = el; }} data-nav-id="archive">
-              <h2 className={styles.sectionHeader}>// ARCHIVE</h2>
+              <h2 className={styles.sectionHeader}>{'// ARCHIVE'}</h2>
               <div className={styles.galleryGrid}>
                 {galleryImages.map((img, idx) => {
                   const currentRevealIdx = revealIdx++;
@@ -346,7 +347,7 @@ function LifeDetailContent({ item }: PageProps) {
           {/* ===== LINKS ===== */}
           {links.length > 0 && (
             <section className={styles.linksSection} ref={(el) => { sectionRefs.current['links'] = el; }} data-nav-id="links">
-              <h2 className={styles.sectionHeader}>// SIGNAL_OUTPUT</h2>
+              <h2 className={styles.sectionHeader}>{'// SIGNAL_OUTPUT'}</h2>
               <div className={styles.linksGrid}>
                 {links.map((link) => (
                   <a
@@ -374,7 +375,7 @@ function LifeDetailContent({ item }: PageProps) {
           {/* ===== FOOTER ===== */}
           <footer className={styles.footer}>
             {prevItem ? (
-              <a
+              <Link
                 href={`/life/${prevItem.id}`}
                 className={`${styles.footerNavButton} ${styles.footerNavPrev}`}
                 onClick={(e) => { e.preventDefault(); navigateTo(`/life/${prevItem.id}`); }}
@@ -382,9 +383,9 @@ function LifeDetailContent({ item }: PageProps) {
               >
                 <span className={styles.footerNavArrow}>←</span>
                 <span className={styles.footerNavTitle}>{prevItem.title}</span>
-              </a>
+              </Link>
             ) : (
-              <a
+              <Link
                 href="/content#life"
                 className={`${styles.footerNavButton} ${styles.footerNavPrev}`}
                 onClick={handleBack}
@@ -392,10 +393,10 @@ function LifeDetailContent({ item }: PageProps) {
               >
                 <span className={styles.footerNavArrow}>←</span>
                 <span className={styles.footerNavTitle}>RETURN TO MAIN</span>
-              </a>
+              </Link>
             )}
             {nextItem ? (
-              <a
+              <Link
                 href={`/life/${nextItem.id}`}
                 className={`${styles.footerNavButton} ${styles.footerNavNext}`}
                 onClick={(e) => { e.preventDefault(); navigateTo(`/life/${nextItem.id}`); }}
@@ -403,9 +404,9 @@ function LifeDetailContent({ item }: PageProps) {
               >
                 <span className={styles.footerNavTitle}>{nextItem.title}</span>
                 <span className={styles.footerNavArrow}>→</span>
-              </a>
+              </Link>
             ) : (
-              <a
+              <Link
                 href="/content#life"
                 className={`${styles.footerNavButton} ${styles.footerNavNext}`}
                 onClick={handleBack}
@@ -413,7 +414,7 @@ function LifeDetailContent({ item }: PageProps) {
               >
                 <span className={styles.footerNavTitle}>RETURN TO MAIN</span>
                 <span className={styles.footerNavArrow}>→</span>
-              </a>
+              </Link>
             )}
           </footer>
         </div>

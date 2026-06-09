@@ -5,29 +5,24 @@ import LazyImage from '../shared/LazyImage';
 
 
 const LifeDetailView = ({ item }) => {
-  if (!item) return null; // 如果没有选中项，则不渲染
+  const { title, description, tech, imageUrl, articleContent, galleryImages } = item || {};
+  const imageStyle = imageUrl ? { backgroundImage: `url(${imageUrl})` } : {};
 
-  const { title, description, tech, imageUrl, articleContent, galleryImages } = item;
-  const imageStyle = imageUrl ? { backgroundImage: `url(${imageUrl})` } : {}; // 主图背景样式
-
-  // 根据双换行符分割文章内容为段落
   const paragraphs = articleContent ? articleContent.split('\n\n') : [];
-  
-  // 模板：无作者 COS 图时可留空；有 galleryImages 时仍走上方分支
-  const MINECRAFT_EXTRA_IMAGES = [];
-  // 确定用于画廊和灯箱的图片数据源
-  // 优先使用 item.galleryImages，否则根据 item.id 提供备用图片 (例如 Minecraft)
-  const imagesForGallery = galleryImages && galleryImages.length > 0 
-    ? galleryImages 
-    : (item.id === 'mc' ? MINECRAFT_EXTRA_IMAGES : []); // 若无特定画廊数据或备用数据，则默认为空数组
 
-  // 灯箱状态管理
-  const [isLightboxOpen, setIsLightboxOpen] = useState(false); // 灯箱是否打开
-  const [currentLightboxImageIndex, setCurrentLightboxImageIndex] = useState(0); // 当前灯箱图片索引
-  const [clickedThumbnailRect, setClickedThumbnailRect] = useState(null); // 新增 state 存储点击的缩略图位置和尺寸
-  const [currentLightboxSourceInfo, setCurrentLightboxSourceInfo] = useState(null); // ADDED state
-  
-  const thumbnailRefs = useRef({}); // To store refs of thumbnail elements { index: ref }
+  const MINECRAFT_EXTRA_IMAGES = [];
+  const imagesForGallery = galleryImages && galleryImages.length > 0
+    ? galleryImages
+    : (item?.id === 'mc' ? MINECRAFT_EXTRA_IMAGES : []);
+
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [currentLightboxImageIndex, setCurrentLightboxImageIndex] = useState(0);
+  const [clickedThumbnailRect, setClickedThumbnailRect] = useState(null);
+  const [currentLightboxSourceInfo, setCurrentLightboxSourceInfo] = useState(null);
+
+  const thumbnailRefs = useRef({});
+
+  if (!item) return null;
 
   // 获取特定图片在特定 Life Item (如 WA, physical-games, qinghai) 中的动态图片说明
   const getDynamicCaption = (imageSrc) => {

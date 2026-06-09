@@ -3,16 +3,16 @@ import styles from '../../styles/ExperienceDetailView.module.scss';
 import Lightbox from '../interactive/Lightbox';
 
 const ExperienceDetailView = ({ item }) => {
-  if (!item) return null;
-
-  const { title, duration, location, details, type, galleryImages } = item;
+  const { title, duration, location, details, type, galleryImages } = item || {};
 
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [currentLightboxImageIndex, setCurrentLightboxImageIndex] = useState(0);
-  const [clickedThumbnailRect, setClickedThumbnailRect] = useState(null); // For FLIP animation consistency
-  const [currentLightboxSourceInfo, setCurrentLightboxSourceInfo] = useState(null); // ADDED state for source info
-  
-  const thumbnailRefs = useRef({}); // To store refs of thumbnail elements
+  const [clickedThumbnailRect, setClickedThumbnailRect] = useState(null);
+  const [currentLightboxSourceInfo, setCurrentLightboxSourceInfo] = useState(null);
+
+  const thumbnailRefs = useRef({});
+
+  if (!item) return null;
 
   const imagesForGallery = galleryImages || [];
 

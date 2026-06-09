@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import gsap from 'gsap';
 import type { GetStaticPaths, GetStaticProps } from 'next';
@@ -44,7 +45,7 @@ function BlogLoadingShell() {
       <div className={styles.mainContent}>
         <header className={`${styles.headerSection} ${entered ? styles.entered : ''}`}>
           <div className={styles.headerContent}>
-            <span className={styles.headerSignal}>// SIGNAL_FRAGMENT</span>
+            <span className={styles.headerSignal}>{'// SIGNAL_FRAGMENT'}</span>
           </div>
         </header>
         <section className={styles.contentSection}>
@@ -223,7 +224,7 @@ function BlogDetailContent({ meta, mdxSource, allPosts }: BlogPostPageProps) {
           data-nav-id="header"
         >
           <div className={styles.headerContent}>
-            <span className={styles.headerSignal}>// SIGNAL_FRAGMENT</span>
+            <span className={styles.headerSignal}>{'// SIGNAL_FRAGMENT'}</span>
             <h1 ref={titleRef} className={styles.headerTitle}>
               {meta.title.split("").map((char, i) => (
                 <span key={`t-${i}`} className={styles.charWrapper}>
@@ -270,7 +271,7 @@ function BlogDetailContent({ meta, mdxSource, allPosts }: BlogPostPageProps) {
           </div>
           <div className={styles.footerNav}>
             {prevPost ? (
-              <a
+              <Link
                 href={`/blog/${prevPost.slug}`}
                 className={`${styles.footerNavButton} ${styles.footerNavPrev}`}
                 onClick={(e) => { e.preventDefault(); navigateTo(`/blog/${prevPost.slug}`); }}
@@ -278,9 +279,9 @@ function BlogDetailContent({ meta, mdxSource, allPosts }: BlogPostPageProps) {
               >
                 <span className={styles.footerNavArrow}>←</span>
                 <span className={styles.footerNavTitle}>{prevPost.title}</span>
-              </a>
+              </Link>
             ) : (
-              <a
+              <Link
                 href="/blog"
                 className={`${styles.footerNavButton} ${styles.footerNavPrev}`}
                 onClick={handleBack}
@@ -288,10 +289,10 @@ function BlogDetailContent({ meta, mdxSource, allPosts }: BlogPostPageProps) {
               >
                 <span className={styles.footerNavArrow}>←</span>
                 <span className={styles.footerNavTitle}>RETURN TO INDEX</span>
-              </a>
+              </Link>
             )}
             {nextPost ? (
-              <a
+              <Link
                 href={`/blog/${nextPost.slug}`}
                 className={`${styles.footerNavButton} ${styles.footerNavNext}`}
                 onClick={(e) => { e.preventDefault(); navigateTo(`/blog/${nextPost.slug}`); }}
@@ -299,9 +300,9 @@ function BlogDetailContent({ meta, mdxSource, allPosts }: BlogPostPageProps) {
               >
                 <span className={styles.footerNavTitle}>{nextPost.title}</span>
                 <span className={styles.footerNavArrow}>→</span>
-              </a>
+              </Link>
             ) : (
-              <a
+              <Link
                 href="/blog"
                 className={`${styles.footerNavButton} ${styles.footerNavNext}`}
                 onClick={handleBack}
@@ -309,7 +310,7 @@ function BlogDetailContent({ meta, mdxSource, allPosts }: BlogPostPageProps) {
               >
                 <span className={styles.footerNavTitle}>RETURN TO INDEX</span>
                 <span className={styles.footerNavArrow}>→</span>
-              </a>
+              </Link>
             )}
           </div>
         </footer>

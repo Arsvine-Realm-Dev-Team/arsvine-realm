@@ -6,22 +6,21 @@ import { CopyToClipboard } from 'react-copy-to-clipboard';
 // Reusing ProjectCard might be complex due to layout differences in detail view.
 // Let's build a dedicated detail view component.
 
-const WorkDetailView = ({ item }) => { // Removed onBack prop
-  if (!item) return null; 
-
-  const { title, description, tech, imageUrl, link, galleryImages, articleContent } = item;
+const WorkDetailView = ({ item }) => {
+  const { title, description, tech, imageUrl, link, galleryImages, articleContent } = item || {};
   const imageStyle = imageUrl ? { backgroundImage: `url(${imageUrl})` } : {};
 
-  // --- Add State and Functions for Lightbox --- 
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [currentLightboxImageIndex, setCurrentLightboxImageIndex] = useState(0);
-  const [clickedThumbnailRect, setClickedThumbnailRect] = useState(null); // Add this if not present, for FLIP
-  const [currentLightboxSourceInfo, setCurrentLightboxSourceInfo] = useState(null); // ADDED state for source info
-  const [copiedTextId, setCopiedTextId] = useState(null); // <-- ADD State for copied text feedback
+  const [clickedThumbnailRect, setClickedThumbnailRect] = useState(null);
+  const [currentLightboxSourceInfo, setCurrentLightboxSourceInfo] = useState(null);
+  const [copiedTextId, setCopiedTextId] = useState(null);
 
-  const thumbnailRefs = useRef({}); // To store refs of thumbnail elements
+  const thumbnailRefs = useRef({});
 
-  const imagesForGallery = galleryImages || []; // Use galleryImages if available
+  const imagesForGallery = galleryImages || [];
+
+  if (!item) return null;
 
   const openLightbox = (index, event, sourceType = 'thumb') => { // ADDED sourceType, default to 'thumb'
     if (index >= 0 && index < imagesForGallery.length) {

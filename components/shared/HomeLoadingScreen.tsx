@@ -13,7 +13,9 @@ const HomeLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   const { progress, logLines, showSplitLines, loading } = useLoadingSystem(startLogging);
   
   const onCompleteRef = useRef(onComplete);
-  onCompleteRef.current = onComplete;
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   // DOM refs
   const wastelandBgRef = useRef<HTMLDivElement>(null);

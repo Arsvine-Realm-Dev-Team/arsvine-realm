@@ -6,14 +6,14 @@
     "dev": "node server.js",
     "build": "next build",
     "start": "cross-env NODE_ENV=production node server.js",
-    "lint": "next lint"
+    "lint": "eslint ."
   },
   "keywords": [],
   "author": "Your Name",
   "license": "MIT",
-  "description": "A post-apocalyptic HUD-themed portfolio & blog template built with Next.js 14",
+  "description": "A post-apocalyptic HUD-themed portfolio & blog template built with Next.js 16",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.9.0"
   },
   "dependencies": {
     "@react-three/cannon": "^6.6.0",
@@ -24,7 +24,7 @@
     "dotenv": "^16.5.0",
     "gray-matter": "^4.0.3",
     "gsap": "^3.13.0",
-    "next": "^14.1.4",
+    "next": "^16.2.7",
     "next-mdx-remote": "^6.0.0",
     "react": "^18.2.0",
     "react-copy-to-clipboard": "^5.1.0",
@@ -34,12 +34,15 @@
     "three": "^0.176.0"
   },
   "devDependencies": {
-    "@next/bundle-analyzer": "^14.2.35",
+    "@next/bundle-analyzer": "^16.2.7",
+    "@eslint/eslintrc": "^3.0.0",
     "@types/node": "^25.2.3",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
+    "@types/react": "^18.2.79",
+    "@types/react-dom": "^18.2.25",
     "@types/three": "^0.175.0",
     "cross-env": "^10.1.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^16.2.7",
     "typescript": "^5.9.3"
   }
 }

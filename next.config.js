@@ -6,7 +6,6 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 const nextConfig = {
   distDir: process.env.NEXT_BUILD_DIR || '.next',
   reactStrictMode: true,
-  swcMinify: true,
   images: {
     remotePatterns: [
       {
@@ -21,23 +20,7 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
-      // Add your own image CDN domain here:
-      // {
-      //   protocol: 'https',
-      //   hostname: 'your-cdn.example.com',
-      //   port: '',
-      //   pathname: '/**',
-      // },
     ],
-  },
-  webpack: (config, { isServer }) => {
-    config.module.rules.push({
-      test: /\.svg$/i,
-      issuer: /\.[jt]sx?$/,
-      use: ['@svgr/webpack'],
-    });
-
-    return config;
   },
 };
 

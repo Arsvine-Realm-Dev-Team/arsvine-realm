@@ -13,10 +13,9 @@ export default function SkillTree({ categories, expanded }: SkillTreeProps) {
   const [typedText, setTypedText] = useState('');
   const prevDescRef = useRef('');
   const [wasExpanded, setWasExpanded] = useState(false);
-
-  useEffect(() => {
-    if (expanded) setWasExpanded(true);
-  }, [expanded]);
+  if (expanded && !wasExpanded) {
+    setWasExpanded(true);
+  }
 
   const isCollapsing = !expanded && wasExpanded;
 

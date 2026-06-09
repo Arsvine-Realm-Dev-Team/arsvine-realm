@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import gsap from 'gsap';
 import type { GetStaticPaths, GetStaticProps } from 'next';
 import styles from '../../styles/Minecraft.module.scss';
@@ -336,7 +337,7 @@ function WebDetailContent({ project }: PageProps) {
         {/* ===== PROJECT META ===== */}
         {(project.role || project.tech.length > 0 || highlights.length > 0) && (
           <section className={styles.metaSection} ref={(el) => { sectionRefs.current['meta'] = el; }} data-nav-id="meta">
-            <h2 className={styles.sectionHeader}>// PROJECT_META</h2>
+            <h2 className={styles.sectionHeader}>{'// PROJECT_META'}</h2>
             <div className={styles.metaGrid}>
               {project.year && (
                 <div className={styles.metaBlock}>
@@ -393,7 +394,7 @@ function WebDetailContent({ project }: PageProps) {
         {/* ===== PROJECT BRIEF ===== */}
         {paragraphs.length > 0 && (
           <section className={styles.timelineSection} ref={(el) => { sectionRefs.current['brief'] = el; }} data-nav-id="brief">
-            <h2 className={styles.sectionHeader}>// PROJECT_BRIEF</h2>
+            <h2 className={styles.sectionHeader}>{'// PROJECT_BRIEF'}</h2>
             {paragraphs.map((para, i) => {
               const currentRevealIdx = revealIdx++;
               return (
@@ -483,7 +484,7 @@ function WebDetailContent({ project }: PageProps) {
         {/* ===== SIGNAL OUTPUT ===== */}
         {signalLinks.length > 0 && (
           <section className={styles.linksSection} ref={(el) => { sectionRefs.current['signal'] = el; }} data-nav-id="signal">
-            <h2 className={styles.sectionHeader}>// SIGNAL_OUTPUT</h2>
+            <h2 className={styles.sectionHeader}>{'// SIGNAL_OUTPUT'}</h2>
             <div className={styles.linksGrid}>
               {signalLinks.map((link) => (
                 <a key={link.href} href={link.href} target="_blank" rel="noopener noreferrer" className={styles.linkCard}>
@@ -515,7 +516,7 @@ function WebDetailContent({ project }: PageProps) {
         {/* ===== FOOTER ===== */}
         <footer className={styles.footer}>
           {prevProject ? (
-            <a
+            <Link
               href={`/web/${prevProject.id}`}
               className={`${styles.footerNavButton} ${styles.footerNavPrev}`}
               onClick={(e) => { e.preventDefault(); navigateTo(`/web/${prevProject.id}`); }}
@@ -523,9 +524,9 @@ function WebDetailContent({ project }: PageProps) {
             >
               <span className={styles.footerNavArrow}>←</span>
               <span className={styles.footerNavTitle}>{prevProject.title}</span>
-            </a>
+            </Link>
           ) : (
-            <a
+            <Link
               href="/content#works"
               className={`${styles.footerNavButton} ${styles.footerNavPrev}`}
               onClick={handleBack}
@@ -533,10 +534,10 @@ function WebDetailContent({ project }: PageProps) {
             >
               <span className={styles.footerNavArrow}>←</span>
               <span className={styles.footerNavTitle}>RETURN TO MAIN</span>
-            </a>
+            </Link>
           )}
           {nextProject ? (
-            <a
+            <Link
               href={`/web/${nextProject.id}`}
               className={`${styles.footerNavButton} ${styles.footerNavNext}`}
               onClick={(e) => { e.preventDefault(); navigateTo(`/web/${nextProject.id}`); }}
@@ -544,9 +545,9 @@ function WebDetailContent({ project }: PageProps) {
             >
               <span className={styles.footerNavTitle}>{nextProject.title}</span>
               <span className={styles.footerNavArrow}>→</span>
-            </a>
+            </Link>
           ) : (
-            <a
+            <Link
               href="/content#works"
               className={`${styles.footerNavButton} ${styles.footerNavNext}`}
               onClick={handleBack}
@@ -554,7 +555,7 @@ function WebDetailContent({ project }: PageProps) {
             >
               <span className={styles.footerNavTitle}>RETURN TO MAIN</span>
               <span className={styles.footerNavArrow}>→</span>
-            </a>
+            </Link>
           )}
         </footer>
       </div>
