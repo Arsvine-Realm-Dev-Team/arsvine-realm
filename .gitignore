@@ -45,6 +45,7 @@ next-env.d.ts
 Thumbs.db 
 public/music/*.flac
 public/music/*.mp3
+public/music/*.m4a
 
 # Stats persistence
 .stats.json
