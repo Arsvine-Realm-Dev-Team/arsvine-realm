@@ -29,7 +29,7 @@ export const useLoadingSystem = (startLogging: boolean = true) => {
   const [showSplitLines, setShowSplitLines] = useState(false);
 
   // Progress tracking refs (no re-render needed)
-  const startTimeRef = useRef(Date.now());
+  const startTimeRef = useRef<number | null>(null);
   const processedLogTextsRef = useRef(new Set<string>());
   const welcomeMessageCountsRef = useRef<Record<string, number>>({});
   const logQueueRef = useRef<Array<{ id: number; text: string }>>([]);
@@ -109,7 +109,7 @@ export const useLoadingSystem = (startLogging: boolean = true) => {
         generateLogLine(next);
         if (next >= 100) {
           clearInterval(interval);
-          const remaining = Math.max(0, MIN_DISPLAY_TIME - (Date.now() - startTimeRef.current));
+          const remaining = Math.max(0, MIN_DISPLAY_TIME - (Date.now() - (startTimeRef.current ?? Date.now())));
           const waitForQueueDrain = () => {
             if (logQueueRef.current.length === 0 && consumerIntervalRef.current === null) {
               setShowSplitLines(true);

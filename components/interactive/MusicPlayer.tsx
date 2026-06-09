@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import styles from './MusicPlayer.module.scss';
 
 // 播放器控制图标 (SVG)
@@ -102,14 +102,14 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
   };
 
   // 切换到上一首 (由拖动逻辑调用)
-  const handlePrev = () => {
+  const handlePrev = useCallback(() => {
     setCurrentTrackIndex((prevIndex) => (prevIndex - 1 + playlist.length) % playlist.length);
-  };
+  }, []);
 
   // 切换到下一首 (由拖动逻辑调用)
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     setCurrentTrackIndex((prevIndex) => (prevIndex + 1) % playlist.length);
-  };
+  }, []);
   
   // 从播放列表选择歌曲
   const selectTrack = (index) => {
@@ -149,7 +149,7 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
   };
 
   // 唱片拖动中 (鼠标/触控移动)
-  const moveDrag = (clientX: number) => {
+  const moveDrag = useCallback((clientX: number) => {
     if (!isDragging) return;
     dragCurrentXRef.current = clientX;
     const offsetX = dragCurrentXRef.current - dragStartX;
@@ -158,24 +158,24 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
     // 根据拖动方向和距离，判断是否预显示上一首/下一首唱片
     if (offsetX > DRAG_THRESHOLD / 2) { // 向右拖 (上一首)
       setIncomingTrackIndex(prevTrackIndex);
-      setIncomingTrackOffsetX(offsetX - (vinylContainerRef.current?.offsetWidth || 200)); 
+      setIncomingTrackOffsetX(offsetX - (vinylContainerRef.current?.offsetWidth || 200));
     } else if (offsetX < -DRAG_THRESHOLD / 2) { // 向左拖 (下一首)
       setIncomingTrackIndex(nextTrackIndex);
-      setIncomingTrackOffsetX(offsetX + (vinylContainerRef.current?.offsetWidth || 200)); 
+      setIncomingTrackOffsetX(offsetX + (vinylContainerRef.current?.offsetWidth || 200));
     } else { // 未达到预显示阈值
       setIncomingTrackIndex(-1);
       setIncomingTrackOffsetX(0);
     }
-  };
+  }, [isDragging, dragStartX, prevTrackIndex, nextTrackIndex]);
 
-  const handleMouseMove = (e) => moveDrag(e.clientX);
-  const handleTouchMove = (e) => {
+  const handleMouseMove = useCallback((e: MouseEvent) => moveDrag(e.clientX), [moveDrag]);
+  const handleTouchMove = useCallback((e: TouchEvent) => {
     if (e.touches.length !== 1) return;
     moveDrag(e.touches[0].clientX);
-  };
+  }, [moveDrag]);
 
   // 唱片拖动结束 (鼠标松开/触控结束)
-  const handleMouseUpOrLeave = (e) => {
+  const handleMouseUpOrLeave = useCallback(() => {
     if (!isDragging) return;
     const finalOffsetX = dragCurrentXRef.current - dragStartX;
     setIsDragging(false);
@@ -201,7 +201,7 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
     // 重置拖动起始点
     setDragStartX(0);
     // dragCurrentXRef.current 在下一次 mousedown 时会被重置
-  };
+  }, [isDragging, dragStartX, handlePrev, handleNext]);
 
   // 监听拖动状态，绑定/解绑全局 mouse + touch 事件
   useEffect(() => {
@@ -225,7 +225,7 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
       window.removeEventListener('touchend', handleMouseUpOrLeave);
       window.removeEventListener('touchcancel', handleMouseUpOrLeave);
     };
-  }, [isDragging, dragStartX]);
+  }, [isDragging, handleMouseMove, handleTouchMove, handleMouseUpOrLeave]);
 
   // 监听当前歌曲索引变化，自动加载新歌曲并根据当前播放状态决定是否播放
   useEffect(() => {
@@ -248,7 +248,7 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
           }
       }
     }
-  }, [currentTrackIndex]); // 依赖 currentTrackIndex
+  }, [currentTrackIndex, isPlaying]); // 依赖 currentTrackIndex 与 isPlaying
 
   // Audio 元素事件监听 (播放进度、元数据加载、播放/暂停状态、播放结束)
   useEffect(() => {
@@ -299,7 +299,7 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
       audio.removeEventListener('pause', setAudioPaused);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [duration]); // 依赖 duration (当 duration 变化时，可能需要重新计算进度)
+  }, [duration, handleNext]); // 依赖 duration (当 duration 变化时，可能需要重新计算进度) 与稳定的 handleNext
 
   // 处理抽屉把手上指示播放状态的动画条的随机延迟效果
   useEffect(() => {

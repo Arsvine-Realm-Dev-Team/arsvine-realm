@@ -1,15 +1,20 @@
 import { useState, useEffect } from 'react';
 
 function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(false);
+  const [matches, setMatches] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia(query).matches;
+  });
 
   useEffect(() => {
     const mql = window.matchMedia(query);
-    setMatches(mql.matches);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Required: matchMedia's "change" event only fires on value changes, so this synchronous sync is needed to initialize matches for the new query
+    if (mql.matches !== matches) setMatches(mql.matches);
 
     const handler = (e: MediaQueryListEvent) => setMatches(e.matches);
     mql.addEventListener('change', handler);
     return () => mql.removeEventListener('change', handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
   return matches;

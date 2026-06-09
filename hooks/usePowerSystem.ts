@@ -3,10 +3,12 @@ import type { PowerSystemState } from '../types';
 
 export default function usePowerSystem(mainVisible: boolean): PowerSystemState {
   const [powerLevel, setPowerLevel] = useState(67);
-  const [isInverted, setIsInverted] = useState(false);
   const [isTesseractActivated, setIsTesseractActivated] = useState(false);
   const [isDischarging, setIsDischarging] = useState(false);
   const dischargeIntervalRef = useRef(null);
+
+  // Inverted mode is purely derived from power state — no separate state needed.
+  const isInverted = powerLevel === 100 && !isDischarging;
 
   // Natural power consumption
   useEffect(() => {
@@ -73,15 +75,6 @@ export default function usePowerSystem(mainVisible: boolean): PowerSystemState {
       }
     }
   }, [isDischarging]);
-
-  // Inverted mode toggle based on power level
-  useEffect(() => {
-    if (powerLevel === 100 && !isDischarging && !isInverted) {
-      setIsInverted(true);
-    } else if ((powerLevel < 100 || isDischarging) && isInverted) {
-      setIsInverted(false);
-    }
-  }, [powerLevel, isInverted, isDischarging]);
 
   // Activate Tesseract
   const handleActivateTesseract = () => {

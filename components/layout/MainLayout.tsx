@@ -79,9 +79,9 @@ export default function MainLayout({ children }) {
   }, [isStandalone, leftPanelAnimated, leversVisible]);
 
   const [forceHomeSection, setForceHomeSection] = useState(false);
-  useEffect(() => {
-    if (isHome) setForceHomeSection(false);
-  }, [isHome]);
+  if (isHome && forceHomeSection) {
+    setForceHomeSection(false);
+  }
   const activeSection = (forceHomeSection || isHome) ? 'home' : 'content';
 
   // Latch: once WebGL is ready, never unmount it (avoids GPU context destruction during transitions)

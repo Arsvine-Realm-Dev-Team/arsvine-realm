@@ -8,7 +8,6 @@ const Lightbox = ({ image, onClose, onPrev, onNext, thumbnailRect, currentIndex,
   const imageRef = useRef(null);
   const overlayRef = useRef(null);
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
-  const [currentImageIndexForClose, setCurrentImageIndexForClose] = useState(currentIndex);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const prevSrcRef = useRef<string | null>(null);
   const isFirstRender = useRef(true);
@@ -41,10 +40,6 @@ const Lightbox = ({ image, onClose, onPrev, onNext, thumbnailRect, currentIndex,
       }
     }
   }, [onPrev, isAnimatingOut, isCrossfading]);
-
-  useEffect(() => {
-    setCurrentImageIndexForClose(currentIndex);
-  }, [currentIndex]);
 
   useEffect(() => {
     const imgElement = imageRef.current;
