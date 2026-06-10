@@ -14,15 +14,6 @@
   font-display: swap;
 }
 
-@font-face {
-  font-family: 'Noto Sans Mono CJK SC';
-  src: url('/fonts/NotoSansMonoCJKsc-Regular.otf') format('opentype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+2E80-2EFF, U+3000-303F, U+31C0-31EF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FF00-FFEF;
-}
-
 // ===== Variables =====
 .variables {
   --main-dark: #1a1a1a;
@@ -33,7 +24,7 @@
   --accent-glow: rgba(100, 180, 80, 0.2);
   --border-color: rgba(160, 160, 160, 0.3);
   --hud-element-color: rgba(180, 180, 180, 0.5);
-  --terminal-mono-font: 'Consolas', 'Noto Sans Mono CJK SC', 'Menlo', 'Courier New', monospace;
+  --terminal-mono-font: 'Consolas', 'Noto Sans SC', 'Menlo', 'Courier New', monospace;
 }
 
 // ===== Core containers =====
@@ -69,7 +60,7 @@
   background-color: var(--main-dark);
   background-image:
     linear-gradient(rgba(20, 20, 20, 0.9), rgba(15, 15, 15, 0.95)),
-    url('/images/texture-noise.png');
+    url('/images/texture-noise.webp');
   background-blend-mode: overlay;
   opacity: 0.9;
   overflow: hidden;

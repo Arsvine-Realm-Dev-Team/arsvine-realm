@@ -56,3 +56,6 @@ deploy.log
 
 # Nested repo artifacts
 rainmorime-template/
+
+# Archived (unused) assets — kept locally for review, excluded from git
+/.archive/

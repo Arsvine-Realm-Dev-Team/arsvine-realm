@@ -8,16 +8,6 @@
   font-display: swap;
 }
 
-@font-face {
-  font-family: 'Noto Sans Mono CJK SC';
-  src: url('/fonts/NotoSansMonoCJKsc-Regular.otf') format('opentype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+2E80-2EFF, U+3000-303F, U+31C0-31EF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FF00-FFEF;
-}
-
-
 :root {
   --black: #000000;
   --dark-gray: #111111;
@@ -29,7 +19,7 @@
   // --- 字体族 ---
   --font-display: 'ZELDA Free', 'Noto Sans SC', 'PingFang SC', sans-serif;
   --font-hud: 'Dosis', sans-serif;
-  --font-mono: 'Consolas', 'Noto Sans Mono CJK SC', 'Menlo', 'Courier New', monospace;
+  --font-mono: 'Consolas', 'Noto Sans SC', 'Menlo', 'Courier New', monospace;
   --font-code: 'JetBrains Mono', 'Fira Code', monospace;
   --font-typewriter: 'Courier Prime', 'Courier New', 'Consolas', monospace;
   --font-family-heading: var(--font-hud);

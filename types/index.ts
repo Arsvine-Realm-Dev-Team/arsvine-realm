@@ -73,6 +73,8 @@ export interface BlogPostMeta {
   excerpt: string;
   tags: string[];
   readingTime: string;
+  /** 置顶到博客列表最前；feed/sitemap 仍按日期排序 */
+  pinned?: boolean;
 }
 
 export interface FriendLink {

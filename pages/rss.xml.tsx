@@ -46,7 +46,10 @@ ${items}
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
-  const posts = getAllPosts();
+  // RSS 不应受置顶影响，按日期降序输出
+  const posts = [...getAllPosts()].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+  );
   const xml = generateRssXml(posts);
 
   res.setHeader('Content-Type', 'application/rss+xml; charset=utf-8');

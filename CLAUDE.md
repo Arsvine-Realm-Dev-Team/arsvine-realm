@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ARSVINE REALM is a personal post-apocalyptic HUD-themed portfolio + blog site built with Next.js 16 (Pages Router), TypeScript, SCSS Modules, Three.js, GSAP, and MDX. Requires Node >= 20.9.
+ARSVINE REALM is a personal post-apocalyptic HUD-themed portfolio + blog site built with Next.js 16 (Pages Router), TypeScript, SCSS Modules, Three.js, GSAP, and MDX. Targets Node 22.x on Vercel (Node 20.9+ also works locally).
 
 ## Commands
 
@@ -33,6 +33,10 @@ The dev and production servers both use `server.js`, not Next.js's built-in serv
 
 Do not replace `server.js` with `next dev` or `next start` — the SSE stats system depends on it.
 
+### API Routes (`pages/api/`)
+
+- `pages/api/hitokoto.ts` — server-side proxy for `https://v1.hitokoto.cn` (categories `d|i|k`, length 10–30). 60s in-process cache, 5s `AbortController` timeout. Returns `200 { text }` (fresh or cached) or `502 { error: 'upstream_unavailable' }` on upstream failure/timeout/empty body. Consumed by `useFateTypingEffect`.
+
 ### State Management
 
 All global state flows through two React contexts:
@@ -41,7 +45,7 @@ All global state flows through two React contexts:
   - `useAnimationSequence` — loading screen sequence, column retract/expand phases
   - `usePowerSystem` — battery charge level, inversion toggle, Tesseract 3D activation
   - `useRealtimeStats` — SSE-driven live visitor stats
-  - `useFateTypingEffect` / `useEnvParamsTypingEffect` — typewriter text effects
+  - `useFateTypingEffect` / `useEnvParamsTypingEffect` — typewriter text effects. `useFateTypingEffect` alternates `1 cycle preset tagline (en + zh)` with `1 hitokoto sentence` pulled from `/api/hitokoto`; on fetch failure the cycle silently falls back to a preset round and retries next iteration.
   - `useColumnHover` — HUD text changes on navigation column hover
 
 - **TransitionContext** (`contexts/TransitionContext.tsx`) — handles page transitions with Web Animations API:
@@ -62,6 +66,8 @@ All pages consume state via `useApp()` and `useTransition()`.
 - `/blog/[slug]` — Blog post view (MDX)
 - `/friends` — Friend links page
 - `/about`, `/contact` — Standalone pages
+- `/copyright` — Bilingual Copyright & License page (MIT for source, CC BY-NC-ND 4.0 for original content). Layout/article copy live directly in `pages/copyright.tsx`; only the `<title>` / `<meta description>` are sourced from `siteConfig.pages.copyright`.
+- `/license` — `getServerSideProps` 301 redirect to `/copyright` (kept for short, intuitive URL).
 - `/sitemap.xml`, `/rss.xml` — Auto-generated from blog posts
 - `/robots.txt` — Generated dynamically from `getSiteUrl()`
 
@@ -70,11 +76,12 @@ All pages consume state via `useApp()` and `useTransition()`.
 - **Data files** (`data/*.ts`) — TypeScript arrays/config for site identity (`data/site.ts`), music playlist (`data/music.ts`), projects, experience, life items, skills, friend links, and project-detail copyable tokens. These are the primary way to maintain site content.
 - **Blog** (`content/blog/*.mdx`) — MDX files with frontmatter (`title`, `date`, `excerpt`, `tags`). Parsed by `lib/blog.ts` using gray-matter + reading-time. Rendered via next-mdx-remote.
 - **Custom MDX components** — `components/mdx/MDXComponents.tsx`
+- **Media hosting** — Music tracks (and future post images/gallery/assets) live on **Tencent COS** (Hong Kong bucket `arsvine-cdn`, region `ap-hongkong`, public-read / private-write) and are served via `cdn.arsvine.com` (DNSPod CNAME → COS origin; no Tencent CDN in front). `data/music.ts` builds each `src` by prefixing `process.env.NEXT_PUBLIC_MEDIA_CDN` to `/music/<file>`; when the env is unset the player falls back to the relative `/music/...` path under `public/` so local dev works without COS. `cdn.arsvine.com` is whitelisted in `config/image-hosts.js` for `next/image`, but post images are expected to render via `next/image` with `unoptimized={true}` (or a plain `<img>`) to bypass Vercel's Image Optimization quota — COS direct origin (no `/_next/image` rewrite) also avoids burning the COS outbound-traffic package via Vercel-side re-fetches.
 
 ### 3D Effects (Desktop Only)
 
 - `RainMorimeEffect` — background rain particle effect
-- `TesseractExperience` — interactive 3D charging animation (activates via lever pull)
+- `TesseractExperience` — interactive 3D charging animation (activates via lever pull). Uses `@react-three/cannon` + `cannon-es` for rigid-body physics (gravity, restitution, ground plane); mobile skips the WebGL canvas and charges the battery on an interval inside `MainLayout` instead.
 - Both use `@react-three/fiber` and are dynamically imported with `ssr: false`
 - Controlled by `usePowerSystem` hook; battery charges during Tesseract interaction
 
@@ -99,6 +106,7 @@ See `.env.example`:
 - `PORT` — server port (default 3000)
 - `NEXT_PUBLIC_SITE_URL` — used for sitemap, RSS, robots, and Open Graph URLs
 - `NEXT_PUBLIC_UMAMI_SRC` / `NEXT_PUBLIC_UMAMI_WEBSITE_ID` — optional Umami analytics script config
+- `NEXT_PUBLIC_MEDIA_CDN` — optional media CDN base URL (e.g. `https://cdn.arsvine.com`, backed by Tencent COS Hong Kong bucket `arsvine-cdn`). Consumed by `data/music.ts`; when unset the music player serves files from `/public/music/` instead.
 - `STATS_FILE` — optional server-side stats persistence file path
 
 ## Key Conventions

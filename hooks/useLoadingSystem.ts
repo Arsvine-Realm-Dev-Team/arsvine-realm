@@ -11,7 +11,7 @@ interface LoadingTask {
 
 const MIN_DISPLAY_TIME = 1800;
 const TASK_TIMEOUT = 6000;
-const CRITICAL_IMAGE_URLS = ['/images/texture-noise.png', '/avatar_transparent.png'];
+const CRITICAL_IMAGE_URLS = ['/images/texture-noise.webp', '/avatar_transparent.png'];
 
 const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T | 'timeout'> => {
   return new Promise(resolve => {

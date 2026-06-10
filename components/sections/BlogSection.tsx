@@ -21,7 +21,7 @@ export default function BlogSection({
         {posts.map((post, i) => (
           <div
             key={post.slug}
-            className={cardStyles.card}
+            className={`${cardStyles.card}${post.pinned ? ` ${cardStyles.pinned}` : ''}`}
             role="link"
             tabIndex={0}
             data-cursor-no-magnetic
@@ -34,7 +34,11 @@ export default function BlogSection({
               </span>
               <div className={cardStyles.cardContent}>
                 <div className={cardStyles.cardHeader}>
-                  <h4 className={cardStyles.cardTitle}>{post.title}</h4>
+                  <h4 className={cardStyles.cardTitle}>
+                    {post.title}{post.pinned && (
+                      <span className={cardStyles.cardPinnedBadge} aria-label="Pinned">PINNED</span>
+                    )}
+                  </h4>
                   {post.date && <span className={cardStyles.cardDate}>{post.date}</span>}
                 </div>
                 <p className={cardStyles.cardExcerpt}>{post.excerpt}</p>

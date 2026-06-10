@@ -12,7 +12,7 @@ ARSVINE REALM 是一个个人作品集与博客站点，基于后末日科幻 HU
 - **站点名称**：`ARSVINE REALM`。
 - **作者**：`Arsvine Zhu`。
 - **技术基线**：Next.js 16 Pages Router、React 18、TypeScript、SCSS Modules、Three.js、GSAP、MDX、自定义 Node.js server。
-- **运行要求**：Node.js `>= 20.9.0`。
+- **运行要求**：Node.js `22.x`（与 Vercel 默认 LTS 一致；本地 Node 20.9+ 仍可运行，仅作为兼容下限）。
 - **测试状态**：当前没有配置测试框架，也没有 `test` script；可用校验为 `npm run lint` 与 `npm run build`。
 
 ## 功能概览
@@ -25,8 +25,10 @@ ARSVINE REALM 是一个个人作品集与博客站点，基于后末日科幻 HU
 - **MDX 博客**：`content/blog/*.mdx` 通过 frontmatter 生成博客列表、详情页、RSS 与 sitemap。
 - **音乐播放器**：播放列表集中在 `data/music.ts`，音频文件放在 `public/music/`，支持浏览器原生 `<audio>` 可解码的格式，例如 `.mp3`、`.m4a`、`.flac`、`.wav`、`.ogg`。
 - **实时统计**：自定义 `server.js` 提供 `/api/sse/stats` 与 `/api/stats`，统计在线人数、总访问量与累计运行时间。
+- **一言代理**：`/api/hitokoto` 服务端代理 `v1.hitokoto.cn`，进程内 60s 缓存、5s 超时；首页打字机会以「1 轮预设 + 1 句一言」交替循环。
+- **版权与许可页**：`/copyright`（双语展示源码 MIT、内容 CC BY-NC-ND 4.0）；`/license` 永久重定向到 `/copyright`。
 - **SEO / 订阅文件**：`/sitemap.xml`、`/rss.xml`、`/robots.txt` 根据站点配置动态生成。
-- **桌面 3D 效果**：`RainMorimeEffect` 与 `TesseractExperience` 通过 dynamic import 禁用 SSR，仅在客户端运行。
+- **桌面 3D 效果**：`RainMorimeEffect` 与 `TesseractExperience`（基于 `@react-three/cannon` 物理引擎）通过 dynamic import 禁用 SSR，仅在客户端运行。
 
 ## 快速开始
 
@@ -59,12 +61,12 @@ npm run lint     # ESLint flat config：eslint .
 
 - 站点名称、作者、邮箱、版权起始年份
 - `metaTitle`、`metaDescription`、RSS 描述
-- 首页打字机签名
+- 首页打字机签名（与一言交替循环显示）
 - 社交链接
 - favicon、Open Graph image、Twitter image
 - Google Fonts / preconnect
 - `htmlLang`、`og:locale`、RSS language
-- `/content`、`/friends` 的页面级 SEO 与标题文案
+- `/content`、`/friends`、`/copyright` 的页面级 SEO 与标题文案
 
 如果需要让 sitemap、RSS、robots、Open Graph 使用正式域名，请设置：
 
@@ -122,7 +124,15 @@ export const musicPlaylist = [
 ];
 ```
 
-本地音频文件放入 `public/music/` 后，`src` 使用 `/music/文件名`。当前播放器基于 HTML5 `<audio>`，格式支持取决于浏览器解码能力；现代浏览器通常支持 `.m4a` / AAC。
+音频文件托管在**腾讯云 COS**（香港 Bucket `arsvine-cdn`，地域 `ap-hongkong`，公有读私有写），生产通过 `cdn.arsvine.com` 子域直出（DNSPod CNAME → COS 源站，不经腾讯云 CDN）。`data/music.ts` 会用 `NEXT_PUBLIC_MEDIA_CDN` 作为前缀拼出最终 `src`：
+
+```env
+NEXT_PUBLIC_MEDIA_CDN=https://cdn.arsvine.com
+```
+
+环境变量**未设置**时（默认本地 dev），`src` 退回到 `/music/<文件名>`，从 `public/music/` 读取本地文件 —— 把同名音频拖进 `public/music/` 即可离线测试。
+
+当前播放器基于 HTML5 `<audio>`，格式支持取决于浏览器解码能力；现代浏览器通常支持 `.m4a` / AAC。
 
 > 音频文件通常较大，已按项目约定不纳入 Git 跟踪；`public/music/README.md` 保留了该目录的用途说明。
 
@@ -134,7 +144,9 @@ Next.js `<Image>` 的远程图片白名单集中在：
 config/image-hosts.js
 ```
 
-新增图床或 CDN 域名时，只改这个文件，然后重启 dev server / 重新构建。
+新增图床或 CDN 域名时，只改这个文件，然后重启 dev server / 重新构建。当前默认放行 `cdn.arsvine.com`（自有图床，腾讯云 COS 香港 Bucket）、`placehold.co`（占位图）以及 `images.unsplash.com` / `source.unsplash.com`（模板示例）。
+
+> 文章 / 内容图片建议走 `next/image` + `unoptimized={true}` 直链 `cdn.arsvine.com`，绕开 Vercel Hobby 的 Image Optimization 配额（1000 张/月），同时避免被 `/_next/image` 二次抓取触发 COS 出站流量。COS 流量包不是限额器，10GB 用完会按量计费，记得到费用中心配预算告警。
 
 ### 统计数据
 
@@ -148,6 +160,7 @@ STATS_FILE=/var/lib/portfolio/stats.json
 
 - `GET /api/stats`：返回累计运行时间与总访问量
 - `GET /api/sse/stats`：SSE 推送在线人数与总访问量
+- `GET /api/hitokoto`：服务端代理 `v1.hitokoto.cn`，返回 `{ text }`；进程内 60s 缓存，5s 超时；上游失败时返回 `502 { error: 'upstream_unavailable' }`
 
 ## 环境变量
 
@@ -156,8 +169,10 @@ STATS_FILE=/var/lib/portfolio/stats.json
 ```env
 PORT=3000
 NEXT_PUBLIC_SITE_URL=https://example.com
-# NEXT_PUBLIC_UMAMI_SRC=https://your-umami-host/script.js
+# NEXT_PUBLIC_UMAMI_SRC=https://cloud.umami.is/script.js
 # NEXT_PUBLIC_UMAMI_WEBSITE_ID=your-website-id
+# NEXT_PUBLIC_UMAMI_DOMAINS=your-domain.com,www.your-domain.com
+# NEXT_PUBLIC_MEDIA_CDN=https://cdn.arsvine.com
 # STATS_FILE=/var/lib/portfolio/stats.json
 ```
 
@@ -165,8 +180,32 @@ NEXT_PUBLIC_SITE_URL=https://example.com
 
 - `PORT`：自定义 server 监听端口，默认 `3000`。
 - `NEXT_PUBLIC_SITE_URL`：用于 sitemap、RSS、robots、Open Graph URL。
-- `NEXT_PUBLIC_UMAMI_SRC` / `NEXT_PUBLIC_UMAMI_WEBSITE_ID`：可选 Umami 统计脚本配置；两者都设置才注入脚本。
+- `NEXT_PUBLIC_UMAMI_SRC` / `NEXT_PUBLIC_UMAMI_WEBSITE_ID`：可选 Umami 统计脚本配置；仅当 `SRC` 存在时才注入 `<script>`。脚本注入位置在 `pages/_document.tsx`，固定附带 `defer` / `data-do-not-track="true"` / `data-exclude-search="true"`。
+- `NEXT_PUBLIC_UMAMI_DOMAINS`：可选，逗号分隔的域名白名单（不带协议）。设置后 Umami tracker 只在这些域名下上报，`localhost` 与 Vercel preview 自动跳过，避免污染统计。
+- `NEXT_PUBLIC_MEDIA_CDN`：可选，媒体 CDN base URL（如 `https://cdn.arsvine.com`，背后是腾讯云 COS 香港 Bucket `arsvine-cdn`）。由 `data/music.ts` 消费；未设置时音乐播放器从 `/public/music/` 读取本地文件。
 - `STATS_FILE`：服务端统计持久化文件路径；不设置则使用项目根目录 `.stats.json`。
+
+### Umami 事件埋点（可选）
+
+注入脚本后页面浏览（pageview）会自动统计。若需要记录自定义事件，直接在元素上加 `data-umami-event` 属性即可，无需写 JS：
+
+```tsx
+<a
+  href={siteConfig.social.github}
+  data-umami-event="Click Social"
+  data-umami-event-platform="github"
+>
+  GitHub
+</a>
+```
+
+也可以在脚本里手动调用：
+
+```ts
+window.umami?.track('Open Life Item', { item: 'arknights' });
+```
+
+事件名长度上限 50 字符；属性是任意键值。本仓库未在组件中预置任何事件标签，按需追加即可。
 
 ## 路由结构
 
@@ -184,6 +223,8 @@ NEXT_PUBLIC_SITE_URL=https://example.com
 | `/friends` | 友情链接 |
 | `/about` | 关于页 |
 | `/contact` | 联系页 |
+| `/copyright` | 版权与许可（双语展示源码 MIT、内容 CC BY-NC-ND 4.0） |
+| `/license` | 永久重定向到 `/copyright` |
 | `/sitemap.xml` | 自动生成 sitemap |
 | `/rss.xml` | 自动生成 RSS |
 | `/robots.txt` | 动态生成 robots |
@@ -212,6 +253,7 @@ NEXT_PUBLIC_SITE_URL=https://example.com
 - TypeScript
 - SCSS Modules / Sass
 - Three.js / `@react-three/fiber` / `@react-three/drei`
+- `@react-three/cannon` + `cannon-es`（Tesseract 物理模拟）
 - GSAP
 - MDX / `next-mdx-remote`
 - Node.js custom server + SSE
@@ -251,4 +293,9 @@ STATS_FILE=/持久化目录/stats.json
 
 ## 许可证与来源
 
-本项目基于 RainMorime 风格作品集代码演进，并已调整为 ARSVINE REALM 个人站点。许可证见 [`LICENSE`](./LICENSE)。
+本项目基于 RainMorime 风格作品集代码演进，并已调整为 ARSVINE REALM 个人站点。
+
+- **源代码**：[MIT License](./LICENSE)
+- **原创内容**（文章、图片、笔记、设计等）：[CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/)
+
+完整双语条款见站内 [`/copyright`](https://arsvine.com/copyright)。

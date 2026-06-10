@@ -107,6 +107,35 @@
   min-width: 0;
 }
 
+.cardPinnedBadge {
+  display: inline-block;
+  font-family: 'Dosis', monospace;
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  color: var(--ark-primary);
+  background-color: rgba(var(--ark-primary-rgb), 0.08);
+  border: 1px solid rgba(var(--ark-primary-rgb), 0.35);
+  padding: 1px 6px;
+  margin-right: 10px;
+  vertical-align: 0.12em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  transition: color 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.card.pinned::before {
+  opacity: 0.85;
+  background: var(--ark-primary);
+  box-shadow: 0 0 6px rgba(var(--ark-primary-rgb), 0.2);
+}
+
+.card.pinned:hover .cardPinnedBadge {
+  color: var(--ark-text);
+  border-color: var(--ark-primary);
+  background-color: rgba(var(--ark-primary-rgb), 0.16);
+}
+
 .cardDate {
   font-family: 'Dosis', monospace;
   font-size: var(--fs-2xs);

@@ -27,6 +27,7 @@ export function getPostBySlug(slug: string) {
     excerpt: data.excerpt || '',
     tags: data.tags || [],
     readingTime: stats.text,
+    pinned: Boolean(data.pinned),
   };
 
   return { meta, content };
@@ -39,7 +40,12 @@ export function getAllPosts(): BlogPostMeta[] {
       const { meta } = getPostBySlug(slug);
       return meta;
     })
-    .sort((a, b) => (new Date(b.date).getTime() - new Date(a.date).getTime()));
+    .sort((a, b) => {
+      // 置顶优先；同为置顶或同为非置顶时按日期降序
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
 
   return posts;
 }

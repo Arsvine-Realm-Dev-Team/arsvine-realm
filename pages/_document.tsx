@@ -30,6 +30,11 @@ export default function Document() {
             defer
             src={process.env.NEXT_PUBLIC_UMAMI_SRC}
             data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+            {...(process.env.NEXT_PUBLIC_UMAMI_DOMAINS
+              ? { 'data-domains': process.env.NEXT_PUBLIC_UMAMI_DOMAINS }
+              : {})}
+            data-do-not-track="true"
+            data-exclude-search="true"
           />
         )}
       </Head>
