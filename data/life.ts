@@ -1,4 +1,5 @@
 import type { LifeItem } from '../types';
+import { cover, gallery } from '../lib/cdn';
 
 // ============================================================
 // Games
@@ -10,17 +11,21 @@ export const gameData: LifeItem[] = [
     description: '不只是策略塔防，而是一个用美术、音乐、叙事和世界观共同构成的泰拉。它让我在战斗之外，也不断思考理想、现实与创作本身。',
     tech: ['Strategy', 'Tower Defense', 'Mobile Game'],
     link: '#',
-    imageUrl: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Arknights',
+    imageUrl: cover('arknights-cover.png'),
     articleContent: `《明日方舟》对我来说，不只是一款策略塔防手游。它真正吸引我的地方，是它用冷峻、克制又极具设计感的方式，构建了一个复杂而残酷的世界：感染者、移动城邦、天灾、国家冲突、企业与组织，每一个设定都不是单纯为了“酷”，而是在共同支撑泰拉大陆那种沉重而真实的秩序。
 
 我喜欢《明日方舟》的原因，一部分来自它的玩法。干员部署、费用管理、路线判断、技能轴和关卡机制，让每一次作战都像是在解一道动态的谜题。它不是单纯依靠数值碾压，而是鼓励我观察、推演、试错，再用自己的方式完成攻略。那种从失败中慢慢理解关卡逻辑，最后打出一套稳定解法的过程，很有成就感。
 
 但它留给我的记忆，更多还是来自角色、音乐、美术和世界观。罗德岛不像一个单纯的“主角阵营”，它更像是在混乱世界中艰难维持理想的一艘船。很多故事并不会给出轻松的答案，也不会把苦难包装成热血口号，而是让人看到现实的复杂性：有些问题无法被简单解决，有些牺牲也并不浪漫。
 
-对我来说，《明日方舟》特别之处在于，它把策略游戏、视觉设计、音乐审美和架空叙事结合得非常完整。它让我记住的不只是某一次通关，也包括第一次被它的美术风格吸引、被剧情里的沉重感击中、被某个角色的立场打动的时刻。它像一个长期陪伴我的世界，让我在游玩之外，也不断思考设计、叙事和创作本身。`,
+对我来说，《明日方舟》特别之处在于，它把策略游戏、视觉设计、音乐审美和架空叙事结合得非常完整。它让我记住的不只是某一次通关，也包括第一次被它的美术风格吸引、被剧情里的沉重感击中、被某个角色的立场打动的时刻。它像一个长期陪伴我的世界，让我在游玩之外，也不断思考设计、叙事和创作本身。
+
+我要卫！
+
+好想去黑流树海！`,
     galleryImages: [
-      { src: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Screenshot+1' },
-      { src: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Screenshot+2' },
+      { src: gallery('arknights-screenshot-1.png') },
+      { src: gallery('arknights-screenshot-2.png') },
     ],
   },
   {
@@ -29,17 +34,18 @@ export const gameData: LifeItem[] = [
     description: '',
     tech: ['3D RPG', 'Strategy', 'Action', 'Factory Building', 'Cross-platform'],
     link: '#',
-    imageUrl: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Arknights+Endfield',
+    imageUrl: cover('endfield-cover.png'),
     articleContent: `《明日方舟：终末地》对我来说，最有吸引力的地方并不只是它继承了“明日方舟”这个名字，而是它把原本属于泰拉大陆的世界观气质，延伸到了一个更加辽阔、陌生，也更接近“开拓叙事”的空间之中。它不再只是罗德岛在移动城邦与感染者问题之间周旋，而是把视角推向塔卫二，推向终末地工业，推向一个需要被探索、建设和重新理解的边疆世界。
     
 相比《明日方舟》偏向关卡、路线与技能轴的策略塔防，《终末地》更像是另一种维度上的尝试：3D 场景、即时战斗、队伍协作、资源调度，以及带有工业建设意味的系统，共同构成了一种“在未知世界中建立秩序”的体验。它吸引我的地方，正是这种从战术判断到宏观规划的转变。玩家不只是完成一次作战，而是在一个陌生星球上不断铺设路径、组织生产、拓展据点，让文明的边界一点点向外推进。
 
 我也很喜欢它在美术和设定上的方向。《明日方舟》原本就有很强的工业感、末世感和冷峻的设计秩序，而《终末地》把这种气质进一步推向科幻与开拓题材：飞行器、设施、荒原、协议源石、工业系统，这些元素都让我联想到一种“文明机器正在荒芜世界中缓慢启动”的画面。它不是单纯明亮的未来幻想，而是带着压力、成本和未知风险的前进。对我来说，《明日方舟：终末地》重要的地方，在于它让我看到了同一个世界观可以如何换一种方式继续生长。它不是简单复制《明日方舟》的成功经验，而是尝试把角色、策略、美术、叙事和系统建设重新组合成另一种体验。
 
-也正因为如此，我期待它的不只是剧情会讲到哪里、角色会出现谁，而是它能不能真正让我感受到：人类如何在一个陌生而危险的世界里，凭借技术、组织和信念，建立新的立足之地。`,
+也正因为如此，我期待它的不只是剧情会讲到哪里、角色会出现谁，而是它能不能真正让我感受到：人类如何在一个陌生而危险的世界里，凭借技术、组织和信念，建立新的立足之地。
+
+大葱小葱？我全都要！`,
     galleryImages: [
-      { src: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Screenshot+1' },
-      { src: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Screenshot+2' },
+      { src: gallery('endfield-screenshot-1.png') },
     ],
   },
   {
@@ -48,14 +54,14 @@ export const gameData: LifeItem[] = [
     description: '不只是因为它讲述了孤独与连接，而是因为它让我相信：即使身处破碎的世界，人依然可以用一次次微小的传递，把彼此重新连起来。',
     tech: ['Action', 'Open-world', 'Strand game', 'PS4/PS5'],
     link: '#',
-    imageUrl: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Death+Stranding',
+    imageUrl: cover('death-stranding-cover.jpg'),
     articleContent: `我玩《死亡搁浅》的经历，很难简单归类为“通关了一款游戏”。它特别的地方不在于战斗有多刺激，而在于它把行走、运送、孤独和连接变成了一种真实的情绪体验。很多时候，我只是背着货物穿过荒原、翻过雪山、避开时间雨，在漫长而安静的路途中感受到一种奇妙的重量：不是任务的重量，而是“把某样东西送到别人手里”的意义。
 
 这款游戏留给我的记忆，是那些一个人走在破碎世界里的时刻，也是看到其他玩家留下的梯子、绳索、桥梁时突然感到被帮助的瞬间。《死亡搁浅》让我记住了，人与人之间的连接不一定轰轰烈烈，有时只是有人在你看不见的地方，为后来者铺了一小段路。对我来说，它重要，是因为它让我相信：即使世界已经支离破碎，人依然可以通过一次次微小的传递，重新建立联系。
 `,
     galleryImages: [
-      { src: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Screenshot+1' },
-      { src: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Screenshot+2' },
+      { src: gallery('death-stranding-screenshot-1.jpg') },
+      { src: gallery('death-stranding-screenshot-2.jpg') },
     ],
   },
 ];
@@ -70,15 +76,15 @@ export const travelData: LifeItem[] = [
     description: '意外之喜的江南古城',
     tech: ['Travel', 'Stay'],
     link: '#',
-    imageUrl: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Zhenjiang',
+    imageUrl: cover('zhenjiang-cover.jpg'),
     articleContent: `根本算不上旅游好吧，因为就在这里上学来着...
     
 但镇江确实是个意外之喜的江南古城。它没有杭州、苏州那样的名气，但却有着独特的魅力：
 
 古老的金山寺、浪漫的西津渡、还有那碧绿的京口水域。每次走在镇江的街头巷尾，我都能感受到一种悠闲而温暖的氛围，仿佛时间在这里流动得更慢了一些。对于我来说，镇江是一个充满回忆和惊喜的地方，虽然不算是传统意义上的旅游目的地，但它在我的心中占据了特殊的位置。`,
     galleryImages: [
-      { src: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Photo+1' },
-      { src: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Photo+2' },
+      { src: gallery('zhenjiang-gallery-1.jpg') },
+      { src: gallery('zhenjiang-gallery-2.jpg') },
     ],
   },
 ];
@@ -91,7 +97,7 @@ export const otherData: LifeItem[] = [
     id: 'game-dev',
     title: '游戏开发与设计',
     description: '创造自己脑海中的世界，虽然还在路上，但已经很享受这个过程了。',
-    imageUrl: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Game+Dev',
+    imageUrl: cover('game-dev-cover.png'),
     tech: ['Programming', 'Design'],
     articleContent: `我的游戏开发之路，最开始并不是从“我要做出一款完整的游戏”开始的，而是从一个个脑海里的世界、角色、机制和场景开始的。我一直很喜欢那种能够把想象变成可交互体验的创作方式：不是只写下一段设定，也不是只画出一张画面，而是让玩家真正走进那个世界，感受到它的规则、氛围和情绪。
 
@@ -101,7 +107,7 @@ export const otherData: LifeItem[] = [
 
 我现在仍然在路上，还没有做出足够成熟的作品，但我已经很享受这个过程。对我来说，游戏开发不只是技术练习，也是一种表达方式。它让我有机会创造属于自己的世界，并用规则、画面和交互，把那些原本只存在于脑海中的东西一点点变成现实。`,
     galleryImages: [
-      { src: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Hobby+1' },
+      { src: gallery('game-dev-gallery-1.png') },
     ],
   },
 ];

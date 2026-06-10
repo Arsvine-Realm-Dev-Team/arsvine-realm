@@ -31,7 +31,7 @@ export interface SiteConfig {
   author: string;
   /** 联系邮箱。用于联系页文本与点击复制 */
   email: string;
-  /** 站点 URL，无尾斜杠。用于 sitemap/rss/og:url。空字符串时回退到 'https://example.com' */
+  /** 站点 URL，无尾斜杠。用于 sitemap/rss/og:url。空字符串时回退到 'https://arsvine.com' */
   url: string;
   /** 版权起始年份 */
   copyrightYearStart: number;
@@ -70,8 +70,8 @@ export const siteConfig: SiteConfig = {
   url: 'https://arsvine.com',
   copyrightYearStart: 2026,
   metaTitle: 'ARSVINE REALM',
-  metaDescription: 'Personal portfolio and blog',
-  rssDescription: 'Personal blog',
+  metaDescription: 'Personal portfolio and blog - Exploring the realms of technology, creativity, and life.',
+  rssDescription: 'Personal blog - Exploring the realms of technology, creativity, and life.',
   tagline: {
     en: 'Я бы хотела жить с Вами в маленьком городе, Где вечные сумерки и вечные колокола.',
     zh: '我想和你一起生活，在小城，那里有永恒的黄昏和永恒的钟声。',

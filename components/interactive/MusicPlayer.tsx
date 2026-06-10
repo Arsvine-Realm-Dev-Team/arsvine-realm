@@ -21,11 +21,18 @@ const NextIcon = () => <svg viewBox="0 0 10 10" width="10" height="10">
 const playlist = musicPlaylist;
 
 const DRAG_THRESHOLD = 50; // 拖动切换唱片的最小像素阈值
+const AUTO_COLLAPSE_DELAY = 5000; // 抽屉打开后无操作自动收起的延迟 (ms)
 
 const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
   const [isOpen, setIsOpen] = useState(false); // 初始状态为收起
   const [isPlaying, setIsPlaying] = useState(false); // 是否正在播放
+  const [isHovering, setIsHovering] = useState(false); // 鼠标是否悬停在播放器上 (用于空闲自动收起)
+  const [idleNudge, setIdleNudge] = useState(0); // 触屏等场景下手动重置空闲计时器
   const audioRef = useRef(null); // Audio 元素引用
+
+  const bumpIdleTimer = useCallback(() => {
+    setIdleNudge((n) => n + 1);
+  }, []);
 
   // 挂载后延迟弹出唱片机以暗示功能
   useEffect(() => {
@@ -69,6 +76,18 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
 
   // 显示的歌曲标题和艺术家
   const displayTitle = currentTrack ? `${currentTrack.title} - ${currentTrack.artist}` : "";
+
+  // 抽屉打开且无用户活动一段时间后自动收起
+  // 触发重置的活动：hover、拖动、播放列表展开、bumpIdleTimer (用于触屏点击)
+  useEffect(() => {
+    if (!isOpen) return;
+    if (isHovering || isDragging || isPlaylistVisible) return;
+    const timer = setTimeout(() => {
+      setIsOpen(false);
+      setIsPlaylistVisible(false);
+    }, AUTO_COLLAPSE_DELAY);
+    return () => clearTimeout(timer);
+  }, [isOpen, isHovering, isDragging, isPlaylistVisible, idleNudge]);
 
   // 切换抽屉展开/收起状态
   const toggleDrawer = () => {
@@ -346,7 +365,12 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
   }, [isPlaying]);
 
   return (
-    <div className={`${styles.playerContainer} ${isOpen ? styles.open : ''}`}>
+    <div
+      className={`${styles.playerContainer} ${isOpen ? styles.open : ''}`}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+      onTouchStart={bumpIdleTimer}
+    >
       {/* 抽屉把手：点击切换抽屉，播放时显示动画条和当前歌曲名 (若收起) */}
       <div
         ref={handleRef}

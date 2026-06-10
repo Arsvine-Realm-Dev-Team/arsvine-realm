@@ -1,40 +1,35 @@
 import type { MusicTrack } from '../types';
+import { music } from '../lib/cdn';
 
 // ============================================================
 // Music Playlist
 // ------------------------------------------------------------
-// Audio files are hosted on Tencent COS (Hong Kong bucket
-// `arsvine-cdn`, region `ap-hongkong`) and served from
-// `cdn.arsvine.com` in production. Set
-//   NEXT_PUBLIC_MEDIA_CDN=https://cdn.arsvine.com
-// in the deployment environment to switch playback to COS.
+// 音频文件托管在腾讯云 COS（香港桶 `arsvine-cdn`），通过
+// `cdn.arsvine.com` 对外。所有 src 通过 lib/cdn.ts 的 `music()`
+// helper 生成 `${NEXT_PUBLIC_MEDIA_CDN}/music/<file>`。
 //
-// When `NEXT_PUBLIC_MEDIA_CDN` is unset (typical local dev), `src`
-// falls back to the relative `/music/...` path under `public/`, which
-// keeps the player working without an internet round-trip.
+// 当 `NEXT_PUBLIC_MEDIA_CDN` 未设置（本地 dev 常见），src 退化为
+// 相对路径 `/music/<file>`，需要本地 `public/music/` 下放同名
+// 文件（已被 .gitignore 排除）才能播放。
 //
-// Supported formats: anything decodable by the browser's native HTML5
-// <audio> element (mp3 / m4a / flac / wav / ogg). Local files in
-// public/music/ are gitignored by project convention.
+// 文件名约定：小写、连字符分隔、去除空格 / 引号 / 括号，避免
+// URL 编码与跨平台命名问题。
 // ============================================================
-
-const MEDIA_CDN = process.env.NEXT_PUBLIC_MEDIA_CDN || '';
-const track = (file: string): string => `${MEDIA_CDN}/music/${file}`;
 
 export const musicPlaylist: MusicTrack[] = [
   {
     title: 'JANE DOE',
     artist: '米津玄師, 宇多田ヒカル',
-    src: track('JANE DOE.m4a'),
+    src: music('jane-doe.m4a'),
   },
   {
     title: "Don't Be So Serious",
     artist: 'Low Roar',
-    src: track("Don't Be So Serious.m4a"),
+    src: music('dont-be-so-serious.m4a'),
   },
   {
     title: 'NEVER (feat. Evil Neuro)',
     artist: 'Neuro-sama, Evil Neuro',
-    src: track('NEVER (feat. Evil Neuro).m4a'),
+    src: music('never-feat-evil-neuro.m4a'),
   },
 ];
