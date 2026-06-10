@@ -14,7 +14,7 @@ export const friendLinksData: FriendLink[] = [
   {
     id: 'LoyalTY',
     name: 'LoyalTY',
-    description: 'Botanical Soul | Rooted in Green',
+    description: 'Safe Sweetie Sleepier Stanza Symbolic',
     url: 'https://steamcommunity.com/profiles/76561199874766647',
     avatar: 'https://shared.fastly.steamstatic.com/community_assets/images/items/1332180/0f1db15dec8e1d1a3ad8802f38879cb282445ff7.gif',
   },

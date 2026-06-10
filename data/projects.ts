@@ -44,9 +44,9 @@ export const webProjects: Project[] = [
     ],
     link: '#',
     liveUrl: 'https://endfield.arsvine.com',
-    imageUrl: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Endfield+Planner',
+    imageUrl: cover('endfield-planner-preview.png'),
     galleryImages: [
-      { src: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Gallery+1' },
+      { src: post('endfield-planner-screenshot-1.png') },
     ],
     articleContent: `使用 Python Flask 构建后端 API，Waitress 作为生产服务器，处理卡池数据和规划算法。前端使用原生 JavaScript 实现动态交互和响应式布局，确保在各种设备上都有良好体验。
     
