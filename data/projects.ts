@@ -1,4 +1,5 @@
 import type { Project } from '../types';
+import { cover, gallery, post } from '../lib/cdn';
 
 // ============================================================
 // Web / Frontend Projects
@@ -20,10 +21,10 @@ export const webProjects: Project[] = [
     ],
     link: '#',
     liveUrl: 'https://arsvine.com',
-    imageUrl: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Arsvine+Realm',
+    imageUrl: cover('arsvine-realm-preview.png'),
     galleryImages: [
-      { src: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Screenshot+1' },
-      { src: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Screenshot+2' },
+      { src: post('arsvine-realm-sceenshot-1.png') },
+      { src: post('arsvine-realm-sceenshot-2.png') },
     ],
     articleContent: `Arsvine Realm，即本站。使用 Next.js 构建，部署在 Vercel 上，采用 Serverless 架构。设计上融合了科幻风格的 HUD 元素，提供了超过 42 种动画样式，整体设计灵感来源于鹰角的美学风格。
 
@@ -43,9 +44,9 @@ export const webProjects: Project[] = [
     ],
     link: '#',
     liveUrl: 'https://endfield.arsvine.com',
-    imageUrl: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Endfield+Planner',
+    imageUrl: cover('endfield-planner-preview.png'),
     galleryImages: [
-      { src: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Gallery+1' },
+      { src: post('endfield-planner-screenshot-1.png') },
     ],
     articleContent: `使用 Python Flask 构建后端 API，Waitress 作为生产服务器，处理卡池数据和规划算法。前端使用原生 JavaScript 实现动态交互和响应式布局，确保在各种设备上都有良好体验。
     
@@ -71,11 +72,11 @@ export const earlyProjects: Project[] = [
     role: 'Student',
     year: '201x',
     status: 'archived',
-    tech: ['HTML', 'CSS', 'JavaScript', 'Python', 'C++', 'C#'],
+    tech: ['HTML', 'CSS', 'JavaScript', 'Python', 'C++', 'C#', 'Scratch', 'Unity'],
     link: '#',
-    imageUrl: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Early+Project',
+    imageUrl: cover('gitblock-cover.png'),
     galleryImages: [
-      { src: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Learning' },
+      { src: gallery('gitblock-allindo.png') },
     ],
     articleContent: `有太多早期项目，多数也没有保留记录了。`,
   },

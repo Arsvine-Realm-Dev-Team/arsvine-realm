@@ -1,4 +1,5 @@
 import type { ExperienceItem } from '../types';
+import { gallery } from '../lib/cdn';
 
 // ============================================================
 // Timeline — Replace with your own education & work history!
@@ -15,7 +16,8 @@ export const experienceData: ExperienceItem[] = [
     ],
     alignment: 'right',
     galleryImages: [
-      { src: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=High+School' },
+      { src: gallery('highschool-gallery-1.jpg') },
+      { src: gallery('highschool-gallery-2.jpg') },
     ],
   },
   {
@@ -30,7 +32,8 @@ export const experienceData: ExperienceItem[] = [
     ],
     alignment: 'left',
     galleryImages: [
-      { src: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=University' },
+      { src: gallery('university-gallery-1.jpg') },
+      { src: gallery('university-gallery-2.jpg') },
     ],
   },
   {
@@ -44,8 +47,6 @@ export const experienceData: ExperienceItem[] = [
       '工程部'
     ],
     alignment: 'left',
-    galleryImages: [
-      { src: 'https://placehold.co/800x450/0d0d0d/b2f2bb?text=Rhodes+Island' },
-    ],
+    galleryImages: [],
   },
 ];
