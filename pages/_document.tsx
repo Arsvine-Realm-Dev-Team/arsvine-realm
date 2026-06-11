@@ -1,18 +1,18 @@
 import { Html, Head, Main, NextScript } from 'next/document';
-import { siteConfig } from '../data/site';
+import { siteConfig, getSiteUrl } from '../data/site';
 
 export default function Document() {
+  const siteUrl = getSiteUrl();
   return (
     <Html lang={siteConfig.locale.htmlLang}>
       <Head>
         <meta httpEquiv="Content-Security-Policy" content="upgrade-insecure-requests" />
 
         <meta property="og:site_name" content={siteConfig.name} />
-        <meta property="og:type" content="website" />
         <meta property="og:locale" content={siteConfig.locale.ogLocale} />
-        <meta property="og:image" content={siteConfig.assets.ogImage} />
+        <meta property="og:image" content={`${siteUrl}${siteConfig.assets.ogImage}`} />
         <meta name="twitter:card" content="summary" />
-        <meta name="twitter:image" content={siteConfig.assets.twitterImage} />
+        <meta name="twitter:image" content={`${siteUrl}${siteConfig.assets.twitterImage}`} />
 
         <link rel="icon" href={siteConfig.assets.icon} />
         {siteConfig.fonts.preconnect.map((p) => (

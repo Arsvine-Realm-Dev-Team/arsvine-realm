@@ -312,6 +312,7 @@ function WebDetailContent({ project }: PageProps) {
       <Head>
         <title>{`${project.title.toUpperCase()} // WORKS`}</title>
         <meta name="description" content={project.title} />
+        <meta property="og:type" content="article" />
         {showHero && coverImg && <link rel="preload" as="image" href={coverImg} />}
       </Head>
 

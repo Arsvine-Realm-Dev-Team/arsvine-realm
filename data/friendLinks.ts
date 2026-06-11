@@ -39,4 +39,11 @@ export const friendLinksData: FriendLink[] = [
     url: 'https://nekomoe.tw/',
     avatar: 'https://avatars.githubusercontent.com/u/82699919?v=4',
   },
+  {
+    id: 'Hitokoto',
+    name: 'Hitokoto',
+    description: '一言 · 一句温暖的话',
+    url: 'https://hitokoto.cn/',
+    avatar: 'https://developer.hitokoto.cn/logo.png',
+  }
 ];

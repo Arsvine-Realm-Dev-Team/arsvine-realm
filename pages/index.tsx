@@ -37,6 +37,7 @@ export default function Home() {
         <meta name="description" content={siteConfig.metaDescription} />
         <meta property="og:title" content={siteConfig.metaTitle} />
         <meta property="og:description" content={siteConfig.metaDescription} />
+        <meta property="og:type" content="website" />
         <meta property="og:url" content={getSiteUrl()} />
       </Head>
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>

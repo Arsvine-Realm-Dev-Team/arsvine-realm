@@ -262,6 +262,7 @@ function LifeDetailContent({ item }: PageProps) {
       <Head>
         <title>{`${item.title.toUpperCase()} // LIFE`}</title>
         <meta name="description" content={item.title} />
+        <meta property="og:type" content="article" />
         <link rel="preload" as="image" href={coverImg} />
       </Head>
 

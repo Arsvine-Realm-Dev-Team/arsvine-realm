@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ARSVINE REALM is a personal post-apocalyptic HUD-themed portfolio + blog site built with Next.js 16 (Pages Router), TypeScript, SCSS Modules, Three.js, GSAP, and MDX. Targets Node 22.x on Vercel (Node 20.9+ also works locally).
+ARSVINE REALM is a personal post-apocalyptic HUD-themed portfolio + blog site built with Next.js 16 (Pages Router), TypeScript, SCSS Modules, Three.js, GSAP, and MDX. Targets Node 24.x on Vercel (Node 20.9+ also works locally).
 
 ## Commands
 

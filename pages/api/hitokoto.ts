@@ -5,8 +5,14 @@ import type { NextApiRequest, NextApiResponse } from 'next';
  *
  * 为什么走代理而不是客户端直连：
  *  - 统一出口便于将来加监控 / 换源；
- *  - 进程内 60s 缓存，QPS 2/s 上限下显著降低上游压力；
  *  - 隔离上游故障（一言曾因 DDoS 多次降级）。
+ *
+ * 缓存策略（两层）：
+ *  - 主层：Vercel edge，s-maxage=300（5min 内同一节点所有访客共享一份响应），
+ *    stale-while-revalidate=3600（缓存过期后边缘立即吐旧、后台异步刷新，
+ *    上游故障时旧内容最多兜底 1 小时）。
+ *  - 次层：进程内 60s 缓存，主要在 edge 未命中时减轻同一 lambda 实例的上游压力，
+ *    冷启动时重置，无害冗余。
  *
  * 句源约束：c=d|i|k（文学/诗词/哲学），长度 10–30。
  *
@@ -27,7 +33,7 @@ let cache: { text: string; expiresAt: number } | null = null;
 
 export default async function handler(_req: NextApiRequest, res: NextApiResponse) {
   if (cache && cache.expiresAt > Date.now()) {
-    res.setHeader('Cache-Control', 'public, max-age=30, s-maxage=60');
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
     return res.status(200).json({ text: cache.text });
   }
 
@@ -42,7 +48,7 @@ export default async function handler(_req: NextApiRequest, res: NextApiResponse
     const text = typeof data?.hitokoto === 'string' ? data.hitokoto.trim() : '';
     if (!text) throw new Error('empty hitokoto');
     cache = { text, expiresAt: Date.now() + CACHE_TTL_MS };
-    res.setHeader('Cache-Control', 'public, max-age=30, s-maxage=60');
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
     return res.status(200).json({ text });
   } catch (err) {
     clearTimeout(timeoutId);

@@ -10,6 +10,7 @@ export default function FriendsPage() {
       <Head>
         <title>{siteConfig.pages.friends.title}</title>
         <meta name="description" content={siteConfig.pages.friends.description} />
+        <meta property="og:type" content="website" />
       </Head>
       <SectionPageLayout>
         <div className={styles.friendLinkSection}>

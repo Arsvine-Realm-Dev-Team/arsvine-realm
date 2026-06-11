@@ -222,6 +222,7 @@ export default function ContentPage({ blogPosts }: ContentPageProps) {
     <>
       <Head>
         <title>{detailTitle}</title>
+        <meta property="og:type" content="website" />
         {!isDetailOpen && (
           <meta name="description" content={siteConfig.pages.content.description} />
         )}

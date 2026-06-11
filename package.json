@@ -13,7 +13,7 @@
   "license": "MIT",
   "description": "A post-apocalyptic HUD-themed portfolio & blog template built with Next.js 16",
   "engines": {
-    "node": "22.x"
+    "node": "24.x"
   },
   "dependencies": {
     "@react-three/cannon": "^6.6.0",

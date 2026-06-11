@@ -18,6 +18,7 @@ export default function CopyrightPage() {
       <Head>
         <title>{siteConfig.pages.copyright.title}</title>
         <meta name="description" content={siteConfig.pages.copyright.description} />
+        <meta property="og:type" content="website" />
       </Head>
       <SectionPageLayout>
         <div className={`${styles.friendLinkSection} ${styles.copyrightSection}`}>
