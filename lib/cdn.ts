@@ -16,6 +16,7 @@
 //   gallery/             图集
 //   avatar/              头像
 //   music/               公开音频
+//   fonts/               Google Fonts 自托管副本（详见 scripts/fetch-google-fonts.mjs）
 //   assets/              通用静态资源
 //   test/                测试
 // ============================================================
@@ -45,3 +46,10 @@ export const music = (key: string): string => cdn(`music/${key}`);
 
 /** 通用静态资产：`assets/<key>`，例：asset('logo.svg')。 */
 export const asset = (key: string): string => cdn(`assets/${key}`);
+
+/** 字体资产：`fonts/<key>`，例：font('google-fonts.css')。
+ *  字体文件由 scripts/fetch-google-fonts.mjs 抓取并上传，目录结构：
+ *    fonts/google-fonts.css           入口样式表（已改写 url 指向同 CDN）
+ *    fonts/<family-slug>/<file>.woff2 各 unicode-range 分片
+ */
+export const font = (key: string): string => cdn(`fonts/${key}`);

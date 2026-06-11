@@ -9,6 +9,7 @@ import { useApp } from '../../contexts/AppContext';
 import { useTransition } from '../../contexts/TransitionContext';
 import LazyImage from '../../components/shared/LazyImage';
 import Lightbox from '../../components/interactive/Lightbox';
+import { AnimatedTitleChars } from '../../components/shared/AnimatedTitleChars';
 import { gameData, travelData, otherData } from '../../data/life';
 import type { LifeItem } from '../../types';
 
@@ -279,11 +280,11 @@ function LifeDetailContent({ item }: PageProps) {
             <div className={styles.heroOverlay} />
             <div className={styles.heroContent}>
               <h1 ref={titleRef} className={styles.heroTitle}>
-                {item.title.toUpperCase().split("").map((char, i) => (
-                  <span key={`t-${i}`} className={styles.charWrapper}>
-                    <span className={styles.charInner}>{char === ' ' ? '\u00A0' : char}</span>
-                  </span>
-                ))}
+                <AnimatedTitleChars
+                  text={item.title}
+                  wrapperClassName={styles.charWrapper}
+                  innerClassName={styles.charInner}
+                />
               </h1>
               <p className={styles.heroSubtitle}>
                 {subtitle.displayed}

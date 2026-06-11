@@ -9,6 +9,7 @@ import { useApp } from '../../contexts/AppContext';
 import { useTransition } from '../../contexts/TransitionContext';
 import LazyImage from '../../components/shared/LazyImage';
 import Lightbox from '../../components/interactive/Lightbox';
+import { AnimatedTitleChars } from '../../components/shared/AnimatedTitleChars';
 import { webProjects, copyableTokens } from '../../data/projects';
 import type { Project } from '../../types';
 
@@ -325,11 +326,11 @@ function WebDetailContent({ project }: PageProps) {
             <div className={styles.heroOverlay} />
             <div className={styles.heroContent}>
               <h1 ref={titleRef} className={styles.heroTitle}>
-                {project.title.toUpperCase().split('').map((char, i) => (
-                  <span key={`t-${i}`} className={styles.charWrapper}>
-                    <span className={styles.charInner}>{char === ' ' ? '\u00A0' : char}</span>
-                  </span>
-                ))}
+                <AnimatedTitleChars
+                  text={project.title}
+                  wrapperClassName={styles.charWrapper}
+                  innerClassName={styles.charInner}
+                />
               </h1>
               <p className={styles.heroSubtitle}>
                 {subtitle.displayed}
@@ -340,11 +341,11 @@ function WebDetailContent({ project }: PageProps) {
         ) : (
           <section className={styles.compactHeader} ref={(el) => { heroRef.current = el; sectionRefs.current['hero'] = el; }} data-nav-id="hero">
             <h1 ref={titleRef} className={styles.compactTitle}>
-              {project.title.toUpperCase().split('').map((char, i) => (
-                <span key={`t-${i}`} className={styles.charWrapper}>
-                  <span className={styles.charInner}>{char === ' ' ? '\u00A0' : char}</span>
-                </span>
-              ))}
+              <AnimatedTitleChars
+                text={project.title}
+                wrapperClassName={styles.charWrapper}
+                innerClassName={styles.charInner}
+              />
             </h1>
             <p className={styles.heroSubtitle}>
               {subtitle.displayed}

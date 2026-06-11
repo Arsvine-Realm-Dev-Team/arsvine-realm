@@ -5,6 +5,7 @@ import { friendLinksData } from '../data/friendLinks';
 import { siteConfig } from '../data/site';
 
 export default function FriendsPage() {
+  const services = siteConfig.pages.friends.services;
   return (
     <>
       <Head>
@@ -35,6 +36,34 @@ export default function FriendsPage() {
               </a>
             ))}
           </div>
+
+          {services && services.items.length > 0 && (
+            <>
+              {/* 致谢区：使用了对方服务（非朋友关系）。视觉上复用 friendLinkCard，
+                  语义上用独立标题分隔，避免和上方两列友链混淆。 */}
+              <h2 className={styles.friendLinkServicesHeading}>{services.heading}</h2>
+              <div className={styles.friendLinkGrid}>
+                {services.items.map((svc) => (
+                  <a
+                    key={svc.url}
+                    href={svc.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.friendLinkCard}
+                    data-cursor-label="VISIT"
+                  >
+                    <div className={styles.friendLinkAvatar}>
+                      <img src={svc.avatar} alt={svc.name} />
+                    </div>
+                    <div className={styles.friendLinkInfo}>
+                      <h3>{svc.name}</h3>
+                      <p>{svc.description}</p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </SectionPageLayout>
     </>

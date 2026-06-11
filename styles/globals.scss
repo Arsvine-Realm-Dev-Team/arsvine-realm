@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Dosis:wght@300;400;500&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;500;700&display=swap');
+// Google Fonts (Dosis + Noto Sans SC + Noto Serif SC) 通过 pages/_document.tsx
+// 的 <link rel="stylesheet"> 加载，避免 @import 的串行阻塞。
 
 @font-face {
   font-family: 'ZELDA Free';

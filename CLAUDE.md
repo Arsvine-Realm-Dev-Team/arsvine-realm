@@ -92,7 +92,19 @@ All pages consume state via `useApp()` and `useTransition()`.
 - CSS custom properties for theming in `styles/globals.scss`:
   - `--ark-highlight-green` — primary accent color (change to retheme)
   - `--ark-inverted-*` — inverted/negative mode colors (lever toggle)
-- Custom fonts: ZELDA Free (display), Dosis (HUD), Noto Sans/Serif SC (reading)
+- Custom fonts: ZELDA Free (display), Dosis (HUD), Noto Sans/Serif SC (reading). Google Fonts are loaded via `<link>` in `_document.tsx` (not CSS `@import`, which would be render-blocking). The combined URL lives in `data/site.ts` and serves only the weight subsets actually used (Dosis 300/400/500, Noto Sans SC 300/400/500/700, Noto Serif SC 400/700).
+
+### Favicon Layout
+
+Icon files live in two places in `public/`:
+- Root (`/favicon.ico`, `/apple-touch-icon.png`) — browsers blind-probe these; must stay at root.
+- `/icons/` — the rest (favicon-16x16, favicon-32x32, android-chrome-192x192, android-chrome-512x512, site.webmanifest).
+
+Regenerate from a transparent source with `node scripts/regen-favicons.mjs`. If the source is a white-background JPG, first run `node scripts/jpg-to-transparent-png.mjs`.
+
+### Local Dev — COS Referer
+
+COS `cdn.arsvine.com` only accepts Referer `*.arsvine.com`. Run `scripts/dev-host-setup.cmd` (double-click) to add `dev.arsvine.com → 127.0.0.1` to Windows hosts, start the dev server, and auto-clean on exit. See the script or README for `-HostsOnly` / `-Remove` sub-commands.
 
 ### Path Aliases
 

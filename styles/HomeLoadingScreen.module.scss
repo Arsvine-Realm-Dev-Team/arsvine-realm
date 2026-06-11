@@ -1,11 +1,6 @@
-@font-face {
-  font-family: 'Dosis';
-  src: url('/fonts/Dosis/Dosis-Light.ttf') format('truetype');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-
+// Dosis 已通过 cdn.arsvine.com/fonts/google-fonts.css 提供（含 300/400/500 variable font），
+// 这里不再重复声明，否则浏览器会额外下载 /fonts/Dosis/Dosis-Light.ttf 浪费 60KB。
+// ZeldaFont 是自定义字体，CDN 没有，必须本地声明。
 @font-face {
   font-family: 'ZeldaFont';
   src: url('/fonts/ZELDA Free.otf') format('opentype');
@@ -60,7 +55,7 @@
   background-color: var(--main-dark);
   background-image:
     linear-gradient(rgba(20, 20, 20, 0.9), rgba(15, 15, 15, 0.95)),
-    url('/images/texture-noise.webp');
+    url('/images/texture-noise.jpg');
   background-blend-mode: overlay;
   opacity: 0.9;
   overflow: hidden;

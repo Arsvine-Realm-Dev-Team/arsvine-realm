@@ -12,7 +12,7 @@ ARSVINE REALM 是一个个人作品集与博客站点，基于后末日科幻 HU
 - **站点名称**：`ARSVINE REALM`。
 - **作者**：`Arsvine Zhu`。
 - **技术基线**：Next.js 16 Pages Router、React 18、TypeScript、SCSS Modules、Three.js、GSAP、MDX、自定义 Node.js server。
-- **运行要求**：Node.js `22.x`（与 Vercel 默认 LTS 一致；本地 Node 20.9+ 仍可运行，仅作为兼容下限）。
+- **运行要求**：Node.js `24.x`（与 Vercel Project 设置保持一致；本地 Node 20.9+ 仍可运行，仅作为兼容下限）。
 - **测试状态**：当前没有配置测试框架，也没有 `test` script；可用校验为 `npm run lint` 与 `npm run build`。
 
 ## 功能概览
@@ -51,9 +51,60 @@ npm start        # 生产服务器：cross-env NODE_ENV=production node server.j
 npm run lint     # ESLint flat config：eslint .
 ```
 
+## 本地开发与 COS Referer
+
+腾讯云 COS 的 Referer 白名单只放行 `arsvine.com` / `*.arsvine.com`，localhost 与空 Referer 均被拒绝。本地开发时要让 `cdn.arsvine.com` 的媒体资源正常加载，需要将 `dev.arsvine.com` 映射到本机。
+
+双击 [scripts/dev-host-setup.cmd](scripts/dev-host-setup.cmd)（支持传参 `-HostsOnly` / `-Remove`）自动完成：
+
+1. 自提升到管理员（UAC 弹窗）
+2. 写 `127.0.0.1  dev.arsvine.com` 到 Windows hosts 文件（首次备份 `hosts.bak.<日期>`）
+3. 启动 `npm run dev`（端口 3000）
+4. 按 Ctrl+C 退出时自动停 dev server、回退 hosts 条目、`ipconfig /flushdns`
+
+手动单向操作也提供：
+
+```bash
+.\scripts\dev-host-setup.cmd -HostsOnly    # 只写 hosts，不启动 dev server
+.\scripts\dev-host-setup.cmd -Remove       # 清理 dev.arsvine.com hosts 条目
+```
+
+> ⚠️ 脚本会修改 `C:\Windows\System32\drivers\etc\hosts`，必须管理员权限。自提升流程是通过 UAC 完成的，不会直接操作系统配置。被 X 关闭窗口导致 hosts 残留时，用 `-Remove` 清理。
+
+浏览器打开 `http://dev.arsvine.com:3000` 后，Referer 变为 `dev.arsvine.com:3000`，COS 放行。
+
+## 开发脚本
+
+| 脚本 | 用途 |
+|---|---|
+| `scripts/dev-host-setup.cmd` / `.ps1` | 本地开发 hosts 管理 + dev server 启动（COS Referer 白名单适配）。双击 `.cmd` 使用。 |
+| `scripts/convert-images.mjs` | 批量图片格式转换（webp/jpg/png/avif），输出到 `scripts/images/out/`。 |
+| `scripts/regen-favicons.mjs` | 从透明源图重新生成全套 favicon（替换 `public/` 中所有 icon 文件）。 |
+| `scripts/jpg-to-transparent-png.mjs` | 去掉白底（alpha unmix 算法），把白底 jpg 转为透明 PNG。 |
+
 ## 配置与内容维护
 
 当前项目已经把常改内容尽量集中到配置和数据文件中，日常维护优先修改 `data/`、`content/`、`public/` 与环境变量，而不是直接改组件逻辑。
+
+### Favicon
+
+图标文件分布在 `public/`：
+
+- `public/favicon.ico` / `public/apple-touch-icon.png` — **留在根目录**，浏览器会盲探这两个路径（书签、社交卡片回退、iOS 添加到主屏幕）
+- `public/icons/` — 其余图标（`favicon-16x16.png`、`favicon-32x32.png`、`android-chrome-192x192.png`、`android-chrome-512x512.png`、`site.webmanifest`）
+
+全部从 `public/avatar_transparent.webp`（透明底）重新生成。更换头像后运行以下命令即可更新全套 favicon：
+
+```bash
+node scripts/regen-favicons.mjs
+```
+
+如果源文件是白底 jpg，先转透明再生成：
+
+```bash
+node scripts/jpg-to-transparent-png.mjs path/to/source.jpg public/favicon-source-transparent.png
+# 然后修改 scripts/regen-favicons.mjs 中的 SRC 指向上面这个 png，再运行
+```
 
 ### 站点配置
 
@@ -86,7 +137,7 @@ NEXT_PUBLIC_SITE_URL=https://你的域名
 | `data/skills.ts` | 技能树 |
 | `data/friendLinks.ts` | 友情链接 |
 | `data/music.ts` | 音乐播放器播放列表 |
-| `data/site.ts` | 站点级身份、SEO、字体、locale 与资源配置 |
+| `data/site.ts` | 站点级身份、SEO、字体、locale 与资源配置 | |
 
 ### 博客文章
 

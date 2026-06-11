@@ -21,7 +21,7 @@ export const webProjects: Project[] = [
     ],
     link: '#',
     liveUrl: 'https://arsvine.com',
-    imageUrl: cover('arsvine-realm-preview.png'),
+    imageUrl: cover('arsvine-realm-preview.webp'),
     galleryImages: [
       { src: post('arsvine-realm-sceenshot-1.png') },
       { src: post('arsvine-realm-sceenshot-2.png') },

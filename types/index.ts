@@ -131,10 +131,14 @@ export interface SiteFontPreconnect {
 }
 
 export interface SiteFonts {
-  /** preconnect 域名列表 */
-  preconnect: SiteFontPreconnect[];
-  /** 主样式表 href（如 Google Fonts CSS） */
-  stylesheet: string;
+  /** preconnect 列表。当前统一指向自有 CDN（cdn.arsvine.com） */
+  cdnPreconnect: SiteFontPreconnect[];
+  /** 真理之源：完整的 Google Fonts CSS URL。仅供 scripts/fetch-google-fonts.mjs
+   *  读取并抓取，浏览器不直接加载它。修改后需重跑脚本 + 重新上传 COS。 */
+  googleStylesheet: string;
+  /** 浏览器实际加载的 stylesheet href。由 scripts/fetch-google-fonts.mjs 抓取
+   *  googleStylesheet 后改写 url 生成，托管在 cdn.arsvine.com/fonts/。 */
+  cdnStylesheet: string;
 }
 
 export interface SiteLocale {
@@ -146,11 +150,32 @@ export interface SiteLocale {
   rssLanguage: string;
 }
 
+/** /friends 页底部「致谢服务」区一条目：使用了对方提供的接口/服务，不属于朋友 */
+export interface ServiceCredit {
+  /** 服务方展示名 */
+  name: string;
+  /** 一行说明文案 */
+  description: string;
+  /** 服务方主页 / 项目主页 */
+  url: string;
+  /** Logo / 头像图 URL */
+  avatar: string;
+}
+
 export interface SitePages {
   /** /content 页 SEO description（无详情视图打开时） */
   content: { description: string };
-  /** /friends 页 title / description / 顶部 heading */
-  friends: { title: string; description: string; heading: string };
+  /**
+   * /friends 页：
+   *  - heading：两列友链区标题
+   *  - services：底部"致谢服务"区，可选；缺省 / items 为空则整段不渲染
+   */
+  friends: {
+    title: string;
+    description: string;
+    heading: string;
+    services?: { heading: string; items: ServiceCredit[] };
+  };
   /** /copyright 页 title / description */
   copyright: { title: string; description: string };
 }

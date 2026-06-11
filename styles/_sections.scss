@@ -142,6 +142,9 @@
     text-align: left;
     width: 100%;
     box-sizing: border-box;
+    // 装饰性主标题（PORTFOLIO/EXPERIENCE/BLOG/LIFE/CONTACT/ABOUT），禁止鼠标选中/复制
+    user-select: none;
+    -webkit-user-select: none;
   }
 
   p {
@@ -813,7 +816,7 @@
   gap: 30px;
   position: relative;
   padding-bottom: 50px;
-  background-image: url('/h.png');
+  background-image: url('/decor/contour-map.webp');
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
@@ -2078,7 +2081,7 @@
     width: 320px;
     height: 320px;
     transform: translate(-50%, -50%);
-    background-image: url('/images/1.png'); // PORTFOLIO 标题装饰图
+    background-image: url('/decor/portfolio-title.webp'); // PORTFOLIO 标题装饰图
     background-repeat: no-repeat;
     background-position: center center;
     background-size: contain;
@@ -2104,7 +2107,7 @@
     width: 420px;
     height: 420px;
     transform: translate(-50%, -50%);
-    background-image: url('/images/2.png'); // EXPERIENCE 标题装饰图
+    background-image: url('/decor/experience-title.webp'); // EXPERIENCE 标题装饰图
     background-repeat: no-repeat;
     background-position: center center;
     background-size: contain;
@@ -2129,7 +2132,7 @@
     width: 360px;
     height: 360px;
     transform: translate(-50%, -50%);
-    background-image: url('/images/3.png'); // LIFE 标题装饰图
+    background-image: url('/decor/life-title.webp'); // LIFE 标题装饰图
     background-repeat: no-repeat;
     background-position: center center;
     background-size: contain;
@@ -2208,13 +2211,41 @@
     text-align: left;
     width: 100%;
     box-sizing: border-box;
+    // 装饰性标题，禁止鼠标选中/复制
+    user-select: none;
+    -webkit-user-select: none;
   }
 }
 
 .friendLinkGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
+  // 桌面端固定两列；移动端在下方 @media (max-width: 767px) 退化为单列。
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(12px, 2vw, 20px);
+
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// 致谢区标题：复用 .friendLinkSection h2 视觉风格，但字号略小、上间距更大，
+// 视觉上和主友链区拉开距离。
+.friendLinkServicesHeading {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 1.5vw + 0.75rem, 2.25rem);
+  font-weight: 300;
+  color: var(--ark-primary);
+  margin: clamp(40px, 5vw, 64px) 0 clamp(20px, 3vw, 40px);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--ark-border);
+  padding-bottom: 10px;
+  text-align: left;
+  width: 100%;
+  box-sizing: border-box;
+  // 装饰性标题，禁止鼠标选中/复制
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 // --- Copyright Page ---

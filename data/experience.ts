@@ -34,6 +34,11 @@ export const experienceData: ExperienceItem[] = [
     galleryImages: [
       { src: gallery('university-gallery-1.jpg') },
       { src: gallery('university-gallery-2.jpg') },
+      { src: gallery('photo-ujs-1.webp') },
+      { src: gallery('photo-ujs-2.webp') },
+      { src: gallery('photo-ujs-3.webp') },
+      { src: gallery('photo-ujs-4.webp') },
+      { src: gallery('photo-ujs-5.webp') },
     ],
   },
   {

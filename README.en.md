@@ -12,7 +12,7 @@ ARSVINE REALM is a personal portfolio and blog site built around a post-apocalyp
 - **Site name**: `ARSVINE REALM`.
 - **Author**: `Arsvine Zhu`.
 - **Technical baseline**: Next.js 16 Pages Router, React 18, TypeScript, SCSS Modules, Three.js, GSAP, MDX, and a custom Node.js server.
-- **Runtime requirement**: Node.js `22.x` (matches Vercel's default LTS; Node 20.9+ still works locally as a compatibility floor).
+- **Runtime requirement**: Node.js `24.x` (matches the Vercel Project setting; Node 20.9+ still works locally as a compatibility floor).
 - **Testing status**: no test framework and no `test` script are configured. Use `npm run lint` and `npm run build` for verification.
 
 ## Features
@@ -51,9 +51,60 @@ npm start        # Production server: cross-env NODE_ENV=production node server.
 npm run lint     # ESLint flat config: eslint .
 ```
 
+## Local Dev & COS Referer
+
+The Tencent COS bucket behind `cdn.arsvine.com` only accepts Referer values matching `arsvine.com` / `*.arsvine.com`; `localhost` and empty Referer are both rejected. To let media from `cdn.arsvine.com` load during local development, map `dev.arsvine.com` to the loopback address.
+
+Double-click [scripts/dev-host-setup.cmd](scripts/dev-host-setup.cmd) — it handles:
+
+1. UAC self-elevation to Administrator.
+2. Writing `127.0.0.1  dev.arsvine.com` to the Windows hosts file (with a daily `hosts.bak.<yyyymmdd>` backup the first time).
+3. Starting `npm run dev` (port 3000).
+4. On Ctrl+C: graceful stop of the dev server, removing the hosts entry (only if it added it), and `ipconfig /flushdns`.
+
+Manual sub-commands:
+
+```bash
+.\scripts\dev-host-setup.cmd -HostsOnly    # write hosts only, do not start dev server
+.\scripts\dev-host-setup.cmd -Remove       # clean up the dev.arsvine.com hosts entry
+```
+
+> ⚠️ The script edits `C:\Windows\System32\drivers\etc\hosts` and requires admin rights, which it obtains through the standard UAC prompt. If the window is closed via the X button instead of Ctrl+C, the hosts entry may be left behind — use `-Remove` to clean up.
+
+Open `http://dev.arsvine.com:3000` in the browser; the Referer becomes `dev.arsvine.com:3000` and COS accepts the request.
+
+## Development Scripts
+
+| Script | Purpose |
+|---|---|
+| `scripts/dev-host-setup.cmd` / `.ps1` | Local dev hosts management + dev server launcher (COS Referer compatibility). Double-click the `.cmd`. |
+| `scripts/convert-images.mjs` | Batch image format converter (webp/jpg/png/avif), output to `scripts/images/out/`. |
+| `scripts/regen-favicons.mjs` | Regenerate the full favicon set from a transparent source image. |
+| `scripts/jpg-to-transparent-png.mjs` | Alpha-unmix a white-background JPG into a true-transparency PNG. |
+
 ## Configuration and Content Maintenance
 
 The project now keeps frequently changed content in configuration and data files. Prefer editing `data/`, `content/`, `public/`, and environment variables instead of changing component logic directly.
+
+### Favicon
+
+Icon files live in two places under `public/`:
+
+- `public/favicon.ico` / `public/apple-touch-icon.png` — **kept at the root** because browsers blind-probe these paths (bookmarks, social card fallbacks, iOS "Add to Home Screen").
+- `public/icons/` — everything else (`favicon-16x16.png`, `favicon-32x32.png`, `android-chrome-192x192.png`, `android-chrome-512x512.png`, `site.webmanifest`).
+
+All generated from `public/avatar_transparent.webp` (transparent source). After replacing the avatar, regenerate the full favicon set with:
+
+```bash
+node scripts/regen-favicons.mjs
+```
+
+If the new source is a white-background JPG, convert it to transparent first:
+
+```bash
+node scripts/jpg-to-transparent-png.mjs path/to/source.jpg public/favicon-source-transparent.png
+# then point scripts/regen-favicons.mjs SRC at that PNG and re-run
+```
 
 ### Site Configuration
 

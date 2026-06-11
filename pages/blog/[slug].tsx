@@ -253,9 +253,11 @@ function BlogDetailContent({ meta, mdxSource, allPosts }: BlogPostPageProps) {
           ref={(el) => { sectionRefs.current['content'] = el; }}
           data-nav-id="content"
         >
-          <div className={`${styles.loadingIndicator} ${titleDone ? styles.hidden : ''}`}>
-            <span className={styles.loadingText}>DECODING TRANSMISSION...</span>
-          </div>
+          {!titleDone && (
+            <div className={styles.loadingIndicator}>
+              <span className={styles.loadingText}>DECODING TRANSMISSION...</span>
+            </div>
+          )}
           <div ref={contentBodyRef} className={styles.contentBody}>
             <MDXRemote {...mdxSource} components={MDXComponents} />
           </div>

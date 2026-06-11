@@ -34,7 +34,7 @@ export const gameData: LifeItem[] = [
     description: '',
     tech: ['3D RPG', 'Strategy', 'Action', 'Factory Building', 'Cross-platform'],
     link: '#',
-    imageUrl: cover('endfield-cover.png'),
+    imageUrl: cover('endfield-cover.webp'),
     articleContent: `《明日方舟：终末地》对我来说，最有吸引力的地方并不只是它继承了“明日方舟”这个名字，而是它把原本属于泰拉大陆的世界观气质，延伸到了一个更加辽阔、陌生，也更接近“开拓叙事”的空间之中。它不再只是罗德岛在移动城邦与感染者问题之间周旋，而是把视角推向塔卫二，推向终末地工业，推向一个需要被探索、建设和重新理解的边疆世界。
     
 相比《明日方舟》偏向关卡、路线与技能轴的策略塔防，《终末地》更像是另一种维度上的尝试：3D 场景、即时战斗、队伍协作、资源调度，以及带有工业建设意味的系统，共同构成了一种“在未知世界中建立秩序”的体验。它吸引我的地方，正是这种从战术判断到宏观规划的转变。玩家不只是完成一次作战，而是在一个陌生星球上不断铺设路径、组织生产、拓展据点，让文明的边界一点点向外推进。
@@ -45,7 +45,7 @@ export const gameData: LifeItem[] = [
 
 大葱小葱？我全都要！`,
     galleryImages: [
-      { src: gallery('endfield-screenshot-1.png') },
+      { src: gallery('endfield-screenshot-1.webp') },
     ],
   },
   {
@@ -60,8 +60,8 @@ export const gameData: LifeItem[] = [
 这款游戏留给我的记忆，是那些一个人走在破碎世界里的时刻，也是看到其他玩家留下的梯子、绳索、桥梁时突然感到被帮助的瞬间。《死亡搁浅》让我记住了，人与人之间的连接不一定轰轰烈烈，有时只是有人在你看不见的地方，为后来者铺了一小段路。对我来说，它重要，是因为它让我相信：即使世界已经支离破碎，人依然可以通过一次次微小的传递，重新建立联系。
 `,
     galleryImages: [
-      { src: gallery('death-stranding-screenshot-1.jpg') },
-      { src: gallery('death-stranding-screenshot-2.jpg') },
+      { src: gallery('death-stranding-screenshot-1.webp') },
+      { src: gallery('death-stranding-screenshot-2.webp') },
     ],
   },
 ];
@@ -85,6 +85,9 @@ export const travelData: LifeItem[] = [
     galleryImages: [
       { src: gallery('zhenjiang-gallery-1.jpg') },
       { src: gallery('zhenjiang-gallery-2.jpg') },
+      { src: gallery('zhenjiang-gallery-3.webp') },
+      { src: gallery('zhenjiang-gallery-4.webp') },
+      { src: gallery('zhenjiang-gallery-5.webp') },
     ],
   },
 ];
@@ -97,7 +100,7 @@ export const otherData: LifeItem[] = [
     id: 'game-dev',
     title: '游戏开发与设计',
     description: '创造自己脑海中的世界，虽然还在路上，但已经很享受这个过程了。',
-    imageUrl: cover('game-dev-cover.png'),
+    imageUrl: cover('game-dev-cover.webp'),
     tech: ['Programming', 'Design'],
     articleContent: `我的游戏开发之路，最开始并不是从“我要做出一款完整的游戏”开始的，而是从一个个脑海里的世界、角色、机制和场景开始的。我一直很喜欢那种能够把想象变成可交互体验的创作方式：不是只写下一段设定，也不是只画出一张画面，而是让玩家真正走进那个世界，感受到它的规则、氛围和情绪。
 

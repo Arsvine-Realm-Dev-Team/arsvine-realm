@@ -4,7 +4,7 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 ## Project Overview
 
-ARSVINE REALM is a personal post-apocalyptic HUD-themed portfolio + blog site built with Next.js 16 (Pages Router), TypeScript, SCSS Modules, Three.js, GSAP, and MDX. Targets Node 22.x on Vercel (Node 20.9+ also works locally).
+ARSVINE REALM is a personal post-apocalyptic HUD-themed portfolio + blog site built with Next.js 16 (Pages Router), TypeScript, SCSS Modules, Three.js, GSAP, and MDX. Targets Node 24.x on Vercel (Node 20.9+ also works locally).
 
 ## Commands
 
@@ -108,6 +108,15 @@ See `.env.example`:
 - `NEXT_PUBLIC_UMAMI_SRC` / `NEXT_PUBLIC_UMAMI_WEBSITE_ID` — optional Umami analytics script config
 - `NEXT_PUBLIC_MEDIA_CDN` — optional media CDN base URL (e.g. `https://cdn.arsvine.com`, backed by Tencent COS Hong Kong bucket `arsvine-cdn`). Consumed by `data/music.ts`; when unset the music player serves files from `/public/music/` instead.
 - `STATS_FILE` — optional server-side stats persistence file path
+
+## Development Scripts
+
+| Script | Purpose |
+|---|---|
+| `scripts/dev-host-setup.cmd` (.ps1) | Double-click entry to manage Windows hosts + start dev server for COS Referer compatibility. Self-elevates via UAC. |
+| `scripts/convert-images.mjs` | Batch image conversion (webp/jpg/png/avif), output to `scripts/images/out/`. |
+| `scripts/regen-favicons.mjs` | Regenerate the full favicon set from a transparent-source image. |
+| `scripts/jpg-to-transparent-png.mjs` | Alpha-unmix a white-background JPG to a true-transparency PNG. |
 
 ## Key Conventions
 

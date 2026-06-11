@@ -9,6 +9,10 @@ const remotePatterns = require('./config/image-hosts');
 const nextConfig = {
   distDir: process.env.NEXT_BUILD_DIR || '.next',
   reactStrictMode: true,
+  // Allow accessing the dev server via the local hosts alias (scripts/dev-host-setup).
+  // COS bucket cdn.arsvine.com only accepts Referer matching *.arsvine.com, so we
+  // browse dev via dev.arsvine.com:3000 instead of localhost during development.
+  allowedDevOrigins: ['dev.arsvine.com'],
   images: {
     remotePatterns,
   },

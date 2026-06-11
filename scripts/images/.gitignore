@@ -1,0 +1,11 @@
+# Ignore all image files (sources and conversion outputs) in this work dir.
+# README.md / .gitignore stay tracked because they don't match these globs.
+out/
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.avif
+*.gif
+*.tif
+*.tiff
