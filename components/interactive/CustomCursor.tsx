@@ -6,6 +6,27 @@ const MAGNETIC_DISTANCE = 120;
 const MAGNETIC_STRENGTH = 0.4;
 const SELECTOR = 'a, button, .btn, [role="button"], [data-cursor-magnetic]';
 
+const isCursorInteractive = (el: HTMLElement | null) => {
+  if (!el || !el.isConnected) return false;
+  const rect = el.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return false;
+
+  let current: HTMLElement | null = el;
+  while (current) {
+    const style = window.getComputedStyle(current);
+    if (
+      style.display === 'none' ||
+      style.visibility === 'hidden' ||
+      parseFloat(style.opacity || '1') === 0
+    ) {
+      return false;
+    }
+    current = current.parentElement;
+  }
+
+  return true;
+};
+
 const CustomCursor = () => {
   const hLineRef = useRef<HTMLDivElement>(null);
   const vLineRef = useRef<HTMLDivElement>(null);
@@ -103,6 +124,7 @@ const CustomCursor = () => {
       elements.forEach((el) => {
         const htmlEl = el as HTMLElement;
         if (htmlEl.closest('[data-cursor-no-magnetic]') && !htmlEl.hasAttribute('data-cursor-magnetic')) return;
+        if (!isCursorInteractive(htmlEl)) return;
         const rect = el.getBoundingClientRect();
         const cx = rect.left + rect.width / 2;
         const cy = rect.top + rect.height / 2;
@@ -130,6 +152,7 @@ const CustomCursor = () => {
   useEffect(() => {
     const handleEnter = (e: Event) => {
       const el = e.currentTarget as HTMLElement;
+      if (!isCursorInteractive(el)) return;
       const rect = el.getBoundingClientRect();
       hoverEl.current = el;
       isHovering.current = true;

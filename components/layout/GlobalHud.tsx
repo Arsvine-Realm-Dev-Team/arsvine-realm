@@ -2,6 +2,7 @@ import { memo, useEffect, useRef } from 'react';
 import styles from '../../styles/Home.module.scss';
 import { useResponsive } from '../../hooks/useMediaQuery';
 import { siteConfig } from '../../data/site';
+import LanguageSwitcher from '../shared/LanguageSwitcher';
 
 function GlobalHud({ currentTime, hudVisible, isGamePage = false }) {
   const { isMobile } = useResponsive();
@@ -22,8 +23,13 @@ function GlobalHud({ currentTime, hudVisible, isGamePage = false }) {
     return (
       <>
         <div className={`${styles.hudElement} ${styles.topLeft} ${hudVisible ? styles.visible : ''}`}>
-          <div>TIME: {currentTime}</div>
-          <div>SYSTEM_ONLINE</div>
+          <div className={styles.hudTopLeftContent}>
+            <div className={styles.hudStatusBlock}>
+              <div>TIME: {currentTime}</div>
+              <div>SYSTEM_ONLINE</div>
+            </div>
+            <LanguageSwitcher />
+          </div>
         </div>
         <div className={`${styles.hudElement} ${styles.topRight} ${hudVisible ? styles.visible : ''}`}>
           <div>NEURAL_NETWORK_ACTIVE</div>
@@ -39,8 +45,13 @@ function GlobalHud({ currentTime, hudVisible, isGamePage = false }) {
   return (
     <>
       <div className={`${styles.hudElement} ${styles.topLeft} ${hudVisible ? styles.visible : ''}`}>
-        <div>TIME: {currentTime}</div>
-        <div>SYSTEM_ONLINE</div>
+        <div className={styles.hudTopLeftContent}>
+          <div className={styles.hudStatusBlock}>
+            <div>TIME: {currentTime}</div>
+            <div>SYSTEM_ONLINE</div>
+          </div>
+          <LanguageSwitcher />
+        </div>
       </div>
       <div className={`${styles.hudElement} ${styles.topRight} ${hudVisible ? styles.visible : ''}`}>
         <div>CURSOR_X: <span ref={cursorXRef}>0000</span></div>

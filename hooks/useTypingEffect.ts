@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import type { FateTypingState, EnvParamsTypingState, EnvData } from '../types';
-import { siteConfig } from '../data/site';
 
 /**
  * Fate text typing effect — 节奏：
@@ -15,21 +15,86 @@ import { siteConfig } from '../data/site';
  */
 const HITOKOTO_PER_CYCLE = 1;
 const HITOKOTO_PAUSE_AFTER_TYPE = 4000; // ms，比预设的 1500 长，给短句更长停留
+const FATE_WRAP_MIN_UNITS = 18;
+const FATE_BREAK_PUNCTUATION = /[,.!?;:，。！？；：、]/;
+const ALPHABETIC_CHAR_RE = /[A-Za-z\u0400-\u04FF]/;
+const CJK_CHAR_RE = /[\u3400-\u9FFF\uF900-\uFAFF]/;
+
+const ALPHABETIC_TYPING_DELAY = 48;
+const ALPHABETIC_DELETE_DELAY = 32;
+const ALPHABETIC_PAUSE_AFTER_TYPE = 2600;
+
+const CJK_TYPING_DELAY = 150;
+const CJK_DELETE_DELAY = 100;
+const CJK_PAUSE_AFTER_TYPE = 1500;
+
+function getTypingUnitWeight(char: string): number {
+  return /[A-Za-z0-9]/.test(char) ? 1 : 2;
+}
+
+function formatFateTextForWrap(text: string): string {
+  let formatted = '';
+  let lineUnits = 0;
+
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i];
+    formatted += char;
+
+    if (char === '\n') {
+      lineUnits = 0;
+      continue;
+    }
+
+    lineUnits += getTypingUnitWeight(char);
+
+    if (!FATE_BREAK_PUNCTUATION.test(char) || lineUnits < FATE_WRAP_MIN_UNITS) {
+      continue;
+    }
+
+    let nextIndex = i + 1;
+    while (nextIndex < text.length && text[nextIndex] === ' ') {
+      nextIndex += 1;
+    }
+
+    if (nextIndex < text.length) {
+      formatted += '\n';
+      lineUnits = 0;
+      i = nextIndex - 1;
+    }
+  }
+
+  return formatted;
+}
+
+function getTypingProfile(text: string) {
+  const hasAlphabetic = ALPHABETIC_CHAR_RE.test(text);
+  const hasCjk = CJK_CHAR_RE.test(text);
+
+  if (hasAlphabetic && !hasCjk) {
+    return {
+      typingDelay: ALPHABETIC_TYPING_DELAY,
+      deleteDelay: ALPHABETIC_DELETE_DELAY,
+      pauseAfterType: ALPHABETIC_PAUSE_AFTER_TYPE,
+    };
+  }
+
+  return {
+    typingDelay: CJK_TYPING_DELAY,
+    deleteDelay: CJK_DELETE_DELAY,
+    pauseAfterType: CJK_PAUSE_AFTER_TYPE,
+  };
+}
 
 export function useFateTypingEffect(textVisible: boolean): FateTypingState {
+  const tSite = useTranslations('pages.site');
   const [displayedFateText, setDisplayedFateText] = useState('');
   const [isFateTypingActive, setIsFateTypingActive] = useState(false);
 
   useEffect(() => {
     if (!textVisible) return;
 
-    const englishText = siteConfig.tagline.en;
-    const chineseText = siteConfig.tagline.zh;
-    const typingDelay = 80;
-    const deleteDelay = 50;
-    const chineseTypingDelay = 150;
-    const chineseDeleteDelay = 100;
-    const pauseAfterType = 1500;
+    const englishText = formatFateTextForWrap(tSite('taglinePrimary'));
+    const chineseText = formatFateTextForWrap(tSite('taglineSecondary'));
     const pauseAfterDelete = 500;
 
     let timeouts: ReturnType<typeof setTimeout>[] = [];
@@ -67,20 +132,23 @@ export function useFateTypingEffect(textVisible: boolean): FateTypingState {
 
     // 一轮预设：en (英文节奏) → zh (中文节奏)
     const presetCycle = (onDone: () => void) => {
-      typeString(englishText, 0, typingDelay, () => {
+      const primaryProfile = getTypingProfile(englishText);
+      const secondaryProfile = getTypingProfile(chineseText);
+
+      typeString(englishText, 0, primaryProfile.typingDelay, () => {
         schedule(() => {
-          deleteString(englishText, deleteDelay, () => {
+          deleteString(englishText, primaryProfile.deleteDelay, () => {
             schedule(() => {
-              typeString(chineseText, 0, chineseTypingDelay, () => {
+              typeString(chineseText, 0, secondaryProfile.typingDelay, () => {
                 schedule(() => {
-                  deleteString(chineseText, chineseDeleteDelay, () => {
+                  deleteString(chineseText, secondaryProfile.deleteDelay, () => {
                     schedule(onDone, pauseAfterDelete);
                   });
-                }, pauseAfterType);
+                }, secondaryProfile.pauseAfterType);
               });
             }, pauseAfterDelete);
           });
-        }, pauseAfterType);
+        }, primaryProfile.pauseAfterType);
       });
     };
 
@@ -98,9 +166,11 @@ export function useFateTypingEffect(textVisible: boolean): FateTypingState {
         })
         .then((text) => {
           if (cancelled) return;
-          typeString(text, 0, chineseTypingDelay, () => {
+          const wrappedText = formatFateTextForWrap(text);
+          const textProfile = getTypingProfile(wrappedText);
+          typeString(wrappedText, 0, textProfile.typingDelay, () => {
             schedule(() => {
-              deleteString(text, chineseDeleteDelay, () => {
+              deleteString(wrappedText, textProfile.deleteDelay, () => {
                 schedule(onDone, pauseAfterDelete);
               });
             }, HITOKOTO_PAUSE_AFTER_TYPE);
@@ -155,7 +225,7 @@ export function useFateTypingEffect(textVisible: boolean): FateTypingState {
       setDisplayedFateText('');
       setIsFateTypingActive(false);
     };
-  }, [textVisible]);
+  }, [textVisible, tSite]);
 
   return { displayedFateText, isFateTypingActive };
 }

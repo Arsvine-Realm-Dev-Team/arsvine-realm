@@ -1,0 +1,115 @@
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px 8px 16px;
+  border: 1px solid rgba(255, 200, 100, 0.45);
+  background: rgba(18, 18, 18, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: rgba(255, 220, 160, 0.9);
+  font-family: 'Dosis', 'Noto Sans SC', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  position: fixed;
+  top: clamp(52px, 8vh, 84px);
+  right: clamp(16px, 2vw, 28px);
+  margin: 0;
+  max-width: min(420px, calc(100vw - 32px));
+  border-radius: 2px;
+  user-select: none;
+  z-index: 120;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+  pointer-events: auto;
+  animation: fallbackBannerIn 0.45s cubic-bezier(0.25, 0.8, 0.25, 1);
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.24s ease, transform 0.24s ease;
+}
+
+// fallback —— 缺译，使用现有的暖琥珀色警示风格（保留默认色作兜底）
+.fallback {
+  border-color: rgba(255, 200, 100, 0.45);
+  color: rgba(255, 220, 160, 0.9);
+}
+
+// translated —— 已翻译，使用更温和的冷色 / 信息色，降低存在感
+.translated {
+  border-color: rgba(150, 200, 230, 0.35);
+  color: rgba(200, 220, 240, 0.78);
+}
+
+.bannerIcon {
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.bannerText {
+  flex: 1;
+}
+
+.closeButton {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border: 1px solid rgba(255, 220, 160, 0.18);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.72;
+  transition: opacity 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+
+  &:hover {
+    opacity: 1;
+    border-color: rgba(255, 220, 160, 0.45);
+    background: rgba(255, 220, 160, 0.08);
+  }
+}
+
+.closing {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+@keyframes fallbackBannerIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 767px) {
+  .banner {
+    top: 56px;
+    left: 50%;
+    right: auto;
+    width: min(calc(100vw - 24px), 420px);
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .closing {
+    transform: translateX(-50%) translateY(-10px);
+  }
+
+  @keyframes fallbackBannerIn {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+}

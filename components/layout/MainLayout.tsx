@@ -1,11 +1,13 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
+import { useTranslations } from 'next-intl';
 
 import styles from '../../styles/Home.module.scss';
 import { useApp } from '../../contexts/AppContext';
 import { useTransition } from '../../contexts/TransitionContext';
 import { useResponsive } from '../../hooks/useMediaQuery';
+import { defaultLocale, isLocale } from '../../i18n/config';
 
 import HomeLoadingScreen from '../shared/HomeLoadingScreen';
 import MusicPlayer from '../interactive/MusicPlayer';
@@ -36,6 +38,7 @@ const CustomCursor = dynamic(
 
 export default function MainLayout({ children }) {
   const router = useRouter();
+  const tNav = useTranslations('mainNav');
   const { navigateTo, handleBack, isDetailOpen } = useTransition();
   const { isMobile, isDesktop } = useResponsive();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -50,9 +53,18 @@ export default function MainLayout({ children }) {
     deactivateTesseract,
   } = app;
 
-  const isHome = router.pathname === '/';
-  const isContentPage = router.pathname === '/content';
-  const isStandalone = router.pathname === '/game' || router.pathname.startsWith('/game/') || router.pathname.startsWith('/web/') || router.pathname.startsWith('/life/') || router.pathname.startsWith('/blog/');
+  const isHome = router.pathname === '/[locale]';
+  const isContentPage = router.pathname === '/[locale]/content';
+  const isStandalone =
+    router.pathname === '/[locale]/game' ||
+    router.pathname.startsWith('/[locale]/game/') ||
+    router.pathname.startsWith('/[locale]/web/') ||
+    router.pathname.startsWith('/[locale]/life/') ||
+    router.pathname.startsWith('/[locale]/blog/');
+
+  // 当前 URL 的 locale，所有内部跳转都要带上前缀
+  const queryLocale = router.query.locale;
+  const locale = isLocale(queryLocale) ? queryLocale : defaultLocale;
 
   const prevStandaloneRef = useRef(isStandalone);
   const [localPanelAnimated, setLocalPanelAnimated] = useState(leftPanelAnimated);
@@ -110,7 +122,7 @@ export default function MainLayout({ children }) {
     if (!isDesktop && isTesseractActivated) {
       const interval = setInterval(() => {
         chargeBatteryRef.current();
-      }, 400);
+      }, 200);
       return () => clearInterval(interval);
     }
   }, [isDesktop, isTesseractActivated]);
@@ -138,12 +150,12 @@ export default function MainLayout({ children }) {
   }, []);
 
   const navLinks = [
-    { label: 'Portfolio', hash: 'works' },
-    { label: 'Experience', hash: 'experience' },
-    { label: 'Blog', hash: 'blog' },
-    { label: 'Life', hash: 'life' },
-    { label: 'Contact', hash: 'contact' },
-    { label: 'About', hash: 'about' },
+    { label: tNav('works'), hash: 'works' },
+    { label: tNav('experience'), hash: 'experience' },
+    { label: tNav('blog'), hash: 'blog' },
+    { label: tNav('life'), hash: 'life' },
+    { label: tNav('contact'), hash: 'contact' },
+    { label: tNav('about'), hash: 'about' },
   ];
 
   const handleLeftNavLinkClick = (link: { label: string; hash: string }) => {
@@ -165,14 +177,14 @@ export default function MainLayout({ children }) {
         }
       }
     } else {
-      navigateTo(`/content#${link.hash}`);
+      navigateTo(`/${locale}/content#${link.hash}`);
     }
   };
 
   const handleFriendsClick = useCallback(() => {
     closeDrawer();
-    navigateTo('/friends');
-  }, [navigateTo, closeDrawer]);
+    navigateTo(`/${locale}/friends`);
+  }, [navigateTo, closeDrawer, locale]);
 
   return (
     <div className={`${styles.container} ${isInverted ? styles.inverted : ''}`}>
@@ -215,7 +227,7 @@ export default function MainLayout({ children }) {
 
       {mainVisible && (
         <>
-          <GlobalHud currentTime={currentTime} hudVisible={hudVisible || isStandalone} isGamePage={router.pathname === '/game'} />
+          <GlobalHud currentTime={currentTime} hudVisible={hudVisible || isStandalone} isGamePage={router.pathname === '/[locale]/game'} />
           <LeftPanel
             leftPanelAnimated={localPanelAnimated}
             mainVisible={mainVisible}
@@ -260,7 +272,7 @@ export default function MainLayout({ children }) {
           </button>
           <button
             className={`${styles.bottomBarBtn} ${isHome ? styles.bottomBarCurrent : ''}`}
-            onClick={() => { if (!isHome) navigateTo('/'); }}
+            onClick={() => { if (!isHome) navigateTo(`/${locale}`); }}
           >
             <span className={styles.bottomBarIcon}>⬡</span>
             <span className={styles.bottomBarIndicator} />

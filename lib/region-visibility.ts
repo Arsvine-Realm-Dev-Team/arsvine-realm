@@ -1,0 +1,50 @@
+/**
+ * 基于访客所在地的 UI 可见性策略。
+ *
+ * 仅供 UI 微调使用（隐藏访客所在地访问不到的外链图标），
+ * 不参与权限/安全决策；未知 country 一律按"显示"处理。
+ *
+ * 数据流：
+ *   1. proxy.ts 读 Vercel geolocation → 写 GEO_COUNTRY cookie + x-geo-country header
+ *   2. _document.tsx SSR 读取上述任一来源 → `<html data-country data-x-blocked data-bilibili-blocked>`
+ *   3. globals.scss 用 `html[data-x-blocked] [data-hide-when-x-blocked]` 等规则直接隐藏
+ *   4. useVisitorCountry hook 仅在客户端需要按 country 做更复杂判断时使用
+ */
+
+/**
+ * 完全屏蔽 X（Twitter）的国家/地区集合。
+ * 注意：HK / MO / TW 没有屏蔽，能正常访问 x.com。
+ *
+ * - CN：大陆全境屏蔽 x.com
+ * - IR：伊朗，国家防火墙屏蔽
+ * - KP：朝鲜，几乎所有外网均屏蔽
+ * - TM：土库曼，国家防火墙屏蔽
+ */
+export const HIDE_X_COUNTRIES: ReadonlySet<string> = new Set(['CN', 'IR', 'KP', 'TM']);
+
+/**
+ * 能正常访问 Bilibili 的"大中华"地区集合。
+ * 这之外的地区 B 站会有：
+ *   - 视频版权区域限制（最常见）
+ *   - 部分海外 IP 段限流 / 503
+ *   - 注册流程需大陆手机号
+ * 综合体验差，外链图标对海外访客几乎没意义。
+ *
+ * 不放进集合则视为"被屏蔽"，但 country 未知（null/空）仍按显示处理 —— 见 isBilibiliBlockedRegion。
+ */
+export const BILIBILI_FRIENDLY_COUNTRIES: ReadonlySet<string> = new Set(['CN', 'HK', 'MO', 'TW']);
+
+export function isXBlockedRegion(country: string | null | undefined): boolean {
+  if (!country) return false;
+  return HIDE_X_COUNTRIES.has(country.toUpperCase());
+}
+
+/**
+ * country 已知 且 不在 BILIBILI_FRIENDLY_COUNTRIES 时返回 true。
+ * 未知 country 返回 false（默认显示），保持与 X 策略一致的"未知即开放"原则。
+ */
+export function isBilibiliBlockedRegion(country: string | null | undefined): boolean {
+  if (!country) return false;
+  return !BILIBILI_FRIENDLY_COUNTRIES.has(country.toUpperCase());
+}
+

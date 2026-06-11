@@ -105,6 +105,10 @@
   transition: color 0.3s ease;
   flex-shrink: 1;
   min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .cardPinnedBadge {
@@ -117,7 +121,6 @@
   background-color: rgba(var(--ark-primary-rgb), 0.08);
   border: 1px solid rgba(var(--ark-primary-rgb), 0.35);
   padding: 1px 6px;
-  margin-right: 10px;
   vertical-align: 0.12em;
   line-height: 1.2;
   text-transform: uppercase;

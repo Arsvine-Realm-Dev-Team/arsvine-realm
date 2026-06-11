@@ -1,0 +1,128 @@
+{
+  "common": {
+    "backToTop": "返回顶部",
+    "back": "返回",
+    "next": "下一篇",
+    "previous": "上一篇",
+    "visit": "访问",
+    "sourceCode": "源代码",
+    "watch": "观看",
+    "copied": "已复制！",
+    "loading": "加载中…",
+    "decoding": "正在解码传输…",
+    "signalFragment": "// 信号片段",
+    "endTransmission": "— 传输结束 —",
+    "returnToIndex": "返回索引",
+    "returnToMain": "返回主页",
+    "imageNotAvailable": "图片不可用"
+  },
+  "nav": {
+    "top": "顶部",
+    "content": "正文",
+    "end": "末尾",
+    "meta": "元数据",
+    "brief": "概要",
+    "story": "故事",
+    "archive": "档案",
+    "signal": "信号"
+  },
+  "sections": {
+    "works": {
+      "tabWeb": "Web",
+      "tabGame": "Game",
+      "earlyWorks": "早期学习",
+      "skillsProficiency": "技能熟练度",
+      "inspectHint": "悬停查看"
+    },
+    "experience": {},
+    "blog": {
+      "heading": "Blog",
+      "pinned": "PINNED"
+    },
+    "life": {
+      "tabGame": "Game",
+      "tabTravel": "Travel",
+      "tabArt": "Art",
+      "tabOther": "Other",
+      "alsoPlayThese": "还有这些也玩"
+    },
+    "contact": {
+      "links": "友链",
+      "copied": "已复制！",
+      "rss": "RSS"
+    },
+    "about": {
+      "systemUptime": "系统在线时间",
+      "totalVisits": "总访问数量",
+      "onlineNow": "当前在线",
+      "codeLicense": "代码遵循 MIT 协议。",
+      "contentLicense": "除特别声明外，所有内容遵循 CC BY-NC-ND 4.0 协议。",
+      "details": "详情 →"
+    }
+  },
+  "mainNav": {
+    "works": "作品集",
+    "experience": "经历",
+    "blog": "博客",
+    "life": "生活",
+    "contact": "联系",
+    "about": "关于"
+  },
+  "detail": {
+    "gallery": "Gallery",
+    "tagsLabel": "Tags:",
+    "projectMeta": "// PROJECT_META",
+    "projectBrief": "// PROJECT_BRIEF",
+    "storyLog": "// STORY_LOG",
+    "archive": "// ARCHIVE",
+    "signalOutput": "// SIGNAL_OUTPUT",
+    "year": "YEAR",
+    "role": "ROLE",
+    "status": "STATUS",
+    "keyHighlights": "KEY HIGHLIGHTS",
+    "confidential": "CONFIDENTIAL"
+  },
+  "fallbackBanner": {
+    "message": "本页暂未提供 {locale} 译本，正在以简体中文显示。"
+  },
+  "pages": {
+    "site": {
+      "title": "ARSVINE REALM",
+      "description": "个人作品集与博客 — 探索技术、创作与生活的领域。",
+      "rssDescription": "个人博客 — 探索技术、创作与生活的领域。",
+      "loadingSubtitle": "我们的命运于此刻交织",
+      "taglinePrimary": "Я бы хотела жить с Вами в маленьком городе, Где вечные сумерки и вечные колокола.",
+      "taglineSecondary": "我想和你一起生活，在小城，那里有永恒的黄昏和永恒的钟声。"
+    },
+    "content": {
+      "description": "Portfolio — Explore"
+    },
+    "friends": {
+      "title": "FRIENDS",
+      "description": "Friends — Signal from fellow travelers",
+      "heading": "Friend Links",
+      "servicesHeading": "Acknowledgements"
+    },
+    "copyright": {
+      "title": "COPYRIGHT",
+      "description": "Copyright & License — Source code and content licensing terms",
+      "heading": "Copyright & License",
+      "headingZh": "版权与许可",
+      "intro": "除特别声明外，本站源代码采用 {mitLink} 许可。",
+      "contentLicense": "除特别声明外，本站原创内容，包括但不限于文章、图片、笔记、设计作品、架空设定及其他创作内容，采用 {ccLink} 许可协议发布。",
+      "shareIntro": "您可以在遵守以下条件的前提下，以任何媒介或格式分享、转载本站原创内容：",
+      "shareItems": [
+        "保留作者署名：{author}；",
+        "保留原文链接；",
+        "仅用于非商业目的；",
+        "以原始、未修改的形式分享；",
+        "不得添加额外限制，阻止他人行使本许可协议允许的权利。"
+      ],
+      "prohibited": "未经作者明确许可，您不得将本站原创内容用于商业用途、商业推广、付费出版、付费墙内容、数据集收录、模型训练、翻译、改编、混剪、重写、摘编式再发布，或以其他形式发布修改后、演绎后、重组后的作品。",
+      "quotation": "出于评论、研究、教育或参考目的的合理引用是允许的，但应保留作者署名与原文链接，且不得歪曲、割裂或误导性呈现原文语境与含义。",
+      "thirdParty": "非本站作者创作的内容，例如第三方图片、引用材料、商标、游戏素材或外部媒体，仍归其原权利人所有，并受其各自许可协议或权利声明约束。",
+      "contactPrefix": "如需商业使用、翻译、改编、归档、数据集收录、模型训练或其他特殊用途，请提前联系作者获得授权：",
+      "bindingNotice": ""
+    }
+  }
+}

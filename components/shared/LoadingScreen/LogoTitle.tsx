@@ -1,4 +1,5 @@
 import React, { forwardRef, useRef, useImperativeHandle } from 'react';
+import { useTranslations } from 'next-intl';
 import styles from '../../../styles/HomeLoadingScreen.module.scss';
 import gsap from 'gsap';
 import { siteConfig } from '../../../data/site';
@@ -10,6 +11,7 @@ export interface LogoTitleRef {
 }
 
 const LogoTitle = forwardRef<LogoTitleRef>((_, ref) => {
+  const tSite = useTranslations('pages.site');
   const logoAreaRef = useRef<HTMLDivElement>(null);
   const mainTitleRef = useRef<HTMLHeadingElement>(null);
 
@@ -58,7 +60,7 @@ const LogoTitle = forwardRef<LogoTitleRef>((_, ref) => {
             </span>
           ))}
         </h1>
-        <div className={styles.logo_subtitle} style={{ opacity: 0, visibility: 'hidden' }}>OUR DESTINIES ENTWINE AT THIS MOMENT</div>
+        <div className={styles.logo_subtitle} style={{ opacity: 0, visibility: 'hidden' }}>{tSite('loadingSubtitle')}</div>
       </div>
     </div>
   );

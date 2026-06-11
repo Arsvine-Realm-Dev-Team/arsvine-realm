@@ -1,7 +1,10 @@
-import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useTranslations } from 'next-intl';
 import styles from '../../styles/Home.module.scss';
 import Noise from '../effects/Noise';
 import { siteConfig } from '../../data/site';
+import { defaultLocale, isLocale } from '../../i18n/config';
+import { useTransition } from '../../contexts/TransitionContext';
 
 export default function AboutSection({
   aboutSectionRef,
@@ -10,6 +13,11 @@ export default function AboutSection({
   totalVisits,
   currentVisitors,
 }) {
+  const t = useTranslations('sections.about');
+  const router = useRouter();
+  const { navigateTo } = useTransition();
+  const queryLocale = router.query.locale;
+  const locale = isLocale(queryLocale) ? queryLocale : defaultLocale;
   const currentYear = new Date().getFullYear();
   const yearRange =
     currentYear > siteConfig.copyrightYearStart
@@ -21,14 +29,24 @@ export default function AboutSection({
       <div ref={aboutContentRef} className={styles.aboutContentInner}>
         <h2>ABOUT</h2>
         <div className={styles.siteStatsContainer}>
-          <p>System Uptime: {runtime}</p>
-          <p>Total Visits: {totalVisits}</p>
-          <p>Online Now: {currentVisitors}</p>
+          <p>{t('systemUptime')}: {runtime}</p>
+          <p>{t('totalVisits')}: {totalVisits}</p>
+          <p>{t('onlineNow')}: {currentVisitors}</p>
         </div>
         <div className={styles.footerInfo}>
-          <p>Code licensed under MIT.</p>
-          <p>Content licensed under CC BY-NC-ND 4.0 unless otherwise stated.</p>
-          <p><Link href="/copyright">Details →</Link></p>
+          <p>{t('codeLicense')}</p>
+          <p>{t('contentLicense')}</p>
+          <p>
+            <a
+              href={`/${locale}/copyright`}
+              onClick={(e) => {
+                e.preventDefault();
+                navigateTo(`/${locale}/copyright`);
+              }}
+            >
+              {t('details')}
+            </a>
+          </p>
           <p>© {yearRange} {siteConfig.author}.</p>
         </div>
 

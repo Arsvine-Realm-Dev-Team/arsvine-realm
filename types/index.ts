@@ -2,11 +2,28 @@
 // Data Types
 // ============================================================
 
+import type { Locale } from '../i18n/config';
+
+/**
+ * 单条内容相对当前请求 locale 的翻译状态：
+ *   - 'source':     当前 locale === 内容原文 locale（无需提示）
+ *   - 'translated': 当前 locale 有该内容的翻译版本（不再提示）
+ *   - 'fallback':   当前 locale 缺译，已退回原文/默认 locale（顶部 banner 提示）
+ */
+export type TranslationStatus = 'source' | 'translated' | 'fallback';
+
 export interface GalleryImage {
   src: string;
   caption?: string;
   isMobile?: boolean;
   invertedSrc?: string;
+}
+
+export interface CopyableToken {
+  /** 要匹配的字符串（按完整字面量匹配，特殊字符会自动正则转义） */
+  pattern: string;
+  /** 鼠标悬浮提示，可选 */
+  label?: string;
 }
 
 export interface Project {
@@ -28,6 +45,9 @@ export interface Project {
   isConfidential?: boolean;
   noHero?: boolean;
   invertedImageUrl?: string;
+  /** 内容原文所用 locale；缺省视为 defaultLocale（zh-CN）。
+   *  用于在详情页区分「已翻译」与「源语言原文」。 */
+  originLocale?: Locale;
 }
 
 export interface LifeItemLink {
@@ -46,6 +66,8 @@ export interface LifeItem {
   galleryImages: GalleryImage[];
   articleContent?: string;
   links?: LifeItemLink[];
+  /** 内容原文所用 locale；缺省视为 defaultLocale（zh-CN）。 */
+  originLocale?: Locale;
 }
 
 export interface ExperienceItem {
@@ -75,6 +97,9 @@ export interface BlogPostMeta {
   readingTime: string;
   /** 置顶到博客列表最前；feed/sitemap 仍按日期排序 */
   pinned?: boolean;
+  /** 内容原文所用 locale；缺省视为 defaultLocale（zh-CN）。
+   *  从 MDX frontmatter 的 `originLocale` 字段读取（如未声明就用默认）。 */
+  originLocale?: Locale;
 }
 
 export interface FriendLink {

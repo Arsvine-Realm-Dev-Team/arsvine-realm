@@ -189,6 +189,10 @@
   transition: opacity 0.8s ease, transform 0.8s ease;
   pointer-events: none;
 
+  > * {
+    pointer-events: auto;
+  }
+
   // 平板端缩小HUD
   @media (max-width: 1023px) {
     font-size: var(--fs-xs);
@@ -334,6 +338,10 @@
   letter-spacing: 0.5px;
   margin-bottom: 4px; // Space between text and line
   text-align: right;
+  white-space: pre-wrap;
+  display: inline-block;
+  max-width: 270px;
+  line-height: 1.5;
   position: relative; // --- 新增: 相对定位用于光标 ---
   transition: color 0.5s ease-in-out; // ADDED transition
 }
@@ -1452,5 +1460,23 @@
     .leftPanel {
       background-color: rgba(240, 240, 240, 0.97);
     }
+  }
+}
+
+.hudTopLeftContent {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.hudStatusBlock {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 767px) {
+  .hudTopLeftContent {
+    align-items: center;
+    gap: 10px;
   }
 }

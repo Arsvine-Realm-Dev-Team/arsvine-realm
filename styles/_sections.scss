@@ -2251,6 +2251,33 @@
 // --- Copyright Page ---
 .copyrightSection {
   max-width: 880px;
+
+  h2,
+  .copyrightArticle,
+  .copyrightStamp {
+    opacity: 0;
+    transform: translateY(18px);
+    will-change: opacity, transform;
+    transition: opacity 0.65s cubic-bezier(0.25, 0.8, 0.25, 1),
+      transform 0.65s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  .copyrightArticle {
+    transition-delay: 0.08s;
+  }
+
+  .copyrightStamp {
+    transition-delay: 0.16s;
+  }
+}
+
+.copyrightEntered {
+  h2,
+  .copyrightArticle,
+  .copyrightStamp {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .copyrightArticle {
@@ -2306,6 +2333,13 @@
   border: none;
   border-top: 1px dashed var(--ark-border);
   margin: clamp(28px, 4vw, 48px) 0;
+}
+
+.copyrightBindingDivider {
+  width: 100%;
+  border: none;
+  border-top: 1px dashed rgba(var(--ark-border-rgb), 0.75);
+  margin: 0 0 clamp(16px, 2vw, 24px);
 }
 
 .copyrightStamp {

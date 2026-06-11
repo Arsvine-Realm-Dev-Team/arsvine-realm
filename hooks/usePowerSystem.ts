@@ -1,14 +1,34 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import type { PowerSystemState } from '../types';
+
+const CHARGE_STEP = 8;
+const DISCHARGE_STEP = 1;
+const DISCHARGE_INTERVAL_MS = 50;
 
 export default function usePowerSystem(mainVisible: boolean): PowerSystemState {
   const [powerLevel, setPowerLevel] = useState(67);
   const [isTesseractActivated, setIsTesseractActivated] = useState(false);
   const [isDischarging, setIsDischarging] = useState(false);
-  const dischargeIntervalRef = useRef(null);
+  const dischargeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isDischargingRef = useRef(false);
 
   // Inverted mode is purely derived from power state — no separate state needed.
   const isInverted = powerLevel === 100 && !isDischarging;
+
+  useEffect(() => {
+    isDischargingRef.current = isDischarging;
+  }, [isDischarging]);
+
+  const stopDischarge = useCallback(() => {
+    if (dischargeIntervalRef.current) {
+      clearInterval(dischargeIntervalRef.current);
+      dischargeIntervalRef.current = null;
+    }
+    if (isDischargingRef.current) {
+      isDischargingRef.current = false;
+      setIsDischarging(false);
+    }
+  }, []);
 
   // Natural power consumption
   useEffect(() => {
@@ -28,20 +48,24 @@ export default function usePowerSystem(mainVisible: boolean): PowerSystemState {
   }, [mainVisible, isDischarging]);
 
   // Charge battery (called by Tesseract interaction)
-  const chargeBattery = () => {
+  const chargeBattery = useCallback(() => {
+    if (isDischargingRef.current) {
+      stopDischarge();
+    }
     setPowerLevel(prevLevel => {
       if (prevLevel >= 100) return 100;
-      const newLevel = Math.min(100, prevLevel + 5);
+      const newLevel = Math.min(100, prevLevel + CHARGE_STEP);
       return newLevel;
     });
-  };
+  }, [stopDischarge]);
 
   // Discharge lever pull handler
-  const handleDischargeLeverPull = () => {
+  const handleDischargeLeverPull = useCallback(() => {
     if (powerLevel === 100 && !isDischarging) {
+      setIsTesseractActivated(false);
       setIsDischarging(true);
     }
-  };
+  }, [isDischarging, powerLevel]);
 
   // Discharge process
   useEffect(() => {
@@ -51,16 +75,13 @@ export default function usePowerSystem(mainVisible: boolean): PowerSystemState {
       }
       dischargeIntervalRef.current = setInterval(() => {
         setPowerLevel(prevLevel => {
-          if (prevLevel > 0) {
-            return Math.max(0, prevLevel - 1);
-          } else {
-            clearInterval(dischargeIntervalRef.current);
-            dischargeIntervalRef.current = null;
-            setIsDischarging(false);
-            return 0;
+          const nextLevel = Math.max(0, prevLevel - DISCHARGE_STEP);
+          if (nextLevel === 0) {
+            stopDischarge();
           }
+          return nextLevel;
         });
-      }, 50);
+      }, DISCHARGE_INTERVAL_MS);
 
       return () => {
         if (dischargeIntervalRef.current) {
@@ -69,23 +90,23 @@ export default function usePowerSystem(mainVisible: boolean): PowerSystemState {
         }
       };
     } else {
-      if (dischargeIntervalRef.current) {
-        clearInterval(dischargeIntervalRef.current);
-        dischargeIntervalRef.current = null;
-      }
+      stopDischarge();
     }
-  }, [isDischarging]);
+  }, [isDischarging, stopDischarge]);
 
   // Activate Tesseract
-  const handleActivateTesseract = () => {
+  const handleActivateTesseract = useCallback(() => {
+    if (isDischargingRef.current) {
+      stopDischarge();
+    }
     if (!isTesseractActivated) {
       setIsTesseractActivated(true);
     }
-  };
+  }, [isTesseractActivated, stopDischarge]);
 
-  const deactivateTesseract = () => {
+  const deactivateTesseract = useCallback(() => {
     setIsTesseractActivated(false);
-  };
+  }, []);
 
   return {
     powerLevel,

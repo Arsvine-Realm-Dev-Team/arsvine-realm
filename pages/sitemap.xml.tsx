@@ -1,72 +1,80 @@
 import type { GetServerSideProps } from 'next';
-import { getAllPosts } from '../lib/blog';
+import { getAllPostsForLocale } from '../lib/blog';
 import { getSiteUrl } from '../data/site';
-import { webProjects } from '../data/projects';
-import { gameData, travelData, otherData } from '../data/life';
+import { loadProjects, loadLife } from '../lib/i18n-data';
+import { locales, defaultLocale } from '../i18n/config';
 
 const SITE_URL = getSiteUrl();
 
-const staticPages = [
-  { path: '/', priority: '1.0', changefreq: 'weekly' },
-  { path: '/content', priority: '0.8', changefreq: 'weekly' },
-  { path: '/friends', priority: '0.5', changefreq: 'monthly' },
-  { path: '/copyright', priority: '0.3', changefreq: 'yearly' },
-];
+const staticPaths = ['/', '/content', '/friends', '/copyright'];
 
-function generateSitemap(posts: ReturnType<typeof getAllPosts>): string {
-  const staticEntries = staticPages
+function buildAlternates(path: string): string {
+  return locales
     .map(
-      (page) => `  <url>
-    <loc>${SITE_URL}${page.path}</loc>
-    <changefreq>${page.changefreq}</changefreq>
-    <priority>${page.priority}</priority>
-  </url>`
+      (loc) =>
+        `    <xhtml:link rel="alternate" hreflang="${loc === 'zh-CN' ? 'zh-Hans' : loc === 'zh-TW' ? 'zh-Hant' : 'en'}" href="${SITE_URL}/${loc}${path === '/' ? '' : path}"/>`,
     )
+    .concat([
+      `    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE_URL}/${defaultLocale}${path === '/' ? '' : path}"/>`,
+    ])
     .join('\n');
+}
 
-  const blogEntries = posts
-    .map(
-      (post) => `  <url>
-    <loc>${SITE_URL}/blog/${post.slug}</loc>
-    <lastmod>${new Date(post.date).toISOString().split('T')[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>`
-    )
-    .join('\n');
+function urlEntry(loc: string, path: string, priority: string, changefreq: string, lastmod?: string): string {
+  const fullPath = path === '/' ? '' : path;
+  return `  <url>
+    <loc>${SITE_URL}/${loc}${fullPath}</loc>
+${lastmod ? `    <lastmod>${lastmod}</lastmod>\n` : ''}    <changefreq>${changefreq}</changefreq>
+    <priority>${priority}</priority>
+${buildAlternates(path)}
+  </url>`;
+}
 
-  const webEntries = webProjects
-    .map(
-      (project) => `  <url>
-    <loc>${SITE_URL}/web/${project.id}</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>`
-    )
-    .join('\n');
+function generateSitemap(): string {
+  const entries: string[] = [];
 
-  const lifeEntries = [...gameData, ...travelData, ...otherData]
-    .map(
-      (item) => `  <url>
-    <loc>${SITE_URL}/life/${item.id}</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>`
-    )
-    .join('\n');
+  // 静态路径 × 三 locale
+  for (const path of staticPaths) {
+    for (const loc of locales) {
+      const priority = path === '/' ? '1.0' : path === '/content' ? '0.8' : path === '/friends' ? '0.5' : '0.3';
+      const changefreq = path === '/' || path === '/content' ? 'weekly' : path === '/friends' ? 'monthly' : 'yearly';
+      entries.push(urlEntry(loc, path, priority, changefreq));
+    }
+  }
+
+  // 博客文章
+  for (const loc of locales) {
+    const posts = getAllPostsForLocale(loc);
+    for (const post of posts) {
+      const lastmod = post.date ? new Date(post.date).toISOString().split('T')[0] : undefined;
+      entries.push(urlEntry(loc, `/blog/${post.slug}`, '0.7', 'monthly', lastmod));
+    }
+  }
+
+  // Web 项目详情
+  for (const loc of locales) {
+    const projects = loadProjects(loc);
+    for (const project of projects.webProjects) {
+      entries.push(urlEntry(loc, `/web/${project.id}`, '0.6', 'monthly'));
+    }
+  }
+
+  // Life 项目详情
+  for (const loc of locales) {
+    const life = loadLife(loc);
+    for (const item of [...life.gameData, ...life.travelData, ...life.otherData]) {
+      entries.push(urlEntry(loc, `/life/${item.id}`, '0.6', 'monthly'));
+    }
+  }
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${staticEntries}
-${blogEntries}
-${webEntries}
-${lifeEntries}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+${entries.join('\n')}
 </urlset>`;
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
-  const posts = getAllPosts();
-  const xml = generateSitemap(posts);
+  const xml = generateSitemap();
 
   res.setHeader('Content-Type', 'application/xml; charset=utf-8');
   res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');

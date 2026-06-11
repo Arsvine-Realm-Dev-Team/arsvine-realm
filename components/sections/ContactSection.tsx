@@ -1,5 +1,8 @@
+import { useRouter } from 'next/router';
+import { useTranslations } from 'next-intl';
 import styles from '../../styles/Home.module.scss';
 import { siteConfig } from '../../data/site';
+import { defaultLocale, isLocale } from '../../i18n/config';
 
 export default function ContactSection({
   contactSectionRef,
@@ -7,6 +10,14 @@ export default function ContactSection({
   isEmailCopied,
   handleShowFriendLinks,
 }) {
+  const t = useTranslations('sections.contact');
+  const router = useRouter();
+  const locale = isLocale(router.query.locale) ? router.query.locale : defaultLocale;
+  // X (Twitter) 的可见性由 _document 注入的 <html data-x-blocked> + globals.scss
+  // 里的 [data-hide-when-x-blocked] 规则统一处理，CSS 命中后直接 display:none，
+  // 不依赖 useEffect 解析 cookie —— SSR/hydration 前就生效，无首屏闪烁。
+  // 切换 VPN → 刷新即可立刻看到 X（不必等 cookie 过期）。
+
   return (
     <div id="contact-section" ref={contactSectionRef} className={`${styles.contentSection} ${styles.contactSection}`}>
       <h2>CONTACT</h2>
@@ -32,7 +43,7 @@ export default function ContactSection({
         </div>
         <div className={styles.contactIconRipple}></div>
         <span className={styles.emailText}>{siteConfig.email}</span>
-        {isEmailCopied && <span className={styles.copyFeedback}>Copied!</span>}
+        {isEmailCopied && <span className={styles.copyFeedback}>{t('copied')}</span>}
       </button>
 
       {/* GitHub */}
@@ -47,9 +58,9 @@ export default function ContactSection({
         </a>
       </div>
 
-      {/* X (Twitter) */}
+      {/* X (Twitter) — 被屏蔽地区（CN/IR/KP/TM）由 CSS 隐藏，见 globals.scss */}
       {siteConfig.social.x && (
-        <div className={`${styles.logItem} ${styles.radarContact3}`}>
+        <div className={`${styles.logItem} ${styles.radarContact3}`} data-hide-when-x-blocked>
           <a href={siteConfig.social.x} target="_blank" rel="noopener noreferrer" className={styles.logLink} aria-label="X">
             <div className={styles.logIconContainer}>
               <svg className={styles.logIcon} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -75,9 +86,9 @@ export default function ContactSection({
         </div>
       )}
 
-      {/* Bilibili */}
+      {/* Bilibili — 海外访客（非 CN/HK/MO/TW）由 CSS 隐藏，见 globals.scss */}
       {siteConfig.social.bilibili && (
-        <div className={`${styles.logItem} ${styles.radarContact7}`}>
+        <div className={`${styles.logItem} ${styles.radarContact7}`} data-hide-when-bilibili-blocked>
           <a href={siteConfig.social.bilibili} target="_blank" rel="noopener noreferrer" className={styles.logLink} aria-label="Bilibili">
             <div className={styles.logIconContainer}>
               <svg className={styles.logIcon} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -91,7 +102,7 @@ export default function ContactSection({
 
       {/* RSS */}
       <div className={`${styles.logItem} ${styles.radarContact5}`}>
-        <a href="/rss.xml" target="_blank" rel="noopener noreferrer" className={styles.logLink}>
+        <a href={`/${locale}/rss.xml`} target="_blank" rel="noopener noreferrer" className={styles.logLink} aria-label={t('rss')}>
           <div className={styles.logIconContainer}>
             <svg className={styles.logIcon} viewBox="0 0 1088 1024" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ transform: 'scale(0.8)', strokeWidth: '0' }}>
               <path d="M64 192c470.72 0 832 357.952 832 829.952h192C1088 460.672 623.808 0 64 0v192z" fill="currentColor" />
@@ -117,7 +128,7 @@ export default function ContactSection({
           </svg>
         </div>
         <div className={styles.contactIconRipple}></div>
-        <span className={styles.emailText}>Links</span>
+        <span className={styles.emailText}>{t('links')}</span>
       </button>
     </div>
   );

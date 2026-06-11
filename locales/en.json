@@ -1,0 +1,128 @@
+{
+  "common": {
+    "backToTop": "Back to top",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "visit": "Visit",
+    "sourceCode": "Source Code",
+    "watch": "Watch",
+    "copied": "Copied!",
+    "loading": "Loading…",
+    "decoding": "DECODING TRANSMISSION…",
+    "signalFragment": "// SIGNAL_FRAGMENT",
+    "endTransmission": "— END TRANSMISSION —",
+    "returnToIndex": "RETURN TO INDEX",
+    "returnToMain": "RETURN TO MAIN",
+    "imageNotAvailable": "Image not available"
+  },
+  "nav": {
+    "top": "Top",
+    "content": "Content",
+    "end": "End",
+    "meta": "Meta",
+    "brief": "Brief",
+    "story": "Story",
+    "archive": "Archive",
+    "signal": "Signal"
+  },
+  "sections": {
+    "works": {
+      "tabWeb": "Web",
+      "tabGame": "Game",
+      "earlyWorks": "Early Works",
+      "skillsProficiency": "Skills",
+      "inspectHint": "Hover to inspect"
+    },
+    "experience": {},
+    "blog": {
+      "heading": "Blog",
+      "pinned": "PINNED"
+    },
+    "life": {
+      "tabGame": "Game",
+      "tabTravel": "Travel",
+      "tabArt": "Art",
+      "tabOther": "Other",
+      "alsoPlayThese": "Also Play These"
+    },
+    "contact": {
+      "links": "Links",
+      "copied": "Copied!",
+      "rss": "RSS"
+    },
+    "about": {
+      "systemUptime": "System Uptime",
+      "totalVisits": "Total Visits",
+      "onlineNow": "Online Now",
+      "codeLicense": "Code licensed under MIT.",
+      "contentLicense": "Content licensed under CC BY-NC-ND 4.0 unless otherwise stated.",
+      "details": "Details →"
+    }
+  },
+  "mainNav": {
+    "works": "Portfolio",
+    "experience": "Experience",
+    "blog": "Blog",
+    "life": "Life",
+    "contact": "Contact",
+    "about": "About"
+  },
+  "detail": {
+    "gallery": "Gallery",
+    "tagsLabel": "Tags:",
+    "projectMeta": "// PROJECT_META",
+    "projectBrief": "// PROJECT_BRIEF",
+    "storyLog": "// STORY_LOG",
+    "archive": "// ARCHIVE",
+    "signalOutput": "// SIGNAL_OUTPUT",
+    "year": "YEAR",
+    "role": "ROLE",
+    "status": "STATUS",
+    "keyHighlights": "KEY HIGHLIGHTS",
+    "confidential": "CONFIDENTIAL"
+  },
+  "fallbackBanner": {
+    "message": "This page is not yet available in {locale}. Showing the Simplified Chinese version."
+  },
+  "pages": {
+    "site": {
+      "title": "ARSVINE REALM",
+      "description": "Personal portfolio and blog — Exploring the realms of technology, creativity, and life.",
+      "rssDescription": "Personal blog — Exploring the realms of technology, creativity, and life.",
+      "loadingSubtitle": "OUR DESTINIES ENTWINE AT THIS MOMENT",
+      "taglinePrimary": "I would like to live with you in a small town, where there are eternal twilights and eternal bells.",
+      "taglineSecondary": "Я бы хотела жить с Вами в маленьком городе, Где вечные сумерки и вечные колокола."
+    },
+    "content": {
+      "description": "Portfolio — Explore"
+    },
+    "friends": {
+      "title": "FRIENDS",
+      "description": "Friends — Signal from fellow travelers",
+      "heading": "Friend Links",
+      "servicesHeading": "Acknowledgements"
+    },
+    "copyright": {
+      "title": "COPYRIGHT",
+      "description": "Copyright & License — Source code and content licensing terms",
+      "heading": "Copyright & License",
+      "headingZh": "Copyright & License",
+      "intro": "Unless otherwise stated, the source code of this website is licensed under the {mitLink}.",
+      "contentLicense": "Unless otherwise stated, all original content published on this website, including but not limited to articles, images, notes, designs, fictional settings, and other creative works, is licensed under the {ccLink}.",
+      "shareIntro": "You may share and redistribute the original content in any medium or format, provided that:",
+      "shareItems": [
+        "proper credit is given to {author};",
+        "a link to the original source is provided;",
+        "the use is non-commercial;",
+        "the content is shared in its original, unmodified form;",
+        "no additional restrictions are applied to prevent others from exercising the rights granted by the license."
+      ],
+      "prohibited": "Without explicit permission, you may not use the original content for commercial purposes, commercial promotion, paid publications, paywalled content, dataset collection, model training, translation, adaptation, remixing, rewriting, excerpt-based republication, or any other form of distributing modified or derivative works.",
+      "quotation": "Reasonable quotation for commentary, research, education, or reference is allowed, provided that attribution and the original link are included, and that the quotation does not misrepresent the original context or meaning.",
+      "thirdParty": "Content that is not created by the site owner, such as third-party images, quoted materials, trademarks, game assets, or externally sourced media, remains subject to the rights and licenses of its respective owners.",
+      "contactPrefix": "For commercial use, translation, adaptation, archival use, dataset use, model training, or any other special use case, please contact the author in advance:",
+      "bindingNotice": "This page is an English translation of the original Simplified Chinese text, provided for reading convenience only. In the event of any discrepancy or interpretive conflict between this translation and the original Simplified Chinese version, the wording and meaning of the Simplified Chinese (简体中文) original shall prevail."
+    }
+  }
+}

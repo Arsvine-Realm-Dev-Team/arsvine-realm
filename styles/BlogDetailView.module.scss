@@ -125,6 +125,44 @@
   }
 }
 
+.articleLocaleSwitcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 6px;
+}
+
+.articleLocaleButton {
+  padding: 6px 10px;
+  border: 1px solid rgba(var(--ark-border-rgb), 0.45);
+  background: rgba(var(--ark-border-rgb), 0.08);
+  color: var(--ark-text-secondary);
+  font-family: var(--font-hud);
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  transition: border-color 0.25s ease, background-color 0.25s ease, color 0.25s ease, opacity 0.25s ease;
+  cursor: none;
+
+  @media (max-width: 1023px) {
+    cursor: pointer;
+  }
+
+  &:hover {
+    border-color: var(--ark-primary);
+    color: var(--ark-text);
+    opacity: 1;
+  }
+}
+
+.activeArticleLocaleButton {
+  border-color: var(--ark-primary);
+  background: rgba(var(--ark-primary-rgb), 0.12);
+  color: var(--ark-text);
+  opacity: 1;
+}
+
 .headerTags {
   display: flex;
   flex-wrap: wrap;

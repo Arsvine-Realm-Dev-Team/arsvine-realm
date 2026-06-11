@@ -1,4 +1,5 @@
 import { type RefObject } from 'react';
+import { useTranslations } from 'next-intl';
 import styles from '../../styles/Home.module.scss';
 import cardStyles from '../../styles/BlogPostCard.module.scss';
 import type { BlogPostMeta } from '../../types';
@@ -14,9 +15,11 @@ export default function BlogSection({
   posts,
   handleBlogItemClick,
 }: BlogSectionProps) {
+  const t = useTranslations('sections.blog');
+
   return (
     <div ref={blogSectionRef} className={styles.contentSection}>
-      <h2>Blog</h2>
+      <h2>{t('heading')}</h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%', marginTop: '20px' }}>
         {posts.map((post, i) => (
           <div
@@ -36,7 +39,7 @@ export default function BlogSection({
                 <div className={cardStyles.cardHeader}>
                   <h4 className={cardStyles.cardTitle}>
                     {post.title}{post.pinned && (
-                      <span className={cardStyles.cardPinnedBadge} aria-label="Pinned">PINNED</span>
+                      <span className={cardStyles.cardPinnedBadge} aria-label={t('pinned')}>{t('pinned')}</span>
                     )}
                   </h4>
                   {post.date && <span className={cardStyles.cardDate}>{post.date}</span>}

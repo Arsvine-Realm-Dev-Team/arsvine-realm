@@ -1,7 +1,7 @@
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import styles from '../../styles/Home.module.scss';
 import ProjectCard from '../cards/ProjectCard';
-import { alsoPlayGames, artPlaceholderText } from '../../data/life';
 
 export default function LifeSection({
   lifeSectionRef,
@@ -16,9 +16,12 @@ export default function LifeSection({
   gameData,
   travelData,
   otherData,
+  alsoPlayGames,
+  artPlaceholderText,
   handleLifeItemClick,
 }) {
   const [alsoPlayExpanded, setAlsoPlayExpanded] = useState(false);
+  const t = useTranslations('sections.life');
 
   return (
     <div
@@ -32,25 +35,25 @@ export default function LifeSection({
           className={`${styles.lifeTabButton} ${activeLifeTab === 'game' ? styles.activeTab : ''}`}
           onClick={() => handleLifeTabClick('game')}
         >
-          Game
+          {t('tabGame')}
         </button>
         <button
           className={`${styles.lifeTabButton} ${activeLifeTab === 'travel' ? styles.activeTab : ''}`}
           onClick={() => handleLifeTabClick('travel')}
         >
-          Travel
+          {t('tabTravel')}
         </button>
         <button
           className={`${styles.lifeTabButton} ${activeLifeTab === 'art' ? styles.activeTab : ''}`}
           onClick={() => handleLifeTabClick('art')}
         >
-          Art
+          {t('tabArt')}
         </button>
         <button
           className={`${styles.lifeTabButton} ${activeLifeTab === 'other' ? styles.activeTab : ''}`}
           onClick={() => handleLifeTabClick('other')}
         >
-          Other
+          {t('tabOther')}
         </button>
       </div>
       <div ref={lifeContentAreaRef} className={styles.lifeContentArea}>
@@ -71,7 +74,7 @@ export default function LifeSection({
               onClick={() => setAlsoPlayExpanded(prev => !prev)}
             >
               <span className={styles.earlySectionToggleIcon}>{alsoPlayExpanded ? '▾' : '▸'}</span>
-              <span>还有这些也玩 / Also Play These</span>
+              <span>{t('alsoPlayThese')}</span>
               <span className={styles.earlySectionCount}>{alsoPlayGames.length}</span>
             </button>
             <div className={`${styles.earlySectionContent} ${alsoPlayExpanded ? styles.expanded : ''}`}>

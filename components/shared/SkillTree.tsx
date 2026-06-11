@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import type { SkillCategory } from '../../types';
 import s from './SkillTree.module.scss';
 
@@ -8,6 +9,7 @@ interface SkillTreeProps {
 }
 
 export default function SkillTree({ categories, expanded }: SkillTreeProps) {
+  const t = useTranslations('sections.works');
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [tappedId, setTappedId] = useState<string | null>(null);
   const [typedText, setTypedText] = useState('');
@@ -155,7 +157,7 @@ export default function SkillTree({ categories, expanded }: SkillTreeProps) {
             </div>
           ) : (
             <div className={s.infoEmpty}>
-              <span>HOVER TO INSPECT</span>
+              <span>{t('inspectHint')}</span>
             </div>
           )}
         </div>

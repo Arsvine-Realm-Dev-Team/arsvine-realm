@@ -109,8 +109,10 @@ export function TransitionProvider({ children, pageWrapperRef }: TransitionProvi
     isTransitioning.current = true;
     queuedNav.current = null;
     cancelActiveAnim();
-    const currentlyHome = router.pathname === '/';
-    const goingHome = url === '/';
+    // Home / 跳回 home 的判定：路由模板是 /[locale]
+    const currentlyHome = router.pathname === '/[locale]';
+    // 目标是 home 的判定：URL 形如 /<locale> 或 /<locale>/
+    const goingHome = /^\/[A-Za-z-]+\/?$/.test(url);
 
     const pushThen = (target: string, cb: () => void, pushOpts?: any) => {
       const onComplete = () => {
@@ -178,7 +180,7 @@ export function TransitionProvider({ children, pageWrapperRef }: TransitionProvi
           anim.cancel();
           activeAnim.current = null;
           wrapper.style.clipPath = 'inset(100%)';
-          pushThen('/', () => {
+          pushThen(url, () => {
             expandColumns();
             wapiDiagExpand();
           });
@@ -191,7 +193,7 @@ export function TransitionProvider({ children, pageWrapperRef }: TransitionProvi
           anim.cancel();
           activeAnim.current = null;
           wrapper.style.opacity = '0';
-          pushThen('/', () => {
+          pushThen(url, () => {
             wrapper.style.opacity = '';
             expandColumns(() => {
               isTransitioning.current = false;
@@ -221,7 +223,8 @@ export function TransitionProvider({ children, pageWrapperRef }: TransitionProvi
   // Handle browser back/forward navigation (popstate) that bypasses navigateTo
   useEffect(() => {
     const handleRouteChange = (url: string) => {
-      if (url === '/' && !isTransitioning.current) {
+      // 任何形如 /<locale> 的 URL 都视为 home，触发列展开
+      if (/^\/[A-Za-z-]+\/?$/.test(url) && !isTransitioning.current) {
         expandColumns();
       }
     };
@@ -240,11 +243,15 @@ export function TransitionProvider({ children, pageWrapperRef }: TransitionProvi
       backOverrideRef.current();
       return;
     }
-    const isHome = router.pathname === '/';
+    // 路由模板 /[locale] 即为 home
+    const isHome = router.pathname === '/[locale]';
     if (!isHome) {
-      navigateTo('/');
+      // 用当前 query.locale 拼出 home 路径
+      const queryLocale = router.query?.locale;
+      const locale = typeof queryLocale === 'string' ? queryLocale : 'zh-CN';
+      navigateTo(`/${locale}`);
     }
-  }, [router.pathname, navigateTo]);
+  }, [router.pathname, router.query, navigateTo]);
 
   const isDetailOpen = useCallback(() => {
     return backOverrideRef.current !== null;

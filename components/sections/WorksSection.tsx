@@ -1,4 +1,5 @@
 import { forwardRef, useState, type Ref, type RefObject } from 'react';
+import { useTranslations } from 'next-intl';
 import styles from '../../styles/Home.module.scss';
 import ProjectCard from '../cards/ProjectCard';
 import SkillTree from '../shared/SkillTree';
@@ -33,6 +34,7 @@ const WorksSection = forwardRef(function WorksSection({
 }: WorksSectionProps, ref: Ref<HTMLDivElement>) {
   const [earlyExpanded, setEarlyExpanded] = useState(false);
   const [skillsExpanded, setSkillsExpanded] = useState(false);
+  const t = useTranslations('sections.works');
 
   return (
     <div id="works-section" ref={worksSectionRef} className={`${styles.contentSection} ${styles.worksSection}`}>
@@ -42,13 +44,13 @@ const WorksSection = forwardRef(function WorksSection({
           className={`${styles.workTabButton} ${activeWorkTab === 'web' ? styles.activeTab : ''}`}
           onClick={() => handleWorkTabClick('web')}
         >
-          Web
+          {t('tabWeb')}
         </button>
         <button
           className={`${styles.workTabButton} ${activeWorkTab === 'game' ? styles.activeTab : ''}`}
           onClick={() => handleWorkTabClick('game')}
         >
-          Game
+          {t('tabGame')}
         </button>
       </div>
       <div ref={workContentAreaRef} className={styles.workContentArea}>
@@ -84,7 +86,7 @@ const WorksSection = forwardRef(function WorksSection({
             onClick={() => setEarlyExpanded(prev => !prev)}
           >
             <span className={styles.earlySectionToggleIcon}>{earlyExpanded ? '▾' : '▸'}</span>
-            <span>早期学习 / Early Works</span>
+            <span>{t('earlyWorks')}</span>
             <span className={styles.earlySectionCount}>{earlyProjects.length}</span>
           </button>
           <div className={`${styles.earlySectionContent} ${earlyExpanded ? styles.expanded : ''}`}>
@@ -107,7 +109,7 @@ const WorksSection = forwardRef(function WorksSection({
           onClick={() => setSkillsExpanded(prev => !prev)}
         >
           <span className={styles.earlySectionToggleIcon}>{skillsExpanded ? '▾' : '▸'}</span>
-          <span>技能熟练度 / Skills</span>
+          <span>{t('skillsProficiency')}</span>
           <span className={styles.earlySectionCount}>
             {skillCategories.reduce((sum, cat) => sum + cat.skills.length, 0)}
           </span>
