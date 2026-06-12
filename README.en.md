@@ -59,8 +59,9 @@ Double-click [scripts/dev-host-setup.cmd](scripts/dev-host-setup.cmd) — it han
 
 1. UAC self-elevation to Administrator.
 2. Writing `127.0.0.1  dev.arsvine.com` to the Windows hosts file (with a daily `hosts.bak.<yyyymmdd>` backup the first time).
-3. Starting `npm run dev` (port 3000).
-4. On Ctrl+C: graceful stop of the dev server, removing the hosts entry (only if it added it), and `ipconfig /flushdns`.
+3. If a system proxy is enabled, temporarily adding `dev.arsvine.com` to the current user's `ProxyOverride`.
+4. Starting `npm run dev` (port 3000).
+5. On Ctrl+C: graceful stop of the dev server, restoring the proxy bypass entry, removing the hosts entry (only if it added it), and `ipconfig /flushdns`.
 
 Manual sub-commands:
 
@@ -69,7 +70,7 @@ Manual sub-commands:
 .\scripts\dev-host-setup.cmd -Remove       # clean up the dev.arsvine.com hosts entry
 ```
 
-> ⚠️ The script edits `C:\Windows\System32\drivers\etc\hosts` and requires admin rights, which it obtains through the standard UAC prompt. If the window is closed via the X button instead of Ctrl+C, the hosts entry may be left behind — use `-Remove` to clean up.
+> ⚠️ The script edits `C:\Windows\System32\drivers\etc\hosts` and, when a system proxy is enabled, temporarily updates the current user's `ProxyOverride`. It requires admin rights, obtained through the standard UAC prompt. If the window is closed via the X button instead of Ctrl+C, the hosts entry or proxy bypass may be left behind — use `-Remove` to clean up.
 
 Open `http://dev.arsvine.com:3000` in the browser; the Referer becomes `dev.arsvine.com:3000` and COS accepts the request.
 
@@ -81,6 +82,38 @@ Open `http://dev.arsvine.com:3000` in the browser; the Referer becomes `dev.arsv
 | `scripts/convert-images.mjs` | Batch image format converter (webp/jpg/png/avif), output to `scripts/images/out/`. |
 | `scripts/regen-favicons.mjs` | Regenerate the full favicon set from a transparent source image. |
 | `scripts/jpg-to-transparent-png.mjs` | Alpha-unmix a white-background JPG into a true-transparency PNG. |
+| `scripts/fetch-google-fonts.mjs` | Reads the Google Fonts URL from `data/site.ts`, fetches the CSS, downloads every woff2, rewrites all `url()` to `cdn.arsvine.com/fonts/`, writes to `public/_fonts-staging/` (gitignored). **Production upload is manual via the Tencent COS web console — `coscli` is not used in this project.** See "Self-hosted Google Fonts" below. |
+
+## Self-hosted Google Fonts (`cdn.arsvine.com/fonts/`)
+
+`fonts.googleapis.com` is unreachable from mainland China, so every visitor (regardless of location) loads fonts from the project's own CDN — a Tencent COS Hong Kong bucket (`arsvine-cdn`) served behind the `cdn.arsvine.com` CNAME. Workflow:
+
+1. **Edit the font config** in [data/site.ts](data/site.ts): update `siteConfig.fonts.googleStylesheet` (a standard Google Fonts URL listing the families and weights you want).
+2. **Generate the staging tree locally**:
+   ```bash
+   node scripts/fetch-google-fonts.mjs
+   ```
+   The script uses a modern Chrome User-Agent (otherwise Google returns bulkier `.ttf` instead of `.woff2`), downloads all `.woff2`, rewrites every `url()` to `cdn.arsvine.com/fonts/<family>/<file>`, and writes the result to `public/_fonts-staging/` (gitignored).
+3. **Upload via Tencent COS web console (not `coscli`)**:
+   - Console → bucket `arsvine-cdn` → enter the `fonts/` directory.
+   - Upload `public/_fonts-staging/google-fonts.css` and every woff2 subdirectory (use "folder upload" to preserve structure).
+   - For `google-fonts.css`, set custom metadata headers (file details → edit metadata):
+     - **Key**: `Content-Type` **Value**: `text/css; charset=utf-8`
+     - **Key**: `Cache-Control` **Value**: `public, max-age=86400, must-revalidate`
+   - Select all woff2 files in bulk → edit metadata:
+     - **Key**: `Content-Type` **Value**: `font/woff2`
+     - **Key**: `Cache-Control` **Value**: `public, max-age=31536000, immutable`
+
+⚠ **Pitfall (we've been bitten by this)**: in the COS metadata editor, the **Value** field is the value only. Do NOT paste `Cache-Control: public, ...` into the Value — COS will emit `Cache-Control: Cache-Control: public, ...` and Firefox will refuse to render the woff2, silently falling back to system fonts. On a Simplified-Chinese-default Windows, uncommon Traditional Chinese characters then render as tofu.
+
+✅ **Variable Font dedup is intentional**: a compound request like `wght@300;400;500` returns a CSS where multiple `@font-face` blocks (different `font-weight:` values) all point to the **same** woff2 file. That file is a Variable Font whose `wght` axis covers 200–900 (or similar). The browser interpolates the right weight at render time. `fetch-google-fonts.mjs` is built around this — **do not** "fix" the script to force one file per weight.
+
+**Verify the upload**:
+
+```bash
+curl -I -H "Referer: https://arsvine.com/" https://cdn.arsvine.com/fonts/google-fonts.css
+# Content-Type and Cache-Control must each appear exactly once
+```
 
 ## Configuration and Content Maintenance
 
@@ -126,6 +159,31 @@ NEXT_PUBLIC_SITE_URL=https://your-domain.com
 ```
 
 You can also set a default `url` in `data/site.ts`; the environment variable has higher priority.
+
+### Font Conventions
+
+Stylesheets pull fonts through CSS variables defined in [styles/globals.scss](styles/globals.scss):
+
+| Variable | Font | Use case |
+|---|---|---|
+| `--font-display` | `ZELDA Free` | Decorative English HUD titles only. **Latin-only — no CJK glyphs and incomplete accented-Latin coverage (French `é`, `à`, etc. render as tofu).** Never use for blog headers, user-provided content, or anything that may need translation. |
+| `--font-hud` | `Dosis` | HUD numerals, labels, and any general-purpose sans (including blog post titles). Variable Font, `wght` axis 200–800. |
+| `--font-reading` | `Noto Serif SC` stack | MDX blog body. Variable Font, `wght` axis 200–900. |
+| `--font-typewriter` | Courier stack | Typewriter effects and monospaced contexts. |
+
+> History: blog titles used to be `--font-display` (ZELDA Free), but French accented characters and CJK rendered as tofu. They were migrated to `--font-hud` weight 500. For any header or body that may receive arbitrary-language content, **do not** reach for `--font-display`.
+
+### Blog Reading Time
+
+Blog frontmatter does **not** need a `readingTime` field. At build time [lib/blog.ts](lib/blog.ts) calls the in-house `estimateReadingMinutes(content, locale)`:
+
+- CJK content (`zh-CN` / `zh-TW` / `ja`): character count ÷ 400 cpm
+- Latin content (`en` / `ru` / `fr`): word count ÷ 230 wpm
+- Mixed content is weighted automatically (fenced code, inline code, HTML/JSX tags, MDX `import|export` lines are stripped first)
+
+UI rendering goes through [lib/format-reading-time.ts](lib/format-reading-time.ts), which formats per the current UI locale. `BlogPostMeta` only carries the numeric `readingMinutes: number`.
+
+> ⚠ **Do not re-introduce the `reading-time` npm package.** It splits on whitespace, so CJK posts are counted as a single "word" and always display as "1 min".
 
 ### Content Data
 
@@ -318,6 +376,17 @@ Event names have a 50-character limit; properties accept arbitrary key-value pai
 - Animation, 3D, typing, and pointer-interaction code may trigger React Compiler lint warnings. Avoid broad rewrites just to silence warnings unless there is a concrete bug.
 - For configurable content, check `data/*.ts`, `config/*.js`, and `.env.example` first.
 - There is no unit test framework; run at least `npm run lint` and `npm run build` before shipping.
+
+### Known Gotchas (real bugs; don't re-introduce)
+
+- **`--font-display` (ZELDA Free) is Latin-only.** French accented characters and CJK render as tofu. Use `--font-hud` or `--font-reading` for any title/body that may receive arbitrary-language content. See [Font Conventions](#font-conventions).
+- **COS metadata Value field is value-only.** Don't paste `Cache-Control: ` as a prefix into the Value field — COS will emit `Cache-Control: Cache-Control: ...` and Firefox will silently fall back to system fonts. See [Self-hosted Google Fonts](#self-hosted-google-fonts-cdnarsvinecomfonts).
+- **Do not re-introduce the `reading-time` npm package.** It splits on whitespace, so CJK posts always show "1 min". Use the in-house [estimateReadingMinutes()](lib/blog.ts).
+- **Variable Font dedup is intentional Google Fonts behavior**, not a bug. Multiple `font-weight:` blocks pointing at the same woff2 file is correct — the file is a VF whose `wght` axis covers a wide range.
+- **This project does not use `coscli`.** Any older doc or script comment that references `coscli sync` / `coscli cp` is obsolete. CDN uploads go through the Tencent COS web console.
+- **Navigation must use `useTransition().navigateTo()`**, not `router.push()` — bypassing it breaks the animated page transitions.
+- **Mobile section anchors require `scroll-margin-top: var(--mobile-section-scroll-offset)`** ([styles/_sections.scss](styles/_sections.scss)), otherwise hash navigation and `scrollIntoView` place the section title under the HUD.
+- **Root-path locale resolution is `NEXT_LOCALE cookie > Accept-Language > zh-CN`** — do not switch to IP-based geo detection; the cookie is the user's explicit choice.
 
 ## Deployment
 

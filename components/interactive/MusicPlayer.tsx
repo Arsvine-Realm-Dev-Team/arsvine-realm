@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/router';
+import { useTranslations } from 'next-intl';
 import styles from './MusicPlayer.module.scss';
 import { musicPlaylist } from '../../data/music';
+import { defaultLocale, isLocale, type Locale } from '../../i18n/config';
 
 // 播放器控制图标 (SVG)
 const PlayIcon = () => <svg viewBox="0 0 10 10" width="10" height="10"><polygon points="3,2 8,5 3,8" fill="currentColor" /></svg>;
@@ -23,7 +26,26 @@ const playlist = musicPlaylist;
 const DRAG_THRESHOLD = 50; // 拖动切换唱片的最小像素阈值
 const AUTO_COLLAPSE_DELAY = 5000; // 抽屉打开后无操作自动收起的延迟 (ms)
 
+const commonLabelFallbacks: Record<Locale, Record<'expandPlaylist' | 'collapsePlaylist', string>> = {
+  'zh-CN': {
+    expandPlaylist: '展开列表',
+    collapsePlaylist: '收起列表',
+  },
+  'zh-TW': {
+    expandPlaylist: '展開列表',
+    collapsePlaylist: '收起列表',
+  },
+  en: {
+    expandPlaylist: 'Open Playlist',
+    collapsePlaylist: 'Close Playlist',
+  },
+};
+
 const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
+  const router = useRouter();
+  const tCommon = useTranslations('common');
+  const queryLocale = router.query.locale;
+  const locale: Locale = isLocale(queryLocale) ? queryLocale : defaultLocale;
   const [isOpen, setIsOpen] = useState(false); // 初始状态为收起
   const [isPlaying, setIsPlaying] = useState(false); // 是否正在播放
   const [isHovering, setIsHovering] = useState(false); // 鼠标是否悬停在播放器上 (用于空闲自动收起)
@@ -60,6 +82,7 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
   const dragCurrentXRef = useRef(0); // 实时存储拖动过程中的 X 坐标 (用于 mouseup/leave 事件)
   const handleRef = useRef(null); // 播放器抽屉把手元素引用 (用于播放状态指示动画)
   const animationTimeouts = useRef([]); // 存储把手动画的 setTimeout ID (用于随机化动画)
+  const playbackIntentRef = useRef(false); // 当前是否应在切歌后继续自动播放
 
   // 组件挂载时设置默认音量
   useEffect(() => {
@@ -76,6 +99,13 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
 
   // 显示的歌曲标题和艺术家
   const displayTitle = currentTrack ? `${currentTrack.title} - ${currentTrack.artist}` : "";
+  const resolveCommonLabel = (key: 'expandPlaylist' | 'collapsePlaylist') => {
+    const translated = tCommon(key);
+    return translated === key ? commonLabelFallbacks[locale][key] : translated;
+  };
+  const playlistToggleLabel = isPlaylistVisible
+    ? resolveCommonLabel('collapsePlaylist')
+    : resolveCommonLabel('expandPlaylist');
 
   // 抽屉打开且无用户活动一段时间后自动收起
   // 触发重置的活动：hover、拖动、播放列表展开、bumpIdleTimer (用于触屏点击)
@@ -96,21 +126,28 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
   };
 
   // 切换播放/暂停状态 (主要通过 audio 事件更新 isPlaying)
-  const togglePlay = (e) => {
-    e.stopPropagation(); // 防止事件冒泡 (例如点击唱臂区域时)
+  const syncPlayState = useCallback((shouldPlay: boolean) => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    if (isPlaying) {
-      audio.pause();
-    } else {
+    playbackIntentRef.current = shouldPlay;
+    if (shouldPlay) {
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise.catch(() => {
-          setIsPlaying(false); // 资源不可用时静默把状态同步回未播放
+          playbackIntentRef.current = false;
+          setIsPlaying(false);
         });
       }
+      return;
     }
+
+    audio.pause();
+  }, []);
+
+  const togglePlay = (e) => {
+    e.stopPropagation(); // 防止事件冒泡 (例如点击唱臂区域时)
+    syncPlayState(!isPlaying);
   };
 
   // 切换到上一首 (由拖动逻辑调用)
@@ -126,9 +163,13 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
   // 从播放列表选择歌曲
   const selectTrack = (index) => {
     if (index !== currentTrackIndex) {
+      playbackIntentRef.current = true;
       setCurrentTrackIndex(index);
-    } else {
-      togglePlay(new Event('synthetic')); // 点击当前歌曲则切换播放/暂停
+      return;
+    }
+
+    if (!isPlaying) {
+      syncPlayState(true);
     }
   };
 
@@ -239,7 +280,7 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
     };
   }, [isDragging, handleMouseMove, handleTouchMove, handleMouseUpOrLeave]);
 
-  // 监听当前歌曲索引变化，自动加载新歌曲并根据当前播放状态决定是否播放
+  // 监听当前歌曲索引变化，自动加载新歌曲并根据播放意图决定是否播放
   useEffect(() => {
     if (audioRef.current && playlist[currentTrackIndex]) {
       const newSrc = playlist[currentTrackIndex].src;
@@ -249,18 +290,19 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
       if (currentFullSrcPath !== newFullSrcPath) { // 仅当歌曲源不同时才加载
         audioRef.current.src = newSrc;
         audioRef.current.load();
-        if (isPlaying) { // 如果之前是播放状态，则尝试自动播放新加载的歌曲
+        if (playbackIntentRef.current) { // 如果当前意图是播放，则切歌后立即尝试续播
           const playPromise = audioRef.current.play();
           if (playPromise !== undefined) {
             playPromise.catch(error => {
               console.error("[Track switch] Autoplay error:", error);
+              playbackIntentRef.current = false;
               setIsPlaying(false); // 自动播放失败，更新状态
             });
           }
         }
       }
     }
-  }, [currentTrackIndex, isPlaying]); // 依赖 currentTrackIndex 与 isPlaying
+  }, [currentTrackIndex]);
 
   // Audio 元素事件监听 (播放进度、元数据加载、播放/暂停状态、播放结束)
   useEffect(() => {
@@ -278,24 +320,14 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
       setDuration(audio.duration);
       setCurrentTime(audio.currentTime);
     };
-    const setAudioPlaying = () => setIsPlaying(true); // 音频开始播放
+    const setAudioPlaying = () => {
+      playbackIntentRef.current = true;
+      setIsPlaying(true);
+    }; // 音频开始播放
     const setAudioPaused = () => setIsPlaying(false);  // 音频暂停
     const handleEnded = () => { // 音频播放结束，自动播放下一首
-      handleNext(); // 更新歌曲索引
-      // handleNext 会触发上面的 useEffect 来加载并可能播放新歌，这里可选择是否强制播放
-      // 此处增加短暂延时尝试播放，确保 useEffect 中的 src 加载完成
-      setTimeout(() => {
-        if (audioRef.current && audioRef.current.paused) { // 确认是否真的需要播放
-          const playPromise = audioRef.current.play();
-          if (playPromise !== undefined) {
-            playPromise.then(() => setIsPlaying(true))
-              .catch(error => {
-                console.error("[Playback ended] Error playing next track:", error);
-                setIsPlaying(false);
-              });
-          }
-        }
-      }, 50);
+      playbackIntentRef.current = true;
+      handleNext();
     };
 
     audio.addEventListener('timeupdate', updateProgress);
@@ -458,7 +490,8 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
           <button
             className={`${styles.playlistToggleButton} ${!isFullPower ? styles.toggleButtonLowPower : ''}`}
             onClick={togglePlaylist}
-            title={isPlaylistVisible ? "收起列表" : "展开列表"}
+            aria-label={playlistToggleLabel}
+            data-cursor-label={playlistToggleLabel}
           >
             {[...Array(3)].map((_, i) => <span key={i} className={styles.toggleButtonLine}></span>)}
           </button>

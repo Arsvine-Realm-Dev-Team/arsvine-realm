@@ -7,7 +7,7 @@ import styles from '../../styles/Home.module.scss';
 import { useApp } from '../../contexts/AppContext';
 import { useTransition } from '../../contexts/TransitionContext';
 import { useResponsive } from '../../hooks/useMediaQuery';
-import { defaultLocale, isLocale } from '../../i18n/config';
+import { defaultLocale, isLocale, type Locale } from '../../i18n/config';
 
 import HomeLoadingScreen from '../shared/HomeLoadingScreen';
 import MusicPlayer from '../interactive/MusicPlayer';
@@ -36,9 +36,25 @@ const CustomCursor = dynamic(
   { ssr: false, loading: () => null }
 );
 
+const commonLabelFallbacks: Record<Locale, Record<'openMenu' | 'closeMenu', string>> = {
+  'zh-CN': {
+    openMenu: '打开菜单',
+    closeMenu: '关闭菜单',
+  },
+  'zh-TW': {
+    openMenu: '開啟選單',
+    closeMenu: '關閉選單',
+  },
+  en: {
+    openMenu: 'Open Menu',
+    closeMenu: 'Close Menu',
+  },
+};
+
 export default function MainLayout({ children }) {
   const router = useRouter();
   const tNav = useTranslations('mainNav');
+  const tCommon = useTranslations('common');
   const { navigateTo, handleBack, isDetailOpen } = useTransition();
   const { isMobile, isDesktop } = useResponsive();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -69,6 +85,9 @@ export default function MainLayout({ children }) {
   const prevStandaloneRef = useRef(isStandalone);
   const [localPanelAnimated, setLocalPanelAnimated] = useState(leftPanelAnimated);
   const [localLeversVisible, setLocalLeversVisible] = useState(leversVisible);
+  // 桌面 Tesseract 拖拽态 —— 用于让电池在用户拖动物体时给出"被吸引"视觉反馈
+  // 不放进 AppContext / PowerSystemState：纯 3D 场景的瞬态 UI 信号，不属于电力系统逻辑
+  const [isTesseractDragging, setIsTesseractDragging] = useState(false);
 
   useEffect(() => {
     const wasStandalone = prevStandaloneRef.current;
@@ -127,6 +146,14 @@ export default function MainLayout({ children }) {
     }
   }, [isDesktop, isTesseractActivated]);
 
+  // Tesseract 取消激活时清零拖拽态，防止子组件未触发 pointer up 就被卸载留下脏值
+  useEffect(() => {
+    if (!isTesseractActivated && isTesseractDragging) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 子组件可能在 pointer up 前被卸载，必须在父层兜底
+      setIsTesseractDragging(false);
+    }
+  }, [isTesseractActivated, isTesseractDragging]);
+
   // 移动端：充满 100% 自动放下充电拉杆
   useEffect(() => {
     if (!isDesktop && powerLevel >= 100 && isTesseractActivated) {
@@ -157,6 +184,11 @@ export default function MainLayout({ children }) {
     { label: tNav('contact'), hash: 'contact' },
     { label: tNav('about'), hash: 'about' },
   ];
+  const resolveCommonLabel = (key: 'openMenu' | 'closeMenu') => {
+    const translated = tCommon(key);
+    return translated === key ? commonLabelFallbacks[locale][key] : translated;
+  };
+  const drawerToggleLabel = drawerOpen ? resolveCommonLabel('closeMenu') : resolveCommonLabel('openMenu');
 
   const handleLeftNavLinkClick = (link: { label: string; hash: string }) => {
     closeDrawer();
@@ -200,6 +232,7 @@ export default function MainLayout({ children }) {
           chargeBattery={chargeBattery}
           isActivated={isTesseractActivated}
           isInverted={isInverted}
+          onDraggingChange={setIsTesseractDragging}
         />
       )}
       <div className={styles.gridBackground}></div>
@@ -211,7 +244,8 @@ export default function MainLayout({ children }) {
         <button
           className={`${styles.hamburgerButton} ${drawerOpen ? styles.hamburgerOpen : ''}`}
           onClick={toggleDrawer}
-          aria-label="Toggle menu"
+          aria-label={drawerToggleLabel}
+          data-cursor-label={drawerToggleLabel}
         >
           <span />
           <span />
@@ -249,6 +283,7 @@ export default function MainLayout({ children }) {
             isInverted={isInverted}
             drawerOpen={drawerOpen}
             isStandalone={isStandalone}
+            isTesseractDragging={isTesseractDragging}
           />
         </>
       )}
@@ -280,6 +315,7 @@ export default function MainLayout({ children }) {
           <button
             className={`${styles.bottomBarBtn} ${drawerOpen ? styles.bottomBarActive : ''}`}
             onClick={toggleDrawer}
+            aria-label={drawerToggleLabel}
           >
             <span className={styles.bottomBarIcon}>{drawerOpen ? '✕' : '☰'}</span>
             <span className={styles.bottomBarIndicator} />

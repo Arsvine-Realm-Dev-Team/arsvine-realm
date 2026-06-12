@@ -19,7 +19,16 @@ const icons = {
   ),
 };
 
-const ActivationLever = ({ onActivate, isActive, iconType, isAnimated }) => {
+interface ActivationLeverProps {
+  onActivate: () => void;
+  isActive: boolean;
+  iconType: keyof typeof icons;
+  isAnimated: boolean;
+  cursorLabel: string;
+  ariaLabel?: string;
+}
+
+const ActivationLever = ({ onActivate, isActive, iconType, isAnimated, cursorLabel, ariaLabel }: ActivationLeverProps) => {
   const handleLeverClick = () => {
     onActivate();
   };
@@ -28,7 +37,8 @@ const ActivationLever = ({ onActivate, isActive, iconType, isAnimated }) => {
   const IconComponent = icons[iconType] || null;
 
   return (
-    <div 
+    <button
+      type="button"
       className={`
         ${styles.leverContainer} 
         ${isActive ? styles.activeState : ''}
@@ -36,6 +46,8 @@ const ActivationLever = ({ onActivate, isActive, iconType, isAnimated }) => {
       `}
       onClick={handleLeverClick}
       data-cursor-magnetic
+      data-cursor-label={cursorLabel}
+      aria-label={ariaLabel ?? cursorLabel}
     >
       <svg viewBox="0 0 50 90" className={styles.leverSvg}>
         {/* 底座/插槽 */}
@@ -75,7 +87,7 @@ const ActivationLever = ({ onActivate, isActive, iconType, isAnimated }) => {
         {/* --- 修改: 渲染图标 --- */}
         {IconComponent}
       </svg>
-    </div>
+    </button>
   );
 };
 

@@ -1,6 +1,10 @@
 /* ActivationLever.module.scss */
 
 .leverContainer {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
   // 移除绝对定位，使其在父容器中正常排列
   // position: absolute;
   // top: 17.5%;

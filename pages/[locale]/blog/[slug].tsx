@@ -26,6 +26,7 @@ import { useApp } from '../../../contexts/AppContext';
 import { useTransition } from '../../../contexts/TransitionContext';
 import { getSiteUrl } from '../../../data/site';
 import { locales, type Locale } from '../../../i18n/config';
+import { formatReadingTime } from '../../../lib/format-reading-time';
 
 const blogContentLocaleLabels: Record<BlogContentLocale, string> = {
   'zh-CN': '简中',
@@ -148,6 +149,7 @@ function BlogDetailContent({
   const tCommon = useTranslations('common');
   const tNav = useTranslations('nav');
   const router = useRouter();
+  const readingLabel = formatReadingTime(meta.readingMinutes, locale);
 
   const currentIndex = allPosts.findIndex((p) => p.slug === meta.slug);
   const prevPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
@@ -331,7 +333,7 @@ function BlogDetailContent({
             </h1>
             <div className={styles.headerMeta}>
               {meta.date && <span className={styles.headerDate}>{meta.date}</span>}
-              {meta.readingTime && <span className={styles.headerReadingTime}>{meta.readingTime}</span>}
+              {readingLabel && <span className={styles.headerReadingTime}>{readingLabel}</span>}
             </div>
             {meta.slug === 'init' && availableContentLocales.length > 1 && (
               <div className={styles.articleLocaleSwitcher} aria-label="Article language switcher">

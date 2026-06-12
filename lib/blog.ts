@@ -1,13 +1,65 @@
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
-import readingTime from 'reading-time';
 import type { BlogPostMeta, TranslationStatus } from '../types';
 import { defaultLocale, locales, isLocale, type Locale } from '../i18n/config';
 
 const BLOG_DIR = path.join(process.cwd(), 'content', 'blog');
 const blogContentLocales = [...locales, 'ja', 'ru', 'fr'] as const;
 export type BlogContentLocale = (typeof blogContentLocales)[number];
+
+// 阅读速度（拉丁：词/分；CJK：字符/分）。CJK 用字符口径是因为分词不靠空格。
+// 速度按"慢读"取值：常见估算速度的一半，让显示分钟数翻倍 —— 文章里多含代码 / 图 / 需要思考的段落，
+// 实际读完的时间通常远高于流畅速读，慢一档对读者更友好。
+const LATIN_WORDS_PER_MINUTE: Record<BlogContentLocale, number> = {
+  'zh-CN': 115,
+  'zh-TW': 115,
+  en: 115,
+  ja: 115,
+  ru: 115,
+  fr: 115,
+};
+const CJK_CHARS_PER_MINUTE: Record<BlogContentLocale, number> = {
+  'zh-CN': 200,
+  'zh-TW': 200,
+  en: 200,
+  ja: 200,
+  ru: 200,
+  fr: 200,
+};
+
+// CJK 字符范围：中日韩统一表意文字 + 扩展 A + 平假名 + 片假名 + 韩文音节
+const CJK_CHAR_RE = /[㐀-䶿一-鿿぀-ゟ゠-ヿ가-힯]/g;
+// 拉丁/西里尔等用空格分词的单词
+const LATIN_WORD_RE = /[A-Za-zÀ-ɏЀ-ӿ]+(?:[''-][A-Za-zÀ-ɏЀ-ӿ]+)*/g;
+
+/**
+ * 估算 MDX 正文阅读时长（分钟），按 locale 加权 CJK 字符数与拉丁单词数。
+ *
+ * 步骤：
+ *   1. 剥离 fenced code block / inline code / HTML 标签 / MDX import-export，
+ *      避免代码、JSX 元数据被计入。
+ *   2. 分别统计 CJK 字符数和拉丁单词数。
+ *   3. 两路并行换算成分钟后相加；不足 1 分钟向上取整。
+ */
+export function estimateReadingMinutes(content: string, locale: BlogContentLocale): number {
+  if (!content) return 1;
+
+  const stripped = content
+    .replace(/```[\s\S]*?```/g, ' ')           // fenced code
+    .replace(/`[^`\n]*`/g, ' ')                // inline code
+    .replace(/<\/?[a-zA-Z][^>]*>/g, ' ')       // HTML / JSX 标签
+    .replace(/^\s*(?:import|export)\s.+$/gm, ' '); // MDX import/export 行
+
+  const cjkChars = stripped.match(CJK_CHAR_RE)?.length ?? 0;
+  const latinWords = stripped.match(LATIN_WORD_RE)?.length ?? 0;
+
+  const cpm = CJK_CHARS_PER_MINUTE[locale] ?? CJK_CHARS_PER_MINUTE[defaultLocale];
+  const wpm = LATIN_WORDS_PER_MINUTE[locale] ?? LATIN_WORDS_PER_MINUTE[defaultLocale];
+
+  const minutes = cjkChars / cpm + latinWords / wpm;
+  return Math.max(1, Math.ceil(minutes));
+}
 
 const specialPostLocales: Partial<Record<string, BlogContentLocale[]>> = {
   init: ['zh-CN', 'zh-TW', 'en', 'ja', 'ru', 'fr'],
@@ -93,7 +145,7 @@ function readEntry(entry: FileEntry) {
   const filePath = path.join(BLOG_DIR, entry.relativePath);
   const fileContent = fs.readFileSync(filePath, 'utf-8');
   const { data, content } = matter(fileContent);
-  const stats = readingTime(content);
+  const readingMinutes = estimateReadingMinutes(content, entry.locale);
 
   // 仅当 frontmatter 显式给出且值是合法 locale 时才采纳，
   // 否则不在 meta 上写该字段（Next.js getStaticProps 不允许 undefined）。
@@ -106,7 +158,7 @@ function readEntry(entry: FileEntry) {
     date: data.date || '',
     excerpt: data.excerpt || '',
     tags: data.tags || [],
-    readingTime: stats.text,
+    readingMinutes,
     pinned: Boolean(data.pinned),
     ...(originLocale ? { originLocale } : {}),
   };

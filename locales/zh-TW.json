@@ -14,7 +14,11 @@
     "endTransmission": "— 傳輸結束 —",
     "returnToIndex": "返回索引",
     "returnToMain": "返回主頁",
-    "imageNotAvailable": "圖片不可用"
+    "imageNotAvailable": "圖片不可用",
+    "expandPlaylist": "展開列表",
+    "collapsePlaylist": "收起列表",
+    "openMenu": "開啟選單",
+    "closeMenu": "關閉選單"
   },
   "nav": {
     "top": "Top",
@@ -52,9 +56,9 @@
       "rss": "RSS"
     },
     "about": {
-      "systemUptime": "System Uptime",
-      "totalVisits": "Total Visits",
-      "onlineNow": "Online Now",
+      "systemUptime": "系統在線時間",
+      "currentVisitDuration": "目前訪問時長",
+      "visitorLanguage": "來訪者語言代碼",
       "codeLicense": "程式碼遵循 MIT 協議。",
       "contentLicense": "除特別說明外，所有內容遵循 CC BY-NC-ND 4.0 協議。",
       "details": "詳情 →"

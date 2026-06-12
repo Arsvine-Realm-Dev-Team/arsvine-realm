@@ -67,6 +67,29 @@ function pickLocaleFromHeader(acceptLanguage: string | null): Locale {
   return defaultLocale;
 }
 
+function coerceCookieLocale(value: string | undefined): Locale | undefined {
+  if (!value) return undefined;
+  const normalized = value.trim();
+  if (isLocale(normalized)) return normalized;
+
+  switch (normalized.toLowerCase()) {
+    case 'zh':
+    case 'zh-cn':
+    case 'zh-hans':
+      return 'zh-CN';
+    case 'zh-tw':
+    case 'zh-hk':
+    case 'zh-hant':
+      return 'zh-TW';
+    case 'en':
+    case 'en-us':
+    case 'en-gb':
+      return 'en';
+    default:
+      return undefined;
+  }
+}
+
 /**
  * 解析当前请求的"有效 country"，优先级：
  *   1. URL ?_geo=XX 显式覆盖（dev 调试 / 用户切换 VPN 后强制刷新）
@@ -154,8 +177,8 @@ export function proxy(request: NextRequest) {
   }
 
   // 裸路径：根据 cookie / Accept-Language 决定目标 locale 并 301
-  const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value;
-  const targetLocale: Locale = (cookieLocale && isLocale(cookieLocale))
+  const cookieLocale = coerceCookieLocale(request.cookies.get('NEXT_LOCALE')?.value);
+  const targetLocale: Locale = cookieLocale
     ? cookieLocale
     : pickLocaleFromHeader(request.headers.get('accept-language'));
 

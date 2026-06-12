@@ -14,7 +14,11 @@
     "endTransmission": "— 传输结束 —",
     "returnToIndex": "返回索引",
     "returnToMain": "返回主页",
-    "imageNotAvailable": "图片不可用"
+    "imageNotAvailable": "图片不可用",
+    "expandPlaylist": "展开列表",
+    "collapsePlaylist": "收起列表",
+    "openMenu": "打开菜单",
+    "closeMenu": "关闭菜单"
   },
   "nav": {
     "top": "顶部",
@@ -53,8 +57,8 @@
     },
     "about": {
       "systemUptime": "系统在线时间",
-      "totalVisits": "总访问数量",
-      "onlineNow": "当前在线",
+      "currentVisitDuration": "目前访问时长",
+      "visitorLanguage": "来访者语言代码",
       "codeLicense": "代码遵循 MIT 协议。",
       "contentLicense": "除特别声明外，所有内容遵循 CC BY-NC-ND 4.0 协议。",
       "details": "详情 →"

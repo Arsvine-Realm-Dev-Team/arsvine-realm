@@ -5,17 +5,18 @@ import Noise from '../effects/Noise';
 import { siteConfig } from '../../data/site';
 import { defaultLocale, isLocale } from '../../i18n/config';
 import { useTransition } from '../../contexts/TransitionContext';
+import { useApp } from '../../contexts/AppContext';
+import useVisitorLanguageCode from '../../hooks/useVisitorLanguageCode';
 
 export default function AboutSection({
   aboutSectionRef,
   aboutContentRef,
-  runtime,
-  totalVisits,
-  currentVisitors,
 }) {
   const t = useTranslations('sections.about');
   const router = useRouter();
   const { navigateTo } = useTransition();
+  const { runtime, currentVisitDuration } = useApp();
+  const visitorLanguageCode = useVisitorLanguageCode();
   const queryLocale = router.query.locale;
   const locale = isLocale(queryLocale) ? queryLocale : defaultLocale;
   const currentYear = new Date().getFullYear();
@@ -29,9 +30,9 @@ export default function AboutSection({
       <div ref={aboutContentRef} className={styles.aboutContentInner}>
         <h2>ABOUT</h2>
         <div className={styles.siteStatsContainer}>
-          <p>{t('systemUptime')}: {runtime}</p>
-          <p>{t('totalVisits')}: {totalVisits}</p>
-          <p>{t('onlineNow')}: {currentVisitors}</p>
+          <p>{t('systemUptime')}: <span className={styles.statValue}>{runtime}</span></p>
+          <p>{t('currentVisitDuration')}: <span className={styles.statValue}>{currentVisitDuration}</span></p>
+          <p>{t('visitorLanguage')}: <span className={styles.statValue}>{visitorLanguageCode ?? '--'}</span></p>
         </div>
         <div className={styles.footerInfo}>
           <p>{t('codeLicense')}</p>

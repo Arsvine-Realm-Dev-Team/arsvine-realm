@@ -8,7 +8,7 @@
  *   1. proxy.ts 读 Vercel geolocation → 写 GEO_COUNTRY cookie + x-geo-country header
  *   2. _document.tsx SSR 读取上述任一来源 → `<html data-country data-x-blocked data-bilibili-blocked>`
  *   3. globals.scss 用 `html[data-x-blocked] [data-hide-when-x-blocked]` 等规则直接隐藏
- *   4. useVisitorCountry hook 仅在客户端需要按 country 做更复杂判断时使用
+ *   4. 语言展示与地区可见性分离：UI 若要显示语言代码，改走 useVisitorLanguageCode hook
  */
 
 /**
@@ -47,4 +47,3 @@ export function isBilibiliBlockedRegion(country: string | null | undefined): boo
   if (!country) return false;
   return !BILIBILI_FRIENDLY_COUNTRIES.has(country.toUpperCase());
 }
-

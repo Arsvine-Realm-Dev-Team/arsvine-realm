@@ -4,7 +4,6 @@ import Head from 'next/head';
 import type { GetStaticPaths, GetStaticProps } from 'next';
 import { useTranslations } from 'next-intl';
 import styles from '../../styles/Home.module.scss';
-import { useApp } from '../../contexts/AppContext';
 import { useTransition } from '../../contexts/TransitionContext';
 
 import WorksSection from '../../components/sections/WorksSection';
@@ -67,7 +66,6 @@ export default function ContentPage({
   pageDescription,
 }: ContentPageProps) {
   const router = useRouter();
-  const { runtime, totalVisits, currentVisitors } = useApp();
   const { navigateTo, setBackOverride } = useTransition();
   const tSite = useTranslations('pages.site');
 
@@ -109,9 +107,8 @@ export default function ContentPage({
     if (!hash) return;
 
     const el = document.getElementById(`section-${hash}`);
-    const container = scrollContainerRef.current;
-    if (el && container) {
-      container.scrollTop = el.offsetTop;
+    if (el) {
+      el.scrollIntoView({ block: 'start' });
     }
   }, []);
 
@@ -244,7 +241,7 @@ export default function ContentPage({
           isClosing ? ` ${styles.detailClosing}` : ''
         }`}
       >
-        <div id="section-works">
+        <div id="section-works" className={styles.sectionAnchor}>
           <WorksSection
             worksSectionRef={worksSectionRef}
             activeWorkTab={activeWorkTab}
@@ -260,7 +257,7 @@ export default function ContentPage({
           />
         </div>
 
-        <div id="section-experience">
+        <div id="section-experience" className={styles.sectionAnchor}>
           <ExperienceSection
             experienceSectionRef={experienceSectionRef}
             experienceData={experienceData}
@@ -268,15 +265,16 @@ export default function ContentPage({
           />
         </div>
 
-        <div id="section-blog">
+        <div id="section-blog" className={styles.sectionAnchor}>
           <BlogSection
             blogSectionRef={blogSectionRef}
+            locale={locale}
             posts={blogPosts}
             handleBlogItemClick={handleBlogItemClick}
           />
         </div>
 
-        <div id="section-life">
+        <div id="section-life" className={styles.sectionAnchor}>
           <LifeSection
             lifeSectionRef={lifeSectionRef}
             activeSection="content"
@@ -296,7 +294,7 @@ export default function ContentPage({
           />
         </div>
 
-        <div id="section-contact">
+        <div id="section-contact" className={styles.sectionAnchor}>
           <ContactSection
             contactSectionRef={contactSectionRef}
             handleCopyEmail={handleCopyEmail}
@@ -305,13 +303,10 @@ export default function ContentPage({
           />
         </div>
 
-        <div id="section-about">
+        <div id="section-about" className={styles.sectionAnchor}>
           <AboutSection
             aboutSectionRef={aboutSectionRef}
             aboutContentRef={aboutContentRef}
-            runtime={runtime}
-            totalVisits={totalVisits}
-            currentVisitors={currentVisitors}
           />
         </div>
       </div>

@@ -2,16 +2,20 @@ import { type RefObject } from 'react';
 import { useTranslations } from 'next-intl';
 import styles from '../../styles/Home.module.scss';
 import cardStyles from '../../styles/BlogPostCard.module.scss';
+import { formatReadingTime } from '../../lib/format-reading-time';
+import type { Locale } from '../../i18n/config';
 import type { BlogPostMeta } from '../../types';
 
 interface BlogSectionProps {
   blogSectionRef: RefObject<HTMLDivElement>;
+  locale: Locale;
   posts: BlogPostMeta[];
   handleBlogItemClick: (slug: string) => void;
 }
 
 export default function BlogSection({
   blogSectionRef,
+  locale,
   posts,
   handleBlogItemClick,
 }: BlogSectionProps) {
@@ -53,8 +57,8 @@ export default function BlogSection({
                       ))}
                     </div>
                   ) : <span />}
-                  {post.readingTime && (
-                    <span className={cardStyles.cardReadingTime}>{post.readingTime}</span>
+                  {post.readingMinutes > 0 && (
+                    <span className={cardStyles.cardReadingTime}>{formatReadingTime(post.readingMinutes, locale)}</span>
                   )}
                 </div>
               </div>

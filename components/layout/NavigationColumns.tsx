@@ -33,6 +33,12 @@ export default function NavigationColumns({
   } = useApp();
 
   const rightPanelRef = useRef<HTMLDivElement>(null);
+  const chargeLeverLabel = isTesseractActivated ? 'CHARGING' : 'START CHARGE';
+  const dischargeLeverLabel = isDischarging
+    ? 'DISCHARGING'
+    : powerLevel === 100
+      ? 'DISCHARGE'
+      : 'FULL CHARGE REQUIRED';
 
   useEffect(() => {
     if (!mainVisible) return;
@@ -99,12 +105,14 @@ export default function NavigationColumns({
                     isActive={isTesseractActivated}
                     iconType="discharge"
                     isAnimated={leversVisible}
+                    cursorLabel={chargeLeverLabel}
                   />
                   <ActivationLever
                     onActivate={handleDischargeLeverPull}
                     isActive={isDischarging}
                     iconType="drain"
                     isAnimated={leversVisible}
+                    cursorLabel={dischargeLeverLabel}
                   />
                 </>
               )}

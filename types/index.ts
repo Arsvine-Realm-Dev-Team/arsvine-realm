@@ -94,7 +94,8 @@ export interface BlogPostMeta {
   date: string;
   excerpt: string;
   tags: string[];
-  readingTime: string;
+  /** 结构化阅读时长（分钟），供 UI 按当前界面语言自行格式化 */
+  readingMinutes: number;
   /** 置顶到博客列表最前；feed/sitemap 仍按日期排序 */
   pinned?: boolean;
   /** 内容原文所用 locale；缺省视为 defaultLocale（zh-CN）。
@@ -242,6 +243,7 @@ export interface PowerSystemState {
 export interface RealtimeStatsState {
   currentTime: string;
   runtime: string;
+  currentVisitDuration: string;
   totalVisits: number | string;
   currentVisitors: number;
 }

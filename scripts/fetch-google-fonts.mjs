@@ -12,12 +12,22 @@
 // public/_fonts-staging/ is gitignored. Re-run is idempotent: same source CSS →
 // same filenames → byte-identical output.
 //
-// Upload step (run manually after this script succeeds):
-//   coscli sync ./public/_fonts-staging/ cos://arsvine-cdn/fonts/ \
-//     --headers "Cache-Control: public, max-age=31536000, immutable"
-//   coscli cp ./public/_fonts-staging/google-fonts.css cos://arsvine-cdn/fonts/google-fonts.css \
-//     --headers "Cache-Control: public, max-age=86400, must-revalidate" \
-//     --headers "Content-Type: text/css; charset=utf-8"
+// Upload step (manual, via COS web console — coscli is not used in this project):
+//   1. 打开腾讯云 COS 控制台 → 桶 arsvine-cdn → fonts/ 目录
+//   2. 把 public/_fonts-staging/ 下的 google-fonts.css 和所有子目录上传过去
+//      （woff2 子目录用「文件夹上传」，保持目录结构）
+//   3. 为 google-fonts.css 在「文件详情 → 自定义 Header」设置：
+//        Content-Type:   text/css; charset=utf-8
+//        Cache-Control:  public, max-age=86400, must-revalidate
+//   4. 为所有 woff2（可批量选中后「编辑元数据」）设置：
+//        Content-Type:   font/woff2
+//        Cache-Control:  public, max-age=31536000, immutable
+//
+//   ⚠ 重要：自定义 Header 的「Key」字段只写 header 名（如 Cache-Control），
+//   「Value」字段只写值（如 public, max-age=86400, must-revalidate）。
+//   不要把 "Cache-Control: " 这种前缀写进 Value，否则 COS 会拼出
+//   "Cache-Control: Cache-Control: ..." 这种非法响应头，导致 Firefox
+//   拒绝渲染 woff2 字体（fallback 到系统字体，繁体/低频字会显示为方块）。
 //
 // Why a modern Chrome User-Agent: Google Fonts CSS API serves different src formats
 // based on UA. Without a modern UA you get .ttf instead of .woff2, ballooning the
@@ -142,7 +152,7 @@ async function main() {
   console.log(`[fonts] Source: ${cssUrl}`);
 
   // Clean staging on each run — keeps the upload set minimal and avoids stale files
-  // from previous weight choices being re-uploaded by `coscli sync`.
+  // from previous weight choices being re-uploaded to COS.
   // .gitignore is preserved.
   await rm(STAGING_DIR, { recursive: true, force: true });
   await mkdir(STAGING_DIR, { recursive: true });
@@ -228,17 +238,27 @@ async function main() {
   console.log(`[fonts] Families: ${manifest.families.join(', ')}`);
   console.log('================================================================');
   console.log('');
-  console.log('Upload to COS (run from project root):');
+  console.log('上传到 COS（腾讯云控制台网页操作，本项目不使用 coscli）：');
   console.log('');
-  console.log('  coscli sync ./public/_fonts-staging/ cos://arsvine-cdn/fonts/ \\');
-  console.log('    --headers "Cache-Control: public, max-age=31536000, immutable"');
+  console.log('  1. 控制台 → 桶 arsvine-cdn → fonts/ 目录');
+  console.log('  2. 上传 public/_fonts-staging/google-fonts.css 和所有 woff2 子目录');
+  console.log('     （woff2 用「文件夹上传」，保持目录结构）');
   console.log('');
-  console.log('  coscli cp ./public/_fonts-staging/google-fonts.css cos://arsvine-cdn/fonts/google-fonts.css \\');
-  console.log('    --headers "Cache-Control: public, max-age=86400, must-revalidate" \\');
-  console.log('    --headers "Content-Type: text/css; charset=utf-8"');
+  console.log('  3. 为 google-fonts.css 设置自定义 Header（文件详情 → 编辑元数据）：');
+  console.log('       Key: Content-Type     Value: text/css; charset=utf-8');
+  console.log('       Key: Cache-Control    Value: public, max-age=86400, must-revalidate');
   console.log('');
-  console.log('Then verify with:');
+  console.log('  4. 批量选中所有 woff2 → 编辑元数据：');
+  console.log('       Key: Content-Type     Value: font/woff2');
+  console.log('       Key: Cache-Control    Value: public, max-age=31536000, immutable');
+  console.log('');
+  console.log('  ⚠ Value 只写值，不要带 "Cache-Control: " 这种前缀，');
+  console.log('    否则响应头会变成 "Cache-Control: Cache-Control: ..."');
+  console.log('    Firefox 会拒绝渲染字体，繁体/低频字 fallback 到系统字体。');
+  console.log('');
+  console.log('Verify with:');
   console.log('  curl -I -H "Referer: https://arsvine.com/" https://cdn.arsvine.com/fonts/google-fonts.css');
+  console.log('  → Content-Type / Cache-Control 各只出现一次');
 }
 
 main().catch((err) => {

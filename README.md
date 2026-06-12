@@ -59,8 +59,9 @@ npm run lint     # ESLint flat config：eslint .
 
 1. 自提升到管理员（UAC 弹窗）
 2. 写 `127.0.0.1  dev.arsvine.com` 到 Windows hosts 文件（首次备份 `hosts.bak.<日期>`）
-3. 启动 `npm run dev`（端口 3000）
-4. 按 Ctrl+C 退出时自动停 dev server、回退 hosts 条目、`ipconfig /flushdns`
+3. 如果系统代理已开启，临时把 `dev.arsvine.com` 加入当前用户的 `ProxyOverride`
+4. 启动 `npm run dev`（端口 3000）
+5. 按 Ctrl+C 退出时自动停 dev server、恢复 proxy bypass、回退 hosts 条目、`ipconfig /flushdns`
 
 手动单向操作也提供：
 
@@ -69,7 +70,7 @@ npm run lint     # ESLint flat config：eslint .
 .\scripts\dev-host-setup.cmd -Remove       # 清理 dev.arsvine.com hosts 条目
 ```
 
-> ⚠️ 脚本会修改 `C:\Windows\System32\drivers\etc\hosts`，必须管理员权限。自提升流程是通过 UAC 完成的，不会直接操作系统配置。被 X 关闭窗口导致 hosts 残留时，用 `-Remove` 清理。
+> ⚠️ 脚本会修改 `C:\Windows\System32\drivers\etc\hosts`，并在系统代理开启时临时更新当前用户的 `ProxyOverride`。必须管理员权限。自提升流程是通过 UAC 完成的，不会直接操作系统配置。被 X 关闭窗口导致 hosts / proxy bypass 残留时，用 `-Remove` 清理。
 
 浏览器打开 `http://dev.arsvine.com:3000` 后，Referer 变为 `dev.arsvine.com:3000`，COS 放行。
 
@@ -81,6 +82,38 @@ npm run lint     # ESLint flat config：eslint .
 | `scripts/convert-images.mjs` | 批量图片格式转换（webp/jpg/png/avif），输出到 `scripts/images/out/`。 |
 | `scripts/regen-favicons.mjs` | 从透明源图重新生成全套 favicon（替换 `public/` 中所有 icon 文件）。 |
 | `scripts/jpg-to-transparent-png.mjs` | 去掉白底（alpha unmix 算法），把白底 jpg 转为透明 PNG。 |
+| `scripts/fetch-google-fonts.mjs` | 从 `data/site.ts` 读取 Google Fonts URL，抓取 CSS、下载所有 woff2、改写 url() 指向 `cdn.arsvine.com/fonts/`，输出到 `public/_fonts-staging/`（gitignored）。**生产分发用腾讯云 COS 网页控制台手动上传，不使用 coscli。** 详见下文「自托管 Google Fonts」。 |
+
+## 自托管 Google Fonts（`cdn.arsvine.com/fonts/`）
+
+国内访问 `fonts.googleapis.com` 不可达，所以全部访客统一走自有 CDN（腾讯云 COS 香港 Bucket `arsvine-cdn`，CNAME 为 `cdn.arsvine.com`）。流程：
+
+1. **改字体配置**：编辑 [data/site.ts](data/site.ts) 中的 `siteConfig.fonts.googleStylesheet`（标准 Google Fonts URL，写入要用到的 family/weight）。
+2. **本地抓取 + 改写 CSS**：
+   ```bash
+   node scripts/fetch-google-fonts.mjs
+   ```
+   脚本会：用现代 Chrome User-Agent 拉 Google CSS（否则 Google 会返回更大的 `.ttf`）→ 下载所有 `.woff2` → 把所有 `url()` 改写为 `cdn.arsvine.com/fonts/<family>/<file>` → 写入 `public/_fonts-staging/`（已 gitignore）。
+3. **上传到 COS（腾讯云控制台网页操作，不使用 coscli）**：
+   - 控制台 → 桶 `arsvine-cdn` → 进入 `fonts/` 目录
+   - 把 `public/_fonts-staging/` 下的 `google-fonts.css` 和所有 woff2 子目录上传（用「文件夹上传」，保持目录结构）
+   - 给 `google-fonts.css` 设置自定义 Header（文件详情 → 编辑元数据）：
+     - **Key**：`Content-Type` **Value**：`text/css; charset=utf-8`
+     - **Key**：`Cache-Control` **Value**：`public, max-age=86400, must-revalidate`
+   - 批量选中所有 woff2 → 编辑元数据：
+     - **Key**：`Content-Type` **Value**：`font/woff2`
+     - **Key**：`Cache-Control` **Value**：`public, max-age=31536000, immutable`
+
+⚠ **必须避开的坑（曾经踩过）**：自定义 Header 的 **Value 字段只写值**，不要带 `Cache-Control: ` 这种前缀。否则 COS 实际响应头会变成 `Cache-Control: Cache-Control: public, ...`，Firefox 拒绝渲染字体，繁体或低频简体字会 fallback 到系统字体显示为方块。
+
+✅ **Variable Font 复用是正确行为**：Google Fonts 复合请求（如 `wght@300;400;500`）返回的 CSS 里多个 `@font-face` 块的 `font-weight:` 值不同但 `src` 都指向**同一个 woff2 文件** —— 这是 Variable Font，单个文件的 `wght` 轴覆盖 200–900 之类的连续范围，浏览器按声明 weight 实时插值。`fetch-google-fonts.mjs` 的 dedup 是按这个机制设计的，**不要**为了"每个 weight 一个文件"去改这个脚本。
+
+**校验上传是否成功**：
+
+```bash
+curl -I -H "Referer: https://arsvine.com/" https://cdn.arsvine.com/fonts/google-fonts.css
+# Content-Type 和 Cache-Control 必须各只出现一次
+```
 
 ## 配置与内容维护
 
@@ -126,6 +159,31 @@ NEXT_PUBLIC_SITE_URL=https://你的域名
 ```
 
 也可以在 `data/site.ts` 的 `url` 中设置默认值；环境变量优先级更高。
+
+### 字体使用规范
+
+样式中字体通过 CSS 变量调用，定义在 [styles/globals.scss](styles/globals.scss)：
+
+| 变量 | 字体 | 用途 |
+|---|---|---|
+| `--font-display` | `ZELDA Free` | 装饰性英文 HUD 标题。**仅支持基础拉丁字母，不含 CJK、不完整支持带音标拉丁（法语 é è à 等）**。绝不要用在博客标题、用户内容、需要国际化的位置。 |
+| `--font-hud` | `Dosis` | HUD 数字、标签、博客标题等通用无衬线场景。Variable Font，wght 轴覆盖 200–800。 |
+| `--font-reading` | `Noto Serif SC` 栈 | MDX 博客正文。Variable Font，wght 轴覆盖 200–900。 |
+| `--font-typewriter` | Courier 栈 | 打字机效果、等宽场景。 |
+
+> 历史教训：博客标题原本用 `--font-display`（ZELDA Free），后来发现法语字符（`é`、`à` 等）都成方块，遂迁回 `--font-hud` 500 字重。新增任何接收任意语言内容的标题/正文，**不要**直接用 `--font-display`。
+
+### 博客阅读时长
+
+博客 frontmatter **不需要**手动写 `readingTime`。[lib/blog.ts](lib/blog.ts) 在构建时调用内置 `estimateReadingMinutes(content, locale)` 计算分钟数：
+
+- CJK 内容（`zh-CN` / `zh-TW` / `ja`）按汉字字符数 ÷ 400 字符/分
+- 拉丁内容（`en` / `ru` / `fr`）按单词数 ÷ 230 词/分
+- 中英混排自动加权（先剥离 fenced code / inline code / HTML/JSX 标签 / MDX `import|export` 行）
+
+UI 展示走 [lib/format-reading-time.ts](lib/format-reading-time.ts) 按当前 UI locale 渲染（"约 N 分钟" / "約 N 分鐘" / "N min read"）。`BlogPostMeta` 只保留数值字段 `readingMinutes: number`。
+
+> ⚠ **不要**重新引入 `reading-time` npm 包。它按空格分词，中文文章会被当作 1 个"词"，全部显示为"1 min"。
 
 ### 内容数据
 
@@ -318,6 +376,17 @@ window.umami?.track('Open Life Item', { item: 'arknights' });
 - 动画、3D、打字机、鼠标交互区域可能触发 React Compiler lint warnings；除非有明确问题，不要为了消除 warning 大范围重写工作交互。
 - 修改可配置内容时优先找 `data/*.ts`、`config/*.js`、`.env.example`。
 - 没有单元测试框架；提交前至少运行 `npm run lint` 与 `npm run build`。
+
+### 已知的坑（曾踩过，不要再来一遍）
+
+- **`--font-display`（ZELDA Free）只支持基础拉丁字母**。法语带音标字符、中文都会丢字成方块。新增标题、列表项、博客字段、用户输入文案，一律用 `--font-hud` 或 `--font-reading`。详见 [字体使用规范](#字体使用规范)。
+- **COS 自定义 Header 的 Value 字段只写值**，不要加 `Cache-Control: ` 这种前缀。否则响应头变成 `Cache-Control: Cache-Control: ...`，Firefox 拒绝字体并 fallback 到系统字体，繁体/低频字成方块。详见 [自托管 Google Fonts](#自托管-google-fontscdnarsvinecomfonts)。
+- **不要重新引入 `reading-time` npm 包**。它按空格分词，CJK 全部估算为 1 分钟。已用内置 [estimateReadingMinutes()](lib/blog.ts) 替代。
+- **Variable Font 复用是 Google Fonts 的设计行为**，不是 bug。`fetch-google-fonts.mjs` 的 dedup 逻辑按此设计。看到不同 `font-weight:` 块指向同一个 woff2 文件不要"修"。
+- **本项目不使用 `coscli`**。任何说"运行 `coscli sync`"的旧文档/旧脚本注释都是过时的。CDN 上传一律走腾讯云 COS 网页控制台。
+- **导航必须用 `useTransition().navigateTo()`**，不要直接 `router.push()`，否则页面转场动画会被破坏。
+- **移动端 section anchor 必须有 `scroll-margin-top: var(--mobile-section-scroll-offset)`**，否则 hash 跳转或 `scrollIntoView` 标题会被顶部 HUD 遮挡。已在 [styles/_sections.scss](styles/_sections.scss) 给主要 section 加好；新增分区别忘了。
+- **根路径语言判定顺序**：`NEXT_LOCALE cookie > Accept-Language > zh-CN`。不要改成基于 IP 的地理映射，cookie 才是用户主动选择的真实意图。
 
 ## 部署
 

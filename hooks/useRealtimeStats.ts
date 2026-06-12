@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import type { RealtimeStatsState } from '../types';
 
+const SYSTEM_LAUNCH_AT = new Date('2026-06-10T02:00:00+08:00').getTime();
+
 function formatTime(date: Date): string {
   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
 }
@@ -21,10 +23,11 @@ function formatRuntime(uptimeMs: number): string {
 export default function useRealtimeStats(): RealtimeStatsState {
   const [currentTime, setCurrentTime] = useState('00:00:00');
   const [runtime, setRuntime] = useState('000:00:00:00');
+  const [currentVisitDuration, setCurrentVisitDuration] = useState('000:00:00:00');
   const [totalVisits, setTotalVisits] = useState<number | string>(0);
   const [currentVisitors, setCurrentVisitors] = useState(0);
 
-  const runtimeOriginRef = useRef<{ server: number; local: number } | null>(null);
+  const visitStartedAtRef = useRef<number>(0);
 
   // SSE connection + runtime stats
   useEffect(() => {
@@ -32,10 +35,11 @@ export default function useRealtimeStats(): RealtimeStatsState {
     let es: EventSource | undefined;
 
     const startRuntimeTick = () => {
-      if (runtimeInterval || !runtimeOriginRef.current) return;
+      if (runtimeInterval) return;
       runtimeInterval = setInterval(() => {
-        const { server, local } = runtimeOriginRef.current!;
-        setRuntime(formatRuntime(server + (Date.now() - local)));
+        const now = Date.now();
+        setRuntime(formatRuntime(Math.max(0, now - SYSTEM_LAUNCH_AT)));
+        setCurrentVisitDuration(formatRuntime(Math.max(0, now - visitStartedAtRef.current)));
       }, 1000);
     };
 
@@ -51,12 +55,22 @@ export default function useRealtimeStats(): RealtimeStatsState {
         const response = await fetch('/api/stats');
         const data = await response.json();
         setTotalVisits(data.visits);
-        runtimeOriginRef.current = { server: data.runtime, local: Date.now() };
+        const now = Date.now();
+        if (!visitStartedAtRef.current) {
+          visitStartedAtRef.current = now;
+        }
+        setRuntime(formatRuntime(Math.max(0, now - SYSTEM_LAUNCH_AT)));
+        setCurrentVisitDuration(formatRuntime(Math.max(0, now - visitStartedAtRef.current)));
         if (!document.hidden) startRuntimeTick();
       } catch (error) {
         console.error('Failed to fetch stats:', error);
         setTotalVisits('N/A');
-        setRuntime('N/A');
+        const now = Date.now();
+        if (!visitStartedAtRef.current) {
+          visitStartedAtRef.current = now;
+        }
+        setRuntime(formatRuntime(Math.max(0, now - SYSTEM_LAUNCH_AT)));
+        setCurrentVisitDuration(formatRuntime(Math.max(0, now - visitStartedAtRef.current)));
       }
 
       es = new EventSource('/api/sse/stats');
@@ -79,11 +93,9 @@ export default function useRealtimeStats(): RealtimeStatsState {
       if (document.hidden) {
         stopRuntimeTick();
       } else {
-        if (runtimeOriginRef.current) {
-          setRuntime(formatRuntime(
-            runtimeOriginRef.current.server + (Date.now() - runtimeOriginRef.current.local)
-          ));
-        }
+        const now = Date.now();
+        setRuntime(formatRuntime(Math.max(0, now - SYSTEM_LAUNCH_AT)));
+        setCurrentVisitDuration(formatRuntime(Math.max(0, now - visitStartedAtRef.current)));
         startRuntimeTick();
       }
     };
@@ -130,5 +142,5 @@ export default function useRealtimeStats(): RealtimeStatsState {
     };
   }, []);
 
-  return { currentTime, runtime, totalVisits, currentVisitors };
+  return { currentTime, runtime, currentVisitDuration, totalVisits, currentVisitors };
 }

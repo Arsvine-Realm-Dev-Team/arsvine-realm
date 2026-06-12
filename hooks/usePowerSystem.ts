@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { PowerSystemState } from '../types';
 
-const CHARGE_STEP = 8;
+// CHARGE_STEP: 每次 chargeBattery() 调用的电量增加百分点。
+// 桌面端由 Tesseract 拖近电池触发（200ms cooldown），移动端由 MainLayout 200ms interval 触发。
+// 12 = 旧值 8 的 1.5×，相当于充电速度提升 50%；满电约 5–6 次触发 ≈ 1.1s。
+const CHARGE_STEP = 12;
 const DISCHARGE_STEP = 1;
 const DISCHARGE_INTERVAL_MS = 50;
 

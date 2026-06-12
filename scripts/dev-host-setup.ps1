@@ -4,14 +4,18 @@
 #   1. (Self-elevate to Administrator if needed.)
 #   2. Add `127.0.0.1  dev.arsvine.com` to the Windows hosts file
 #      so the COS *.arsvine.com Referer whitelist accepts local pages.
-#   3. Run `node server.js` (the same entry as `npm run dev`) directly,
+#   3. If the current user has a Windows proxy enabled, temporarily append
+#      `dev.arsvine.com` to the proxy bypass list so browsers do not send the
+#      local alias through the proxy first.
+#   4. Run `node server.js` (the same entry as `npm run dev`) directly,
 #      streaming its output here. We bypass npm.cmd because Ctrl+C only
 #      kills the cmd.exe wrapper, leaving node.exe orphaned on port 3000.
-#   4. On Ctrl+C / normal exit / script termination:
+#   5. On Ctrl+C / normal exit / script termination:
 #      - Stop the dev server (graceful taskkill, then /F fallback,
 #        then port-3000 sweep as a last resort).
 #      - Remove the hosts entry that this script added (won't remove an
 #        entry that was already there before the script ran).
+#      - Restore the proxy bypass entry if this script added it.
 #      - Flush DNS cache.
 #
 # Usage:
@@ -28,7 +32,9 @@
 
 param(
     [switch]$Remove,
-    [switch]$HostsOnly
+    [switch]$HostsOnly,
+    [ValidateSet('Add', 'Remove')]
+    [string]$ElevatedHostsAction
 )
 
 $ErrorActionPreference = 'Stop'
@@ -38,30 +44,46 @@ $IP        = '127.0.0.1'
 $DevPort   = 3000
 $HostsPath = "$env:windir\System32\drivers\etc\hosts"
 $Marker    = "$IP`t$Hostname`t# arsvine-realm local dev"
+$InternetSettingsPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings'
 
 $ProjectRoot = Split-Path -Parent (Split-Path -Parent $PSCommandPath)
 $EntryRegex  = "^\s*\d{1,3}(\.\d{1,3}){3}\s+$([regex]::Escape($Hostname))(\s|$)"
 
-# --- Self-elevate ---------------------------------------------------------
+# --- Privilege helpers ----------------------------------------------------
 
 $currentPrincipal = New-Object Security.Principal.WindowsPrincipal(
     [Security.Principal.WindowsIdentity]::GetCurrent())
-if (-not $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Write-Host "Elevating to Administrator..." -ForegroundColor Yellow
-    # Prefer PowerShell 7 (pwsh.exe, modern console). Fall back to Windows
-    # PowerShell 5.1 (powershell.exe) if pwsh isn't on PATH.
+$isAdministrator = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+function Invoke-ElevatedHostsAction {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('Add', 'Remove')]
+        [string]$Action
+    )
+
+    if ($isAdministrator) {
+        return
+    }
+
+    Write-Host "Elevating to Administrator for hosts update..." -ForegroundColor Yellow
     $shell = if (Get-Command pwsh.exe -ErrorAction SilentlyContinue) { 'pwsh.exe' } else { 'powershell.exe' }
-    $argList = @('-NoExit', '-ExecutionPolicy', 'Bypass', '-File', "`"$PSCommandPath`"")
-    if ($Remove)    { $argList += '-Remove' }
-    if ($HostsOnly) { $argList += '-HostsOnly' }
+    $argList = @(
+        '-ExecutionPolicy', 'Bypass',
+        '-File', "`"$PSCommandPath`"",
+        '-ElevatedHostsAction', $Action
+    )
+
     try {
-        Start-Process $shell -ArgumentList $argList -Verb RunAs | Out-Null
+        $proc = Start-Process $shell -ArgumentList $argList -Verb RunAs -PassThru -Wait
+        if ($proc.ExitCode -ne 0) {
+            throw "Elevated hosts action exited with code $($proc.ExitCode)."
+        }
     } catch {
-        Write-Host "Failed to elevate: $_" -ForegroundColor Red
+        Write-Host "Failed to update hosts with elevation: $_" -ForegroundColor Red
         Read-Host "Press Enter to close"
         exit 1
     }
-    exit 0
 }
 
 # --- Hosts helpers --------------------------------------------------------
@@ -103,6 +125,93 @@ function Remove-HostsEntry {
     Write-Host "Removed $Hostname from hosts." -ForegroundColor Green
 }
 
+# --- Proxy helpers --------------------------------------------------------
+
+function Refresh-InternetSettings {
+    if (-not ('WinInetProxySettings' -as [type])) {
+        Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+
+public static class WinInetProxySettings {
+    [DllImport("wininet.dll", SetLastError = true)]
+    public static extern bool InternetSetOption(IntPtr hInternet, int dwOption, IntPtr lpBuffer, int dwBufferLength);
+}
+"@
+    }
+
+    # INTERNET_OPTION_SETTINGS_CHANGED = 39
+    # INTERNET_OPTION_REFRESH = 37
+    [WinInetProxySettings]::InternetSetOption([IntPtr]::Zero, 39, [IntPtr]::Zero, 0) | Out-Null
+    [WinInetProxySettings]::InternetSetOption([IntPtr]::Zero, 37, [IntPtr]::Zero, 0) | Out-Null
+}
+
+function Get-ProxyOverrideTokens {
+    try {
+        $raw = (Get-ItemProperty -Path $InternetSettingsPath -Name ProxyOverride -ErrorAction SilentlyContinue).ProxyOverride
+    } catch {
+        $raw = $null
+    }
+
+    if ([string]::IsNullOrWhiteSpace($raw)) {
+        return @()
+    }
+
+    return @(
+        $raw -split ';' |
+        ForEach-Object { $_.Trim() } |
+        Where-Object { $_ }
+    )
+}
+
+function Test-ProxyBypassEntry {
+    $tokens = Get-ProxyOverrideTokens
+    return ($tokens | Where-Object { $_.Equals($Hostname, [System.StringComparison]::OrdinalIgnoreCase) }).Count -gt 0
+}
+
+function Add-ProxyBypassEntry {
+    try {
+        $settings = Get-ItemProperty -Path $InternetSettingsPath -ErrorAction Stop
+    } catch {
+        Write-Host "Could not read Internet Settings; skipping proxy bypass update." -ForegroundColor DarkYellow
+        return $false
+    }
+
+    if (-not $settings.ProxyEnable -or [string]::IsNullOrWhiteSpace($settings.ProxyServer)) {
+        return $false
+    }
+
+    if (Test-ProxyBypassEntry) {
+        Write-Host "Proxy bypass for $Hostname already present. Will NOT remove it on exit." -ForegroundColor Yellow
+        return $false
+    }
+
+    $tokens = Get-ProxyOverrideTokens
+    $newValue = @($tokens + $Hostname) -join ';'
+    Set-ItemProperty -Path $InternetSettingsPath -Name ProxyOverride -Value $newValue
+    Refresh-InternetSettings
+    Write-Host "Added $Hostname to ProxyOverride." -ForegroundColor Green
+    return $true
+}
+
+function Remove-ProxyBypassEntry {
+    $tokens = Get-ProxyOverrideTokens
+    if (-not $tokens.Count) {
+        return
+    }
+
+    $remaining = @($tokens | Where-Object { -not $_.Equals($Hostname, [System.StringComparison]::OrdinalIgnoreCase) })
+    if ($remaining.Count -eq $tokens.Count) {
+        Write-Host "No proxy bypass entry for $Hostname found." -ForegroundColor DarkGray
+        return
+    }
+
+    $newValue = $remaining -join ';'
+    Set-ItemProperty -Path $InternetSettingsPath -Name ProxyOverride -Value $newValue
+    Refresh-InternetSettings
+    Write-Host "Removed $Hostname from ProxyOverride." -ForegroundColor Green
+}
+
 # --- Port helpers ---------------------------------------------------------
 
 function Get-PortListenerPid {
@@ -123,20 +232,64 @@ function Stop-PortListener {
     }
 }
 
+function Get-ProcessNameByPid {
+    param([int]$Pid)
+    try {
+        return (Get-Process -Id $Pid -ErrorAction Stop).ProcessName
+    } catch {
+        return $null
+    }
+}
+
 # --- Subcommand: -Remove (manual cleanup) ---------------------------------
 
+if ($ElevatedHostsAction) {
+    if (-not $isAdministrator) {
+        Write-Host "Elevated hosts action requires Administrator context." -ForegroundColor Red
+        exit 1
+    }
+
+    if ($ElevatedHostsAction -eq 'Add') {
+        Add-HostsEntry | Out-Null
+        exit 0
+    }
+
+    if ($ElevatedHostsAction -eq 'Remove') {
+        Remove-HostsEntry
+        exit 0
+    }
+}
+
 if ($Remove) {
-    Remove-HostsEntry
+    if ($isAdministrator) {
+        Remove-HostsEntry
+    } else {
+        Invoke-ElevatedHostsAction -Action 'Remove'
+    }
+    Remove-ProxyBypassEntry
     Read-Host "Press Enter to close"
     exit 0
 }
 
 # --- Add hosts entry ------------------------------------------------------
 
-$weAdded = Add-HostsEntry
-if (-not $weAdded) {
-    Write-Host "Entry for $Hostname already present. Will NOT remove it on exit." -ForegroundColor Yellow
+if ($isAdministrator) {
+    $weAdded = Add-HostsEntry
+    if (-not $weAdded) {
+        Write-Host "Entry for $Hostname already present. Will NOT remove it on exit." -ForegroundColor Yellow
+    }
+} else {
+    $hostsEntryAlreadyPresent = Test-HostsEntry
+    if ($hostsEntryAlreadyPresent) {
+        $weAdded = $false
+        Write-Host "Entry for $Hostname already present. Will NOT remove it on exit." -ForegroundColor Yellow
+    } else {
+        Invoke-ElevatedHostsAction -Action 'Add'
+        $weAdded = $true
+    }
 }
+
+$weAddedProxyBypass = Add-ProxyBypassEntry
 
 # --- Subcommand: -HostsOnly (no dev server) -------------------------------
 
@@ -145,69 +298,78 @@ if ($HostsOnly) {
     Write-Host "Hosts entry active. Open another shell and run npm run dev yourself." -ForegroundColor Cyan
     Write-Host "Press Enter here to remove the hosts entry and exit." -ForegroundColor Yellow
     Read-Host
-    if ($weAdded) { Remove-HostsEntry }
+    if ($weAdded) {
+        if ($isAdministrator) { Remove-HostsEntry } else { Invoke-ElevatedHostsAction -Action 'Remove' }
+    }
+    if ($weAddedProxyBypass) { Remove-ProxyBypassEntry }
     exit 0
 }
 
 # --- Default: also launch the dev server ---------------------------------
 
-# Sanity: refuse to start if something already holds port 3000 (e.g. a
-# previous crashed run left an orphan). Tell the user to clean it up.
+# Sanity: if a previous crashed run left an orphan node.exe on port 3000,
+# clean it up automatically. If another program owns the port, abort so we
+# don't kill unrelated software.
 $preExisting = Get-PortListenerPid -Port $DevPort
 if ($preExisting) {
-    Write-Host ""
-    Write-Host "Port $DevPort is already in use (PID $preExisting)." -ForegroundColor Red
-    Write-Host "Run this script with -Remove to clean hosts, then kill that PID:" -ForegroundColor Yellow
-    Write-Host "  taskkill /F /PID $preExisting" -ForegroundColor Yellow
-    if ($weAdded) { Remove-HostsEntry }
-    Read-Host "Press Enter to close"
-    exit 1
+    $preExistingName = Get-ProcessNameByPid -Pid $preExisting
+    if ($preExistingName -and $preExistingName.Equals('node', [System.StringComparison]::OrdinalIgnoreCase)) {
+        Write-Host ""
+        Write-Host "Port $DevPort is held by an old node process (PID $preExisting). Cleaning it up..." -ForegroundColor DarkYellow
+        & taskkill /F /T /PID $preExisting 2>$null | Out-Null
+        Start-Sleep -Milliseconds 800
+        Stop-PortListener -Port $DevPort
+        $stillHeld = Get-PortListenerPid -Port $DevPort
+        if ($stillHeld) {
+            Write-Host "Port $DevPort is still in use after cleanup (PID $stillHeld)." -ForegroundColor Red
+            if ($weAdded) {
+                if ($isAdministrator) { Remove-HostsEntry } else { Invoke-ElevatedHostsAction -Action 'Remove' }
+            }
+            if ($weAddedProxyBypass) { Remove-ProxyBypassEntry }
+            Read-Host "Press Enter to close"
+            exit 1
+        }
+    } else {
+        $ownerLabel = if ($preExistingName) { "PID $preExisting, $preExistingName" } else { "PID $preExisting" }
+        Write-Host ""
+        Write-Host "Port $DevPort is already in use ($ownerLabel)." -ForegroundColor Red
+        Write-Host "Refusing to kill a non-node process automatically." -ForegroundColor Yellow
+        if ($weAdded) {
+            if ($isAdministrator) { Remove-HostsEntry } else { Invoke-ElevatedHostsAction -Action 'Remove' }
+        }
+        if ($weAddedProxyBypass) { Remove-ProxyBypassEntry }
+        Read-Host "Press Enter to close"
+        exit 1
+    }
 }
 
 Write-Host ""
 Write-Host "Starting dev server (node server.js) in $ProjectRoot" -ForegroundColor Cyan
 Write-Host "Open: http://${Hostname}:${DevPort}" -ForegroundColor Cyan
 Write-Host "Note: first compile can take 10-30s. Wait for `"> Ready on http://localhost:${DevPort}`"." -ForegroundColor DarkGray
-Write-Host "Press Ctrl+C to stop the server and (if we added it) remove the hosts entry." -ForegroundColor Yellow
+Write-Host "Press Ctrl+C to stop the server and clean up the local alias." -ForegroundColor Yellow
 Write-Host ""
 
-$proc = $null
 try {
-    # IMPORTANT: launch node.exe directly (not npm.cmd). npm.cmd is a cmd.exe
-    # wrapper -- Ctrl+C only kills the wrapper, leaving node.exe orphaned on
-    # port 3000. Bypassing npm gives us a direct PID for clean shutdown.
-    $proc = Start-Process -FilePath 'node.exe' `
-                          -ArgumentList 'server.js' `
-                          -WorkingDirectory $ProjectRoot `
-                          -NoNewWindow `
-                          -PassThru
-
-    # Block here until the dev server exits OR Ctrl+C bubbles up to us.
-    # Wait-Process throws PipelineStoppedException on Ctrl+C, which jumps to finally.
-    Wait-Process -Id $proc.Id
+    Push-Location $ProjectRoot
+    # IMPORTANT: invoke node.exe directly (not npm.cmd). This keeps live stdout
+    # visible in the current console while still avoiding npm.cmd's extra cmd.exe
+    # wrapper that used to orphan node.exe on Ctrl+C.
+    & node.exe server.js
 }
 finally {
+    Pop-Location
     Write-Host ""
-    if ($proc -and -not $proc.HasExited) {
-        Write-Host "Stopping dev server (PID $($proc.Id))..." -ForegroundColor Yellow
-        # /T = whole tree. Try graceful first.
-        & taskkill /T /PID $proc.Id 2>$null | Out-Null
-        $waited = 0
-        while (-not $proc.HasExited -and $waited -lt 3000) {
-            Start-Sleep -Milliseconds 200; $waited += 200
-        }
-        if (-not $proc.HasExited) {
-            Write-Host "Graceful stop timed out, forcing..." -ForegroundColor DarkYellow
-            & taskkill /F /T /PID $proc.Id 2>$null | Out-Null
-        }
-    }
-    # Belt-and-suspenders: even if $proc tracking failed (orphan handle,
-    # PID wrap, etc.), sweep port 3000 so we never leak a listener.
+    # Belt-and-suspenders: sweep port 3000 so Ctrl+C / console close never leaves
+    # an orphan listener behind.
     Stop-PortListener -Port $DevPort
     if ($weAdded) {
-        Remove-HostsEntry
+        if ($isAdministrator) { Remove-HostsEntry } else { Invoke-ElevatedHostsAction -Action 'Remove' }
     } else {
         Write-Host "Hosts entry was pre-existing; leaving it in place." -ForegroundColor DarkGray
+    }
+    if ($weAddedProxyBypass) {
+        Remove-ProxyBypassEntry
     }
     Write-Host ""
     Write-Host "Done. Press Enter to close." -ForegroundColor Green

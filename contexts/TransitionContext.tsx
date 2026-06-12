@@ -24,8 +24,8 @@ interface TransitionProviderProps {
 }
 
 const SLIDE_IN_KF: Keyframe[] = [
-  { opacity: 0, transform: 'translateX(100%)' },
-  { opacity: 1, transform: 'translateX(0)' },
+  { opacity: 0, transform: 'translate3d(100%, 0, 0)' },
+  { opacity: 1, transform: 'translate3d(0, 0, 0)' },
 ];
 const SLIDE_IN_OPTS: KeyframeAnimationOptions = {
   duration: 1800,
@@ -34,8 +34,8 @@ const SLIDE_IN_OPTS: KeyframeAnimationOptions = {
 };
 
 const SLIDE_OUT_KF: Keyframe[] = [
-  { opacity: 1, transform: 'translateX(0)' },
-  { opacity: 0, transform: 'translateX(100%)' },
+  { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+  { opacity: 0, transform: 'translate3d(100%, 0, 0)' },
 ];
 const SLIDE_OUT_OPTS: KeyframeAnimationOptions = {
   duration: 500,

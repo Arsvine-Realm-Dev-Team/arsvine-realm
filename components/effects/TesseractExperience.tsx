@@ -23,47 +23,103 @@ function Plane(props) {
   );
 }
 
-// 场景逻辑处理 (例如更新连接线)
-function SceneLogic({ isConnecting, tesseractRef, batteryPosition3D, setConnectionLinePoints }) {
-  useFrame(({ camera }) => {
-    // Tesseract 正在连接且相关引用和位置存在
+// 场景逻辑处理 (例如更新连接线 + 拖动时让电池 DOM 向 Tesseract 偏移产生"引力")
+function SceneLogic({ isConnecting, tesseractRef, batteryPosition3D, setConnectionLinePoints, batteryElementRef, isDragging }) {
+  // 跨帧累积偏移量（写在 DOM 上），useFrame 内逐帧 lerp 平滑过渡
+  const currentOffsetRef = useRef({ x: 0, y: 0 });
+
+  useFrame(({ camera, size }) => {
+    // --- 1) 连接线更新（原有逻辑）---
     if (isConnecting && tesseractRef.current && batteryPosition3D) {
       const tesseractWorldPos = new THREE.Vector3();
-      // 获取 Tesseract 的物理实体引用
       const physicsMesh = tesseractRef.current.meshRef ? tesseractRef.current.meshRef.current : tesseractRef.current;
-      
-      if (physicsMesh) {
-        physicsMesh.getWorldPosition(tesseractWorldPos); // 获取 Tesseract 世界坐标
 
-        // 将电池的 NDC 坐标转换为世界坐标
+      if (physicsMesh) {
+        physicsMesh.getWorldPosition(tesseractWorldPos);
+
         const batteryWorldPos = new THREE.Vector3(batteryPosition3D.x, batteryPosition3D.y, 0.5);
         batteryWorldPos.unproject(camera);
         const dir = batteryWorldPos.sub(camera.position).normalize();
         const distance = (batteryPosition3D.z - camera.position.z) / dir.z;
         const finalBatteryWorldPos = camera.position.clone().add(dir.multiplyScalar(distance));
 
-        // 限制坐标范围，防止线条过长
-        tesseractWorldPos.clampLength(0, 50); 
+        tesseractWorldPos.clampLength(0, 50);
         finalBatteryWorldPos.clampLength(0, 50);
 
-        // 更新连接线端点
         setConnectionLinePoints([tesseractWorldPos, finalBatteryWorldPos]);
-      } else {
-         // 可选: 若 Tesseract 引用丢失，重置连接线点
-         // setConnectionLinePoints([new THREE.Vector3(), new THREE.Vector3()]);
       }
     }
+
+    // --- 2) 电池"引力"位移：把 Tesseract 的屏幕坐标和电池 DOM 的屏幕坐标做差，按距离缩放偏移 ---
+    const batteryEl = batteryElementRef.current;
+    if (!batteryEl) return;
+
+    let targetX = 0;
+    let targetY = 0;
+
+    if (isDragging && tesseractRef.current) {
+      const physicsMesh = tesseractRef.current.meshRef ? tesseractRef.current.meshRef.current : tesseractRef.current;
+      if (physicsMesh) {
+        // Tesseract 世界坐标 → NDC → Canvas 屏幕像素
+        const worldPos = new THREE.Vector3();
+        physicsMesh.getWorldPosition(worldPos);
+        const projected = worldPos.clone().project(camera);
+        const canvasEl = batteryEl.ownerDocument?.defaultView
+          ? (batteryEl.ownerDocument.querySelector('canvas') as HTMLCanvasElement | null)
+          : null;
+        if (!canvasEl) return;
+        const canvasRect = canvasEl.getBoundingClientRect();
+        const tesseractScreenX = canvasRect.left + ((projected.x + 1) / 2) * canvasRect.width;
+        const tesseractScreenY = canvasRect.top + ((1 - projected.y) / 2) * canvasRect.height;
+
+        // 电池图标中心点屏幕坐标（取 batteryIcon 而不是整个 powerDisplay 容器，定位更准）
+        const iconEl = batteryEl.querySelector('[class*="batteryIcon"]');
+        if (!iconEl) return;
+        const iconRect = (iconEl as HTMLElement).getBoundingClientRect();
+        // 用 transform 后的实际中心计算到 Tesseract 的方向，
+        // 但反推偏移量时要减去已经累计的 transform，得到"原始锚点"上的方向
+        const cur = currentOffsetRef.current;
+        const iconCenterX = iconRect.left + iconRect.width / 2 - cur.x;
+        const iconCenterY = iconRect.top + iconRect.height / 2 - cur.y;
+
+        const dx = tesseractScreenX - iconCenterX;
+        const dy = tesseractScreenY - iconCenterY;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+
+        // 引力强度：距离越近吸得越多；最大偏移 14px
+        // 用 1 / (1 + dist/120) 平滑曲线：dist=0 → 1.0，dist=120 → 0.5，dist=∞ → 0
+        const MAX_OFFSET = 14;
+        const strength = 1 / (1 + dist / 120);
+        targetX = (dx / dist) * MAX_OFFSET * strength;
+        targetY = (dy / dist) * MAX_OFFSET * strength;
+      }
+    }
+
+    // 帧间 lerp 平滑（系数 0.18 在 60fps 下约 100ms 内贴近目标，松手回弹也走这条路径）
+    const cur = currentOffsetRef.current;
+    cur.x += (targetX - cur.x) * 0.18;
+    cur.y += (targetY - cur.y) * 0.18;
+
+    // 极小偏移直接 snap 到 0，避免无谓的浮点 transform 持续触发合成层
+    if (Math.abs(cur.x) < 0.05 && Math.abs(cur.y) < 0.05 && targetX === 0 && targetY === 0) {
+      cur.x = 0;
+      cur.y = 0;
+      batteryEl.style.transform = '';
+    } else {
+      batteryEl.style.transform = `translate(${cur.x.toFixed(2)}px, ${cur.y.toFixed(2)}px)`;
+    }
   });
-  return null; // 不渲染任何可见内容
+  return null;
 }
 
 // Tesseract 3D 场景主组件
-const TesseractExperience = ({ chargeBattery, isActivated, isInverted }) => {
+const TesseractExperience = ({ chargeBattery, isActivated, isInverted, onDraggingChange }) => {
   const [batteryPosition3D, setBatteryPosition3D] = useState(null); // 电池 3D NDC 坐标
   const [isConnecting, setIsConnecting] = useState(false); // Tesseract 是否连接到电池
   const tesseractRef = useRef(null); // Tesseract 组件引用
   const [isTesseractDragging, setIsTesseractDragging] = useState(false); // Tesseract 是否被拖拽
   const glRef = useRef(null); // R3F Canvas WebGLRenderer 实例引用
+  const batteryElementRef = useRef<HTMLElement | null>(null); // 电池容器 DOM，引力位移直接写在它的 style.transform
   const [connectionLinePoints, setConnectionLinePoints] = useState([ // 连接线起点和终点
     new THREE.Vector3(0, 0, 0),
     new THREE.Vector3(0, 0, 0),
@@ -72,7 +128,8 @@ const TesseractExperience = ({ chargeBattery, isActivated, isInverted }) => {
   // 获取电池图标 DOM 位置并转换为 NDC 坐标
   useEffect(() => {
     const batterySelector = '[class*="powerDisplay"]'; // 电池容器选择器
-    const batteryElement = document.querySelector(batterySelector);
+    const batteryElement = document.querySelector(batterySelector) as HTMLElement | null;
+    batteryElementRef.current = batteryElement;
 
     if (!batteryElement) {
       console.error("[TesseractExperience] Battery element not found, selector:", batterySelector);
@@ -142,6 +199,11 @@ const TesseractExperience = ({ chargeBattery, isActivated, isInverted }) => {
        } else {
           window.removeEventListener('scroll', updatePosition);
        }
+      // 卸载时清空引力位移，避免 transform 残留
+      if (batteryElement) {
+        batteryElement.style.transform = '';
+      }
+      batteryElementRef.current = null;
     };
   }, []); // 仅在挂载和卸载时运行
 
@@ -152,7 +214,9 @@ const TesseractExperience = ({ chargeBattery, isActivated, isInverted }) => {
     if (canvas) {
       canvas.style.pointerEvents = isTesseractDragging ? 'auto' : 'none';
     }
-  }, [isTesseractDragging]);
+    // 向父组件冒泡拖拽态，供电池"被吸引"视觉反馈使用
+    onDraggingChange?.(isTesseractDragging);
+  }, [isTesseractDragging, onDraggingChange]);
 
   // 更新连接状态回调
   const handleConnectChange = (connecting) => {
@@ -239,11 +303,13 @@ const TesseractExperience = ({ chargeBattery, isActivated, isInverted }) => {
           )}
           {/* 场景逻辑辅助组件 */}
           {isActivated && (
-             <SceneLogic 
-                isConnecting={isConnecting} 
-                tesseractRef={tesseractRef} 
-                batteryPosition3D={batteryPosition3D} 
-                setConnectionLinePoints={setConnectionLinePoints} // 更新连接线点的函数
+             <SceneLogic
+                isConnecting={isConnecting}
+                tesseractRef={tesseractRef}
+                batteryPosition3D={batteryPosition3D}
+                setConnectionLinePoints={setConnectionLinePoints}
+                batteryElementRef={batteryElementRef}
+                isDragging={isTesseractDragging}
              />
           )}
         </Suspense>

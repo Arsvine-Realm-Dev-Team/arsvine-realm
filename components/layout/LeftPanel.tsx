@@ -22,7 +22,14 @@ export default function LeftPanel({
   isInverted,
   drawerOpen = false,
   isStandalone = false,
+  isTesseractDragging = false,
 }) {
+  const chargeLeverLabel = isTesseractActivated ? 'CHARGING' : 'START CHARGE';
+  const dischargeLeverLabel = isDischarging
+    ? 'DISCHARGING'
+    : powerLevel === 100
+      ? 'DISCHARGE'
+      : 'FULL CHARGE REQUIRED';
 
   const showBackAndNav =
     leftPanelAnimated && (
@@ -45,6 +52,7 @@ export default function LeftPanel({
             isActive={isTesseractActivated}
             iconType="discharge"
             isAnimated={leversVisible}
+            cursorLabel={chargeLeverLabel}
           />
         )}
         {mainVisible && (
@@ -53,6 +61,7 @@ export default function LeftPanel({
             isActive={isDischarging}
             iconType="drain"
             isAnimated={leversVisible}
+            cursorLabel={dischargeLeverLabel}
           />
         )}
       </div>
@@ -60,6 +69,7 @@ export default function LeftPanel({
       className={`${styles.globalBackButton} ${showBackAndNav ? styles.visible : ''}`}
       onClick={handleGlobalBackClick}
       data-cursor-label="BACK"
+      aria-label="BACK"
     >
     </button>
       <div className={`${styles.globalBackButtonDivider} ${showBackAndNav ? styles.visible : ''}`}></div>
@@ -80,7 +90,7 @@ export default function LeftPanel({
           Friends
         </button>
       </div>
-      <div className={styles.powerDisplay}>
+      <div className={`${styles.powerDisplay} ${isTesseractDragging ? styles.attracting : ''}`}>
         <div className={styles.batteryIcon}>
           {[...Array(5)].map((_, i) => {
             const shouldBeFilled = powerLevel >= (i + 1) * 20;

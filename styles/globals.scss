@@ -25,6 +25,9 @@
   --font-typewriter: 'Courier Prime', 'Courier New', 'Consolas', monospace;
   --font-family-heading: var(--font-hud);
   --font-reading: 'Noto Serif SC', 'Source Han Serif SC', 'Noto Sans SC', serif;
+  --mobile-hud-clearance: calc(64px + env(safe-area-inset-top, 0px));
+  --mobile-section-scroll-offset: calc(var(--mobile-hud-clearance) + 16px);
+  --mobile-detail-top-offset: calc(var(--mobile-hud-clearance) + 8px);
 
   // --- 字号阶梯 ---
   --fs-micro:   0.5rem;
@@ -175,6 +178,16 @@ button {
     background: var(--dark-gray);
     color: var(--white);
   }
+}
+
+.pageTransitionLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
 }
 
 .cursor {

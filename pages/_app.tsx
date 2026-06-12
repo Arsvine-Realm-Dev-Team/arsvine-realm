@@ -38,7 +38,11 @@ function MyApp({ Component, pageProps }) {
         </Head>
         <TransitionProvider pageWrapperRef={pageWrapperRef}>
           <MainLayout>
-            <div ref={pageWrapperRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: isStandalone ? 15 : 2 }}>
+            <div
+              ref={pageWrapperRef}
+              className="pageTransitionLayer"
+              style={{ zIndex: isStandalone ? 15 : 2 }}
+            >
               <Component {...pageProps} />
             </div>
           </MainLayout>

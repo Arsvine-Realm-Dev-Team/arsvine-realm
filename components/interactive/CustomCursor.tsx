@@ -55,60 +55,71 @@ const CustomCursor = () => {
     dot.style.transform = `translate(${x - dotSize.current.w / 2}px, ${y - dotSize.current.h / 2}px)`;
   }, []);
 
-  const tick = useCallback(() => {
-    const target = snapTarget.current;
-    let tx = mouse.current.x;
-    let ty = mouse.current.y;
+  const resetHoverState = useCallback(() => {
+    hoverEl.current = null;
+    isHovering.current = false;
+    snapTarget.current = null;
+    currentLabel.current = '';
+    dotSize.current = { w: 24, h: 24 };
 
-    if (target) {
-      tx = target.x;
-      ty = target.y;
+    const dot = dotRef.current;
+    if (dot) {
+      gsap.killTweensOf(dot);
+      gsap.to(dot, { width: 24, height: 24, duration: 0.25, ease: 'power2.out' });
+      dot.classList.remove(styles.hovering);
     }
 
-    const speed = isHovering.current ? 0.15 : 0.25;
-    rendered.current.x = lerp(rendered.current.x, tx, speed);
-    rendered.current.y = lerp(rendered.current.y, ty, speed);
+    const hLine = hLineRef.current;
+    const vLine = vLineRef.current;
+    if (hLine) { hLine.style.maskImage = ''; hLine.style.webkitMaskImage = ''; }
+    if (vLine) { vLine.style.maskImage = ''; vLine.style.webkitMaskImage = ''; }
 
-    applyPosition(rendered.current.x, rendered.current.y);
-
-    if (isHovering.current && hoverEl.current) {
-      const rect = hoverEl.current.getBoundingClientRect();
-      const mx = mouse.current.x;
-      const my = mouse.current.y;
-      const margin = 60;
-
-      if (mx < rect.left - margin || mx > rect.right + margin ||
-          my < rect.top - margin || my > rect.bottom + margin) {
-        hoverEl.current = null;
-        isHovering.current = false;
-        snapTarget.current = null;
-        currentLabel.current = '';
-        dotSize.current = { w: 24, h: 24 };
-
-        const dot = dotRef.current;
-        if (dot) {
-          gsap.killTweensOf(dot);
-          gsap.to(dot, { width: 24, height: 24, duration: 0.25, ease: 'power2.out' });
-        }
-        dotRef.current?.classList.remove(styles.hovering);
-
-        const hLine = hLineRef.current;
-        const vLine = vLineRef.current;
-        if (hLine) { hLine.style.maskImage = ''; hLine.style.webkitMaskImage = ''; }
-        if (vLine) { vLine.style.maskImage = ''; vLine.style.webkitMaskImage = ''; }
-
-        const labelEl = labelRef.current;
-        if (labelEl) gsap.to(labelEl, { opacity: 0, duration: 0.15 });
-      }
+    const labelEl = labelRef.current;
+    if (labelEl) {
+      gsap.killTweensOf(labelEl);
+      gsap.to(labelEl, { opacity: 0, duration: 0.15 });
     }
-
-    rafId.current = requestAnimationFrame(tick);
-  }, [applyPosition]);
+  }, []);
 
   useEffect(() => {
+    const tick = () => {
+      if (isHovering.current && (!hoverEl.current || !isCursorInteractive(hoverEl.current))) {
+        resetHoverState();
+      }
+
+      const target = snapTarget.current;
+      let tx = mouse.current.x;
+      let ty = mouse.current.y;
+
+      if (target) {
+        tx = target.x;
+        ty = target.y;
+      }
+
+      const speed = isHovering.current ? 0.15 : 0.25;
+      rendered.current.x = lerp(rendered.current.x, tx, speed);
+      rendered.current.y = lerp(rendered.current.y, ty, speed);
+
+      applyPosition(rendered.current.x, rendered.current.y);
+
+      if (isHovering.current && hoverEl.current) {
+        const rect = hoverEl.current.getBoundingClientRect();
+        const mx = mouse.current.x;
+        const my = mouse.current.y;
+        const margin = 60;
+
+        if (mx < rect.left - margin || mx > rect.right + margin ||
+            my < rect.top - margin || my > rect.bottom + margin) {
+          resetHoverState();
+        }
+      }
+
+      rafId.current = requestAnimationFrame(tick);
+    };
+
     rafId.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId.current);
-  }, [tick]);
+  }, [applyPosition, resetHoverState]);
 
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
@@ -189,36 +200,7 @@ const CustomCursor = () => {
 
     const handleLeave = (e: Event) => {
       if (hoverEl.current && hoverEl.current !== e.currentTarget) return;
-      hoverEl.current = null;
-      isHovering.current = false;
-      snapTarget.current = null;
-      currentLabel.current = '';
-
-      dotSize.current = { w: 24, h: 24 };
-
-      const dot = dotRef.current;
-      if (dot) {
-        gsap.killTweensOf(dot);
-        gsap.to(dot, { width: 24, height: 24, duration: 0.25, ease: 'power2.out' });
-      }
-
-      const labelEl = labelRef.current;
-      if (labelEl) {
-        gsap.to(labelEl, { opacity: 0, duration: 0.15 });
-      }
-
-      dotRef.current?.classList.remove(styles.hovering);
-
-      const hLine = hLineRef.current;
-      const vLine = vLineRef.current;
-      if (hLine) {
-        hLine.style.maskImage = '';
-        hLine.style.webkitMaskImage = '';
-      }
-      if (vLine) {
-        vLine.style.maskImage = '';
-        vLine.style.webkitMaskImage = '';
-      }
+      resetHoverState();
     };
 
     let currentEls: NodeListOf<Element> = document.querySelectorAll(SELECTOR);
@@ -244,6 +226,9 @@ const CustomCursor = () => {
 
     let debounceTimer: ReturnType<typeof setTimeout>;
     const observer = new MutationObserver(() => {
+      if (hoverEl.current && !hoverEl.current.isConnected) {
+        resetHoverState();
+      }
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
         unbind();
@@ -258,7 +243,27 @@ const CustomCursor = () => {
       observer.disconnect();
       unbind();
     };
-  }, []);
+  }, [resetHoverState]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isHovering.current) resetHoverState();
+    };
+    const handleBlur = () => resetHoverState();
+    const handleVisibilityChange = () => {
+      if (document.hidden) resetHoverState();
+    };
+
+    window.addEventListener('scroll', handleScroll, true);
+    window.addEventListener('blur', handleBlur);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('blur', handleBlur);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [resetHoverState]);
 
   useEffect(() => {
     const handleLeave = () => {
