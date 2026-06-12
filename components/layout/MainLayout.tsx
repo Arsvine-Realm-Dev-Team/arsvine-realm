@@ -55,9 +55,11 @@ export default function MainLayout({ children }) {
   const router = useRouter();
   const tNav = useTranslations('mainNav');
   const tCommon = useTranslations('common');
+  const tTweets = useTranslations('pages.tweets');
   const { navigateTo, handleBack, isDetailOpen } = useTransition();
   const { isMobile, isDesktop } = useResponsive();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [routeLoadingKind, setRouteLoadingKind] = useState<null | 'tweets'>(null);
   const app = useApp();
   const {
     mainVisible, isInverted, isTesseractActivated, animationsComplete,
@@ -218,6 +220,33 @@ export default function MainLayout({ children }) {
     navigateTo(`/${locale}/friends`);
   }, [navigateTo, closeDrawer, locale]);
 
+  const handleTweetsClick = useCallback(() => {
+    closeDrawer();
+    navigateTo(`/${locale}/tweets`);
+  }, [navigateTo, closeDrawer, locale]);
+
+  useEffect(() => {
+    const handleRouteChangeStart = (url: string) => {
+      const path = url.split('?')[0]?.split('#')[0] ?? url;
+      const isTweetsTarget = /^\/[A-Za-z-]+\/tweets\/?$/.test(path);
+      setRouteLoadingKind(isTweetsTarget ? 'tweets' : null);
+    };
+
+    const clearRouteLoading = () => {
+      setRouteLoadingKind(null);
+    };
+
+    router.events.on('routeChangeStart', handleRouteChangeStart);
+    router.events.on('routeChangeComplete', clearRouteLoading);
+    router.events.on('routeChangeError', clearRouteLoading);
+
+    return () => {
+      router.events.off('routeChangeStart', handleRouteChangeStart);
+      router.events.off('routeChangeComplete', clearRouteLoading);
+      router.events.off('routeChangeError', clearRouteLoading);
+    };
+  }, [router.events]);
+
   return (
     <div className={`${styles.container} ${isInverted ? styles.inverted : ''}`}>
 
@@ -275,6 +304,8 @@ export default function MainLayout({ children }) {
             navLinks={navLinks}
             handleLeftNavLinkClick={handleLeftNavLinkClick}
             handleFriendsClick={handleFriendsClick}
+            handleTweetsClick={handleTweetsClick}
+            tweetsLabel={tNav('tweets')}
             powerLevel={powerLevel}
             isFateTypingActive={isFateTypingActive}
             displayedFateText={displayedFateText}
@@ -294,6 +325,15 @@ export default function MainLayout({ children }) {
       }}>
         {children}
       </div>
+
+      {mainVisible && routeLoadingKind === 'tweets' ? (
+        <div className={styles.routeLoadingOverlay} aria-live="polite" aria-atomic="true">
+          <div className={styles.routeLoadingCard}>
+            <span className={styles.routeLoadingSignal}>{tCommon('signalFragment')}</span>
+            <span className={styles.routeLoadingText}>{tTweets('loading')}</span>
+          </div>
+        </div>
+      ) : null}
 
       {/* 底部功能栏 (移动端) */}
       {mainVisible && isMobile && (

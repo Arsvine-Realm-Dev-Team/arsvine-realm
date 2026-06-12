@@ -233,3 +233,58 @@
   animation: scanMove 10s linear infinite;
 }
 
+.routeLoadingOverlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: var(--content-width);
+  min-height: 100vh;
+  padding: var(--spacing-section-top) var(--spacing-section-pad) clamp(40px, 5vw, 80px) 0;
+  display: flex;
+  align-items: flex-start;
+  pointer-events: none;
+  z-index: 6;
+
+  @media (max-width: 1023px) {
+    padding-right: var(--spacing-section-pad);
+  }
+
+  @media (max-width: 767px) {
+    width: 100%;
+    padding: var(--spacing-section-top) 16px calc(56px + 32px);
+  }
+}
+
+.routeLoadingCard {
+  width: min(100%, 760px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 20px;
+  border: 1px solid rgba(var(--ark-border-rgb), 0.4);
+  background-color: rgba(var(--ark-border-rgb), 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.routeLoadingSignal {
+  font-family: var(--font-hud);
+  font-size: var(--fs-2xs);
+  color: var(--ark-primary);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.routeLoadingText {
+  font-family: var(--font-hud);
+  font-size: var(--fs-xs);
+  color: var(--ark-text-secondary);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  animation: loadingPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes loadingPulse {
+  0%, 100% { opacity: 0.28; }
+  50% { opacity: 0.8; }
+}
+

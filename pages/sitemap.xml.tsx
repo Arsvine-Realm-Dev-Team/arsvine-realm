@@ -6,7 +6,7 @@ import { locales, defaultLocale } from '../i18n/config';
 
 const SITE_URL = getSiteUrl();
 
-const staticPaths = ['/', '/content', '/friends', '/copyright'];
+const staticPaths = ['/', '/content', '/friends', '/tweets', '/copyright'];
 
 function buildAlternates(path: string): string {
   return locales
@@ -36,8 +36,22 @@ function generateSitemap(): string {
   // 静态路径 × 三 locale
   for (const path of staticPaths) {
     for (const loc of locales) {
-      const priority = path === '/' ? '1.0' : path === '/content' ? '0.8' : path === '/friends' ? '0.5' : '0.3';
-      const changefreq = path === '/' || path === '/content' ? 'weekly' : path === '/friends' ? 'monthly' : 'yearly';
+      const priority =
+        path === '/'
+          ? '1.0'
+          : path === '/content'
+            ? '0.8'
+            : path === '/tweets'
+              ? '0.7'
+              : path === '/friends'
+                ? '0.5'
+                : '0.3';
+      const changefreq =
+        path === '/' || path === '/content'
+          ? 'weekly'
+          : path === '/tweets' || path === '/friends'
+            ? 'monthly'
+            : 'yearly';
       entries.push(urlEntry(loc, path, priority, changefreq));
     }
   }

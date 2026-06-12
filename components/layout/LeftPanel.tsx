@@ -14,6 +14,8 @@ export default function LeftPanel({
   navLinks,
   handleLeftNavLinkClick,
   handleFriendsClick,
+  handleTweetsClick,
+  tweetsLabel,
   powerLevel,
   isFateTypingActive,
   displayedFateText,
@@ -83,6 +85,12 @@ export default function LeftPanel({
             {link.label}
           </button>
         ))}
+        <button
+          className={styles.leftNavLink}
+          onClick={handleTweetsClick}
+        >
+          {tweetsLabel}
+        </button>
         <button
           className={styles.leftNavLink}
           onClick={handleFriendsClick}
