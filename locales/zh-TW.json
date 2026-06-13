@@ -43,6 +43,7 @@
       "heading": "Blog",
       "pinned": "PINNED"
     },
+    "tweets": {},
     "life": {
       "tabGame": "遊戲",
       "tabTravel": "旅行",
@@ -68,6 +69,7 @@
     "works": "作品集",
     "experience": "經歷",
     "blog": "部落格",
+    "tweets": "推文",
     "life": "生活",
     "contact": "聯絡",
     "about": "關於"
@@ -106,6 +108,16 @@
       "description": "Friends — Signal from fellow travelers",
       "heading": "Friend Links",
       "servicesHeading": "Acknowledgements"
+    },
+    "tweets": {
+      "title": "TWEETS",
+      "description": "短句、碎片、近況與開發中的訊號記錄 (BETA)。",
+      "heading": "Tweets",
+      "empty": "暫無推文訊號。",
+      "loading": "正在解碼推文訊號…",
+      "loadMore": "載入更多月份",
+      "generatedAt": "快取生成於：{value}",
+      "pinned": "PINNED"
     },
     "copyright": {
       "title": "COPYRIGHT",

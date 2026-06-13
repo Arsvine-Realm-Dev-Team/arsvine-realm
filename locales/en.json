@@ -43,6 +43,7 @@
       "heading": "Blog",
       "pinned": "PINNED"
     },
+    "tweets": {},
     "life": {
       "tabGame": "Game",
       "tabTravel": "Travel",
@@ -68,6 +69,7 @@
     "works": "Portfolio",
     "experience": "Experience",
     "blog": "Blog",
+    "tweets": "Tweets",
     "life": "Life",
     "contact": "Contact",
     "about": "About"
@@ -106,6 +108,16 @@
       "description": "Friends — Signal from fellow travelers",
       "heading": "Friend Links",
       "servicesHeading": "Acknowledgements"
+    },
+    "tweets": {
+      "title": "TWEETS",
+      "description": "Short notes, fragments, updates, and signals from ongoing work (BETA).",
+      "heading": "Tweets",
+      "empty": "No tweets yet.",
+      "loading": "Decoding tweet signal...",
+      "loadMore": "Load More Months",
+      "generatedAt": "Cached at: {value}",
+      "pinned": "PINNED"
     },
     "copyright": {
       "title": "COPYRIGHT",

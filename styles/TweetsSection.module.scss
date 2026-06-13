@@ -1,0 +1,216 @@
+.tweetsSection {
+  position: relative;
+  z-index: 2;
+  width: var(--content-width);
+  margin-left: var(--content-offset);
+  min-height: 100vh;
+  padding: var(--spacing-section-top) var(--spacing-section-pad) clamp(40px, 5vw, 80px) 0;
+  color: var(--ark-text);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  @media (max-width: 1023px) {
+    padding-right: var(--spacing-section-pad);
+  }
+
+  @media (max-width: 767px) {
+    padding: var(--spacing-section-top) 16px calc(56px + 32px);
+  }
+}
+
+.header {
+  width: 100%;
+  margin-bottom: 28px;
+}
+
+.heading {
+  width: 100%;
+  margin: 0 0 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--ark-border);
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 2.5vw + 1rem, 3.5rem);
+  font-weight: 300;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ark-primary);
+  text-align: left;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.description {
+  margin: 0;
+  max-width: 760px;
+  color: var(--ark-text-secondary);
+  line-height: 1.7;
+  font-size: var(--fs-body);
+  font-family: var(--font-reading);
+}
+
+.emptyState {
+  margin: 0;
+  padding: 18px 20px;
+  border: 1px solid var(--ark-border);
+  background-color: rgba(var(--ark-border-rgb), 0.08);
+  color: var(--ark-text);
+  font-family: var(--font-reading);
+  line-height: 1.8;
+
+  :global(.inverted) & {
+    background-color: rgba(var(--ark-primary-rgb), 0.04);
+  }
+}
+
+.monthGroupList {
+  width: 100%;
+  display: grid;
+  gap: 28px;
+}
+
+.monthGroup {
+  width: 100%;
+}
+
+.monthHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(var(--ark-border-rgb), 0.35);
+}
+
+.monthHeading {
+  margin: 0;
+  color: var(--ark-primary);
+  font-family: var(--font-hud);
+  font-size: clamp(1rem, 0.8vw + 0.9rem, 1.25rem);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.monthMeta {
+  color: var(--ark-text-secondary);
+  font-family: var(--font-hud);
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.14em;
+  opacity: 0.6;
+}
+
+.tweetList {
+  width: 100%;
+  display: grid;
+  gap: 16px;
+}
+
+.tweetList :global(.cardIndex) {
+  display: none;
+}
+
+.tweetList :global(.cardInner) {
+  padding: 18px 20px;
+  gap: 0;
+}
+
+.tweetList :global(.cardContent) {
+  gap: 12px;
+}
+
+.tweetMetaRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.tweetMetaLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.tweetId {
+  color: var(--ark-text-secondary);
+  opacity: 0.28;
+  font-family: var(--font-hud);
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.tweetContent {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 2;
+  color: #ffffff;
+  font-size: clamp(0.9rem, 0.3vw + 1rem, 1.1rem);
+  font-family: var(--font-reading);
+  text-wrap: pretty;
+  opacity: 1;
+  overflow: visible;
+  text-overflow: clip;
+  display: block;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: initial;
+
+  :global(.inverted) & {
+    color: var(--ark-text);
+  }
+}
+
+.generatedAt {
+  margin: 18px 0 0;
+  color: var(--ark-text-secondary);
+  font-family: var(--font-hud);
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.08em;
+}
+
+.loadMoreButton {
+  margin-top: 22px;
+  align-self: flex-start;
+  padding: 10px 16px;
+  border: 1px solid rgba(var(--ark-border-rgb), 0.45);
+  background-color: rgba(var(--ark-border-rgb), 0.08);
+  color: var(--ark-text);
+  font-family: var(--font-hud);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transition: border-color 0.25s ease, background-color 0.25s ease, color 0.25s ease;
+}
+
+.loadMoreButton:hover {
+  border-color: var(--ark-primary);
+  background-color: rgba(var(--ark-border-rgb), 0.14);
+  color: #ffffff;
+}
+
+.loadMoreButton:focus-visible {
+  outline: 1px solid var(--ark-primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 767px) {
+  .monthHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .tweetMetaRow {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .tweetId {
+    text-align: left;
+  }
+}
