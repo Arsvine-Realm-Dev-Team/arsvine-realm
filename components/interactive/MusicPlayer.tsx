@@ -437,7 +437,12 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
 
       <audio
         ref={audioRef}
-        preload="metadata"
+        // 进入站点时不应预拉音频。preload="none" 让浏览器在用户真正
+        // 点击播放（play()）前不发任何网络请求；本组件下面 effect 里的
+        // audio.load() 在 preload="none" 下也只是把媒体状态机重置到
+        // NETWORK_IDLE，不会触发 fetch。代价是首次播放前看不到准确的
+        // duration——可接受的取舍。
+        preload="none"
         onError={() => { setIsPlaying(false); }}
       />
 

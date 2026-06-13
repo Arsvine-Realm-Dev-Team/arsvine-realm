@@ -713,7 +713,7 @@
   flex-direction: column;
   gap: 12px;
   transition: border-color 0.3s, background-color 0.3s;
-  cursor: pointer;
+  cursor: none;
 
   &:hover {
     border-color: var(--ark-primary);

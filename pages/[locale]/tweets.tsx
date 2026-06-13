@@ -7,23 +7,25 @@ import HreflangLinks from '../../components/shared/HreflangLinks';
 import { getSiteUrl } from '../../data/site';
 import { locales, type Locale } from '../../i18n/config';
 import { loadMessages } from '../../lib/i18n-data';
-import { getTweetMonthGroups } from '../../lib/tweets/github';
+import { getTweetMonthGroupsPage } from '../../lib/tweets/github';
 import type { TweetMonthGroup } from '../../lib/tweets/types';
 
-const INITIAL_VISIBLE_MONTHS = 1;
+const INITIAL_MONTH_BATCH_SIZE = 1;
 
 interface TweetsPageProps {
   locale: Locale;
   messages: Record<string, unknown>;
   monthGroups: TweetMonthGroup[];
-  initialVisibleMonths: number;
+  totalMonths: number;
+  monthBatchSize: number;
   generatedAt: string;
 }
 
 export default function TweetsPage({
   locale,
   monthGroups,
-  initialVisibleMonths,
+  totalMonths,
+  monthBatchSize,
   generatedAt,
 }: TweetsPageProps) {
   const t = useTranslations('pages.tweets');
@@ -44,7 +46,8 @@ export default function TweetsPage({
         <TweetsSection
           locale={locale}
           monthGroups={monthGroups}
-          initialVisibleMonths={initialVisibleMonths}
+          totalMonths={totalMonths}
+          monthBatchSize={monthBatchSize}
           generatedAt={generatedAt}
         />
       </SectionPageLayout>
@@ -60,14 +63,15 @@ export const getStaticPaths: GetStaticPaths = async () => ({
 export const getStaticProps: GetStaticProps<TweetsPageProps> = async ({ params }) => {
   const locale = params!.locale as Locale;
   const messages = await loadMessages(locale);
-  const monthGroups = await getTweetMonthGroups();
+  const { monthGroups, totalMonths } = await getTweetMonthGroupsPage(0, INITIAL_MONTH_BATCH_SIZE);
 
   return {
     props: {
       locale,
       messages,
       monthGroups,
-      initialVisibleMonths: Math.min(INITIAL_VISIBLE_MONTHS, monthGroups.length || INITIAL_VISIBLE_MONTHS),
+      totalMonths,
+      monthBatchSize: INITIAL_MONTH_BATCH_SIZE,
       generatedAt: new Date().toISOString(),
     },
     revalidate: 300,

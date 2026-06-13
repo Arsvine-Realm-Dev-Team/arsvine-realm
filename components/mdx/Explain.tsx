@@ -1,5 +1,5 @@
 import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
-import styles from '../../styles/MDXContent.module.scss';
+import styles from '../../styles/Explain.module.scss';
 
 /**
  * 句级注解 / 语句解释。

@@ -111,13 +111,25 @@
     },
     "tweets": {
       "title": "TWEETS",
-      "description": "Short notes, fragments, updates, and signals from ongoing work (BETA).",
+      "description": "Short notes, fragments, updates, and signals from ongoing work.",
       "heading": "Tweets",
       "empty": "No tweets yet.",
       "loading": "Decoding tweet signal...",
       "loadMore": "Load More Months",
       "generatedAt": "Cached at: {value}",
-      "pinned": "PINNED"
+      "pinned": "PINNED",
+      "autoTranslatedFrom": "Automatically translated from {source}",
+      "viewOriginal": "View Original",
+      "hideOriginal": "Hide Original",
+      "viewTranslation": "View Translation",
+      "originalLabel": "Original ({source})",
+      "sourceLanguages": {
+        "zh-CN": "Simplified Chinese",
+        "zh-TW": "Traditional Chinese",
+        "en": "English",
+        "ja": "Japanese",
+        "other": "another language"
+      }
     },
     "copyright": {
       "title": "COPYRIGHT",
