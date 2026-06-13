@@ -159,10 +159,77 @@
   display: block;
   -webkit-line-clamp: unset;
   -webkit-box-orient: initial;
+  min-height: 1.6em;
 
   :global(.inverted) & {
     color: var(--ark-text);
   }
+}
+
+.tweetContentTyping::after {
+  content: '';
+  display: inline-block;
+  width: 0.55ch;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.12em;
+  background-color: currentColor;
+  opacity: 0.85;
+  animation: tweetCaretBlink 0.9s steps(2, end) infinite;
+}
+
+@keyframes tweetCaretBlink {
+  0%, 49% { opacity: 0.85; }
+  50%, 100% { opacity: 0; }
+}
+
+.translationRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.translationNotice {
+  margin: 0;
+  color: var(--ark-text-secondary);
+  font-family: var(--font-hud);
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.08em;
+  opacity: 0.72;
+}
+
+.originalToggle {
+  margin: 0;
+  padding: 5px 12px;
+  border: 1px solid rgba(var(--ark-border-rgb), 0.45);
+  background-color: transparent;
+  color: var(--ark-text-secondary);
+  font-family: var(--font-hud);
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  // 与站内其他按钮保持一致：桌面交给 CustomCursor，移动端由全局
+  // `button { @media (max-width: 1023px) cursor: auto }` 兜底，
+  // 不要写 cursor: pointer，否则系统指针会在自定义光标之外露出。
+  cursor: none;
+  transition: border-color 0.25s ease, background-color 0.25s ease, color 0.25s ease;
+
+  @media (max-width: 1023px) {
+    cursor: auto;
+  }
+}
+
+.originalToggle:hover {
+  border-color: var(--ark-primary);
+  color: var(--ark-primary);
+  background-color: rgba(var(--ark-border-rgb), 0.08);
+}
+
+.originalToggle:focus-visible {
+  outline: 1px solid var(--ark-primary);
+  outline-offset: 2px;
 }
 
 .generatedAt {
@@ -187,6 +254,10 @@
   transition: border-color 0.25s ease, background-color 0.25s ease, color 0.25s ease;
 }
 
+.loadMoreButton:disabled {
+  opacity: 0.6;
+}
+
 .loadMoreButton:hover {
   border-color: var(--ark-primary);
   background-color: rgba(var(--ark-border-rgb), 0.14);
@@ -196,6 +267,15 @@
 .loadMoreButton:focus-visible {
   outline: 1px solid var(--ark-primary);
   outline-offset: 2px;
+}
+
+.loadMoreError {
+  margin: 10px 0 0;
+  color: var(--ark-text-secondary);
+  font-family: var(--font-hud);
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.08em;
+  opacity: 0.72;
 }
 
 @media (max-width: 767px) {

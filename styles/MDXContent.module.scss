@@ -375,76 +375,7 @@
 }
 
 // ===== Explain (句级注解 tooltip) =====
-
-.explainWrapper {
-  position: relative;
-  display: inline;
-}
-
-.explainTrigger {
-  // 触发器现在是 <span role="button">：天然 inline，文本与正文一起按
-  // 行盒自然换行，不会被强制单行或居中。
-  // 注意：站点桌面端用 CustomCursor，body 设了 cursor: none —— 这里
-  // 不要写 cursor: help / pointer，否则系统指针会在自定义光标之外露出。
-  text-decoration: underline dotted rgba(230, 230, 230, 0.5);
-  text-underline-offset: 4px;
-  text-decoration-thickness: 1px;
-  // box-decoration-break 让多行 trigger 跨行时背景色每行单独绘制，避免
-  // 出现"贯穿到行尾再换行"的难看长矩形。
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
-  transition:
-    text-decoration-color 0.2s ease,
-    color 0.2s ease,
-    background-color 0.2s ease;
-
-  &:hover,
-  &:focus-visible {
-    text-decoration-color: rgba(230, 230, 230, 0.9);
-    color: rgba(255, 255, 255, 1);
-    background-color: rgba(230, 230, 230, 0.1);
-    outline: none;
-  }
-}
-
-.explainTooltip {
-  position: absolute;
-  // 桌面宽屏：浮到触发器右侧空白处，不遮挡正文
-  // < 1280px 与移动端的下方回退在下面 media query 内处理
-  top: -2px;
-  left: calc(100% + 16px);
-  z-index: 50;
-  max-width: min(320px, 28vw);
-  width: max-content;
-  padding: 10px 14px;
-  font-family: var(--font-reading);
-  font-size: var(--fs-base);
-  font-style: normal;
-  line-height: 1.7;
-  color: rgba(230, 230, 230, 0.92);
-  background: rgba(15, 15, 18, 0.95);
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
-  // 不阻挡正文交互；trigger 自身维持 hover 状态
-  pointer-events: none;
-  animation: explainFadeIn 0.18s ease-out;
-}
-
-// 中等及以下视口：右侧空白不够放 tooltip，回退到触发器下方
-@media (max-width: 1279px) {
-  .explainTooltip {
-    top: calc(100% + 8px);
-    left: 0;
-    max-width: min(360px, 90vw);
-  }
-}
-
-@keyframes explainFadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+// 已迁出至 styles/Explain.module.scss（与推文卡片共用）
 
 // ===== Inverted mode =====
 
@@ -524,21 +455,6 @@
   .termRt {
     color: rgba(var(--ark-primary-rgb), 0.55);
   }
-
-  .explainTrigger {
-    text-decoration-color: rgba(var(--ark-primary-rgb), 0.6);
-
-    &:hover,
-    &:focus-visible {
-      text-decoration-color: var(--ark-primary);
-    }
-  }
-
-  .explainTooltip {
-    background: rgba(245, 245, 245, 0.97);
-    color: rgba(20, 20, 20, 0.92);
-    border-color: rgba(0, 0, 0, 0.1);
-  }
 }
 
 // ===== Responsive =====
@@ -578,30 +494,5 @@
   .codeBlock {
     padding: 14px 16px;
     font-size: var(--fs-md);
-  }
-
-  .explainTooltip {
-    // 移动端：absolute + left:0 会让 tooltip 锚在触发器左缘往右展开，
-    // 触发器靠近右边时直接顶出视口右侧。改用 fixed 横向锁视口左右 12px；
-    // top 由 Explain.tsx 测量触发器底部后注入 inline 样式（视觉上仍跟在
-    // 原文下方）。fixed + 正文滚动会脱位，所以 Explain.tsx 在移动端 open
-    // 期间监听 scroll/resize 自动关闭。
-    position: fixed;
-    left: 12px;
-    right: 12px;
-    bottom: auto;
-    width: auto;
-    max-width: none;
-    z-index: 1100; // 高于 _layout.scss .bottomBar 的 1002
-    font-size: var(--fs-caption);
-    padding: 12px 14px;
-    // 长 note 不顶出可视区；tooltip 内可滚
-    max-height: 50vh;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-    // 覆盖桌面 base 的 pointer-events: none，让 tooltip 内能滚动；
-    // 关闭交给 Explain 组件的 outside pointerdown / Escape / scroll 监听
-    pointer-events: auto;
   }
 }

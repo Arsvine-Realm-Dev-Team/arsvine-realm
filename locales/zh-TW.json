@@ -111,13 +111,25 @@
     },
     "tweets": {
       "title": "TWEETS",
-      "description": "短句、碎片、近況與開發中的訊號記錄 (BETA)。",
+      "description": "短句、碎片、近況與開發中的訊號記錄。",
       "heading": "Tweets",
       "empty": "暫無推文訊號。",
       "loading": "正在解碼推文訊號…",
       "loadMore": "載入更多月份",
       "generatedAt": "快取生成於：{value}",
-      "pinned": "PINNED"
+      "pinned": "PINNED",
+      "autoTranslatedFrom": "自動翻譯自 {source}",
+      "viewOriginal": "查看原文",
+      "hideOriginal": "收起原文",
+      "viewTranslation": "查看譯文",
+      "originalLabel": "原文（{source}）",
+      "sourceLanguages": {
+        "zh-CN": "簡體中文",
+        "zh-TW": "繁體中文",
+        "en": "English",
+        "ja": "日本語",
+        "other": "其他語言"
+      }
     },
     "copyright": {
       "title": "COPYRIGHT",
