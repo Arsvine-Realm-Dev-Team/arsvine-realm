@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { PowerSystemState } from '../types';
+import { POWER_SYSTEM_STORAGE_KEY, THEME_MODE_STORAGE_KEY } from '../lib/document-bootstrap';
 
 // CHARGE_STEP: 每次 chargeBattery() 调用的电量增加百分点。
 // 桌面端由 Tesseract 拖近电池触发（200ms cooldown），移动端由 MainLayout 200ms interval 触发。
@@ -7,8 +8,6 @@ import type { PowerSystemState } from '../types';
 const CHARGE_STEP = 12;
 const DISCHARGE_STEP = 1;
 const DISCHARGE_INTERVAL_MS = 50;
-const POWER_SYSTEM_STORAGE_KEY = 'arsvine:power-system';
-const THEME_MODE_STORAGE_KEY = 'arsvine:theme-mode';
 const DEFAULT_POWER_LEVEL = 67;
 const DEFAULT_TESSERACT_ACTIVATED = false;
 const DEFAULT_DISCHARGING = false;

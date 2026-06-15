@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import SectionPageLayout from '../../../components/layout/SectionPageLayout';
 import HreflangLinks from '../../../components/shared/HreflangLinks';
 import { getSiteUrl } from '../../../data/site';
+import type { ProtectedVerifyResponse } from '../../../lib/content/access-api';
 import { hasValidAccessGrant } from '../../../lib/content/access-grant';
 import { getTotpGroup } from '../../../lib/content/totp';
 import { loadMessages } from '../../../lib/i18n-data';
@@ -51,14 +52,13 @@ export default function AccessPage({ locale, group, nextPath }: AccessPageProps)
         }),
       });
 
-      const json = (await response.json()) as {
-        ok: boolean;
-        redirectTo?: string;
-        error?: { message?: string };
-      };
+      const json = (await response.json()) as ProtectedVerifyResponse;
 
       if (!response.ok || !json.ok || !json.redirectTo) {
-        throw new Error(json.error?.message || t('invalidToken'));
+        if ('error' in json) {
+          throw new Error(json.error.message || t('invalidToken'));
+        }
+        throw new Error(t('invalidToken'));
       }
 
       await router.push(json.redirectTo);

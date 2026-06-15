@@ -53,19 +53,21 @@ export default function BlogSection({
                   </h4>
                   {post.date && <span className={cardStyles.cardDate}>{post.date}</span>}
                 </div>
-                <p className={cardStyles.cardExcerpt}>{post.excerpt}</p>
-                <div className={cardStyles.cardFooter}>
-                  {post.tags.length > 0 ? (
-                    <div className={cardStyles.cardTags}>
-                      {post.tags.map((tag) => (
-                        <span key={tag} className={cardStyles.cardTag}>{tag}</span>
-                      ))}
-                    </div>
-                  ) : <span />}
-                  {post.readingMinutes > 0 && (
-                    <span className={cardStyles.cardReadingTime}>{formatReadingTime(post.readingMinutes, locale)}</span>
-                  )}
-                </div>
+                {post.excerpt ? <p className={cardStyles.cardExcerpt}>{post.excerpt}</p> : null}
+                {(post.tags.length > 0 || post.readingMinutes > 0) ? (
+                  <div className={cardStyles.cardFooter}>
+                    {post.tags.length > 0 ? (
+                      <div className={cardStyles.cardTags}>
+                        {post.tags.map((tag) => (
+                          <span key={tag} className={cardStyles.cardTag}>{tag}</span>
+                        ))}
+                      </div>
+                    ) : <span />}
+                    {post.readingMinutes > 0 ? (
+                      <span className={cardStyles.cardReadingTime}>{formatReadingTime(post.readingMinutes, locale)}</span>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
               <span className={cardStyles.cardArrow}>→</span>
             </div>

@@ -1,18 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { setAccessGrantCookie } from '../../lib/content/access-grant';
+import { normalizeNextPath, type ProtectedVerifyResponse } from '../../lib/content/access-api';
 import { enforceRateLimit } from '../../lib/content/rate-limit';
 import { verifyTotpGroupToken } from '../../lib/content/totp';
-
-type ResponseBody =
-  | { ok: true; redirectTo: string }
-  | { ok: false; error: { code: string; message: string } };
-
-function normalizeNextPath(value: unknown) {
-  if (typeof value !== 'string') return '/';
-  if (!value.startsWith('/')) return '/';
-  if (value.startsWith('//')) return '/';
-  return value;
-}
 
 function getClientKey(req: NextApiRequest) {
   const forwarded = req.headers['x-forwarded-for'];
@@ -25,7 +15,7 @@ function getClientKey(req: NextApiRequest) {
 
 export default function handler(
   req: NextApiRequest,
-  res: NextApiResponse<ResponseBody>,
+  res: NextApiResponse<ProtectedVerifyResponse>,
 ) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -40,7 +30,7 @@ export default function handler(
   const next = normalizeNextPath(req.body?.next);
 
   if (!group || !token) {
-    return res.status(422).json({
+    return res.status(400).json({
       ok: false,
       error: { code: 'VALIDATION_FAILED', message: 'Missing group or token.' },
     });

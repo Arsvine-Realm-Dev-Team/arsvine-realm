@@ -34,7 +34,7 @@ type BlogIndexVariant = {
   readingMinutes?: number;
 };
 
-function isBlogContentLocale(value: string): value is BlogContentLocale {
+export function isBlogContentLocale(value: string): value is BlogContentLocale {
   return (blogContentLocales as readonly string[]).includes(value);
 }
 
@@ -130,6 +130,19 @@ function getTranslationStatus(
     return 'translated';
   }
   return 'source';
+}
+
+function sanitizeProtectedPostMeta(meta: BlogPostMeta): BlogPostMeta {
+  if (meta.access.mode !== 'totp') {
+    return meta;
+  }
+
+  return {
+    ...meta,
+    excerpt: '',
+    tags: [],
+    readingMinutes: 0,
+  };
 }
 
 export function estimateReadingMinutes(content: string, locale: BlogContentLocale): number {
@@ -244,7 +257,7 @@ export async function getAllPostsForLocale(locale: Locale): Promise<BlogPostMeta
   const index = await getContentBlogIndex();
   const metas = index.posts.map((entry) => {
     const actualLocale = getPreferredVariantLocale(entry, locale);
-    return getVariantMetaFromIndex(entry, actualLocale);
+    return sanitizeProtectedPostMeta(getVariantMetaFromIndex(entry, actualLocale));
   });
 
   return metas.sort((a, b) => {
@@ -257,6 +270,10 @@ export async function getAllPostsForLocale(locale: Locale): Promise<BlogPostMeta
 export async function getPublicPostsForLocale(locale: Locale): Promise<BlogPostMeta[]> {
   const posts = await getAllPostsForLocale(locale);
   return posts.filter((post) => post.access.mode === 'public');
+}
+
+export function getProtectedPostPublicMeta(meta: BlogPostMeta): BlogPostMeta {
+  return sanitizeProtectedPostMeta(meta);
 }
 
 export async function getAllPosts(): Promise<BlogPostMeta[]> {

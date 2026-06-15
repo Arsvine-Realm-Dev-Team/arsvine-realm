@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import gsap from 'gsap';
 import styles from '../../styles/CustomCursor.module.scss';
 import useCursorTargetRegistry from '../../hooks/useCursorTargetRegistry';
@@ -30,6 +30,7 @@ const CustomCursor = () => {
   const isHovering = useRef(false);
   const snapTarget = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
   const hoverEl = useRef<HTMLElement | null>(null);
+  const [isTesseractMode, setIsTesseractMode] = useState(false);
 
   const applyPosition = useCallback((x: number, y: number) => {
     const hLine = hLineRef.current;
@@ -254,7 +255,7 @@ const CustomCursor = () => {
   useEffect(() => {
     const handleTesseractCursorHover = (event: Event) => {
       const active = Boolean((event as CustomEvent<{ active?: boolean }>).detail?.active);
-      rootRef.current?.classList.toggle(styles.tesseractMode, active);
+      setIsTesseractMode(active);
     };
 
     window.addEventListener('arsvine:tesseract-cursor-hover', handleTesseractCursorHover as EventListener);
@@ -288,7 +289,7 @@ const CustomCursor = () => {
   }, []);
 
   return (
-    <div ref={rootRef} className={styles.cursorRoot}>
+    <div ref={rootRef} className={`${styles.cursorRoot} ${isTesseractMode ? styles.tesseractMode : ''}`}>
       <div ref={hLineRef} className={styles.hLine} />
       <div ref={vLineRef} className={styles.vLine} />
       <div ref={xLineARef} className={styles.xLineA} />

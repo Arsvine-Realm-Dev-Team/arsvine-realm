@@ -5,16 +5,22 @@ import { useTranslations } from 'next-intl';
 
 import styles from '../../styles/Home.module.scss';
 import { useApp } from '../../contexts/AppContext';
+import LayoutAnchorsContext from '../../contexts/LayoutAnchorsContext';
 import { useTransition } from '../../contexts/TransitionContext';
 import { useResponsive } from '../../hooks/useMediaQuery';
+import useDrawerNavigation from '../../hooks/useDrawerNavigation';
+import useLayoutRouteMode from '../../hooks/useLayoutRouteMode';
+import useMobileTesseractCharge from '../../hooks/useMobileTesseractCharge';
 import useRouteLoadingKind from '../../hooks/useRouteLoadingKind';
 import useStandalonePanelState from '../../hooks/useStandalonePanelState';
+import { CONTENT_DETAIL_EXIT_DELAY_MS } from '../../lib/ui-timings';
 import { defaultLocale, isLocale, type Locale } from '../../i18n/config';
 
 import HomeLoadingScreen from '../shared/HomeLoadingScreen';
 import MusicPlayer from '../interactive/MusicPlayer';
 import GlobalHud from './GlobalHud';
 import LeftPanel from './LeftPanel';
+import RouteLoadingOverlay from './RouteLoadingOverlay';
 
 
 const TesseractExperience = dynamic(
@@ -38,21 +44,6 @@ const CustomCursor = dynamic(
   { ssr: false, loading: () => null }
 );
 
-const commonLabelFallbacks: Record<Locale, Record<'openMenu' | 'closeMenu', string>> = {
-  'zh-CN': {
-    openMenu: '打开菜单',
-    closeMenu: '关闭菜单',
-  },
-  'zh-TW': {
-    openMenu: '開啟選單',
-    closeMenu: '關閉選單',
-  },
-  en: {
-    openMenu: 'Open Menu',
-    closeMenu: 'Close Menu',
-  },
-};
-
 export default function MainLayout({ children }) {
   const router = useRouter();
   const tNav = useTranslations('mainNav');
@@ -60,7 +51,6 @@ export default function MainLayout({ children }) {
   const tTweets = useTranslations('pages.tweets');
   const { navigateTo, handleBack, isDetailOpen } = useTransition();
   const { isMobile, isDesktop } = useResponsive();
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const app = useApp();
   const {
     mainVisible, isInverted, isTesseractActivated, animationsComplete,
@@ -72,32 +62,40 @@ export default function MainLayout({ children }) {
     deactivateTesseract,
   } = app;
 
-  const isHome = router.pathname === '/[locale]';
-  const isContentPage = router.pathname === '/[locale]/content';
-  const isStandalone =
-    router.pathname === '/[locale]/game' ||
-    router.pathname.startsWith('/[locale]/game/') ||
-    router.pathname.startsWith('/[locale]/web/') ||
-    router.pathname.startsWith('/[locale]/life/') ||
-    router.pathname.startsWith('/[locale]/blog/');
-
   // 当前 URL 的 locale，所有内部跳转都要带上前缀
   const queryLocale = router.query.locale;
   const locale = isLocale(queryLocale) ? queryLocale : defaultLocale;
 
+  const {
+    drawerOpen,
+    navLinks,
+    drawerToggleLabel,
+    toggleDrawer,
+    closeDrawer,
+  } = useDrawerNavigation({
+    locale,
+    tNav,
+    tCommon,
+  });
+
+  const [forceHomeSection, setForceHomeSection] = useState(false);
+  const { isHome, isContentPage, isStandalone, activeSection } = useLayoutRouteMode(
+    router,
+    forceHomeSection,
+  );
   const { localPanelAnimated, localLeversVisible } = useStandalonePanelState({
     isStandalone,
     leftPanelAnimated,
     leversVisible,
   });
-  const routeLoadingKind = useRouteLoadingKind(router);
+  const routeLoadingState = useRouteLoadingKind(router);
   // 桌面 Tesseract 拖拽态 —— 用于让电池在用户拖动物体时给出"被吸引"视觉反馈
   // 不放进 AppContext / PowerSystemState：纯 3D 场景的瞬态 UI 信号，不属于电力系统逻辑
   const [isTesseractDragging, setIsTesseractDragging] = useState(false);
   const powerDisplayRef = useRef<HTMLDivElement | null>(null);
   const batteryIconRef = useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const [forceHomeSection, setForceHomeSection] = useState(false);
   useEffect(() => {
     if (isHome && forceHomeSection) {
       const timeoutId = window.setTimeout(() => {
@@ -106,7 +104,6 @@ export default function MainLayout({ children }) {
       return () => clearTimeout(timeoutId);
     }
   }, [forceHomeSection, isHome]);
-  const activeSection = (forceHomeSection || isHome) ? 'home' : 'content';
 
   // Latch: once WebGL is ready, never unmount it (avoids GPU context destruction during transitions)
   const [webglReady, setWebglReady] = useState(false);
@@ -119,24 +116,13 @@ export default function MainLayout({ children }) {
     }
   }, [animationsComplete, webglReady]);
 
-  // 移动端：拉杆激活后直接充电（桌面端由 TesseractExperience 组件负责充电）
-  const chargeBatteryRef = useRef(chargeBattery);
-  const deactivateTesseractRef = useRef(deactivateTesseract);
-  useEffect(() => {
-    chargeBatteryRef.current = chargeBattery;
-  }, [chargeBattery]);
-  useEffect(() => {
-    deactivateTesseractRef.current = deactivateTesseract;
-  }, [deactivateTesseract]);
-
-  useEffect(() => {
-    if (!isDesktop && isTesseractActivated) {
-      const interval = setInterval(() => {
-        chargeBatteryRef.current();
-      }, 200);
-      return () => clearInterval(interval);
-    }
-  }, [isDesktop, isTesseractActivated]);
+  useMobileTesseractCharge({
+    isDesktop,
+    isTesseractActivated,
+    powerLevel,
+    chargeBattery,
+    deactivateTesseract,
+  });
 
   // Tesseract 取消激活时清零拖拽态，防止子组件未触发 pointer up 就被卸载留下脏值
   useEffect(() => {
@@ -146,13 +132,6 @@ export default function MainLayout({ children }) {
     }
   }, [isTesseractActivated, isTesseractDragging]);
 
-  // 移动端：充满 100% 自动放下充电拉杆
-  useEffect(() => {
-    if (!isDesktop && powerLevel >= 100 && isTesseractActivated) {
-      deactivateTesseractRef.current();
-    }
-  }, [isDesktop, powerLevel, isTesseractActivated]);
-
   const handleGlobalBackClick = () => {
     if (!isDetailOpen()) {
       setForceHomeSection(true);
@@ -160,27 +139,9 @@ export default function MainLayout({ children }) {
     handleBack();
   };
 
-  const toggleDrawer = useCallback(() => {
-    setDrawerOpen(prev => !prev);
+  const registerScrollContainer = useCallback((element: HTMLDivElement | null) => {
+    scrollContainerRef.current = element;
   }, []);
-
-  const closeDrawer = useCallback(() => {
-    setDrawerOpen(false);
-  }, []);
-
-  const navLinks = [
-    { label: tNav('works'), hash: 'works' },
-    { label: tNav('experience'), hash: 'experience' },
-    { label: tNav('blog'), hash: 'blog' },
-    { label: tNav('life'), hash: 'life' },
-    { label: tNav('contact'), hash: 'contact' },
-    { label: tNav('about'), hash: 'about' },
-  ];
-  const resolveCommonLabel = (key: 'openMenu' | 'closeMenu') => {
-    const translated = tCommon(key);
-    return translated === key ? commonLabelFallbacks[locale][key] : translated;
-  };
-  const drawerToggleLabel = drawerOpen ? resolveCommonLabel('closeMenu') : resolveCommonLabel('openMenu');
 
   const handleLeftNavLinkClick = (link: { label: string; hash: string }) => {
     closeDrawer();
@@ -188,12 +149,12 @@ export default function MainLayout({ children }) {
     if (isContentPage) {
       if (isDetailOpen()) {
         handleBack();
-        setTimeout(() => {
+        window.setTimeout(() => {
           const el = document.getElementById(`section-${link.hash}`);
           if (el) {
             el.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
-        }, 1900);
+        }, CONTENT_DETAIL_EXIT_DELAY_MS);
       } else {
         const el = document.getElementById(`section-${link.hash}`);
         if (el) {
@@ -215,136 +176,141 @@ export default function MainLayout({ children }) {
     navigateTo(`/${locale}/tweets`);
   }, [navigateTo, closeDrawer, locale]);
 
-  const routeLoadingText = routeLoadingKind === 'tweets'
+  const routeLoadingText = routeLoadingState.kind === 'tweets'
     ? tTweets('loading')
     : tCommon('decoding');
 
+  useEffect(() => {
+    window.dispatchEvent(new Event('arsvine:cursor-targets-dirty'));
+  }, [router.asPath]);
+
   return (
-    <div className={`${styles.container} ${isInverted ? styles.inverted : ''}`}>
+    <LayoutAnchorsContext.Provider
+      value={{
+        registerScrollContainer,
+        getScrollContainer: () => scrollContainerRef.current,
+      }}
+    >
+      <div className={`${styles.container} ${isInverted ? styles.inverted : ''}`}>
 
 
-      <div className={styles.leftDotMatrix}></div>
-      {mainVisible && <MusicPlayer powerLevel={powerLevel} />}
-      {isDesktop && <CustomCursor />}
-      {webglReady && isDesktop && <RainMorimeEffect />}
-      <HomeLoadingScreen onComplete={handleLoadingComplete} />
-      {isTesseractActivated && isDesktop && !isStandalone && (
-        <TesseractExperience
-          chargeBattery={chargeBattery}
-          isActivated={isTesseractActivated}
-          isInverted={isInverted}
-          onDraggingChange={setIsTesseractDragging}
-          powerDisplayRef={powerDisplayRef}
-          batteryIconRef={batteryIconRef}
-        />
-      )}
-      <div className={styles.gridBackground}></div>
-      <div className={styles.glowEffect}></div>
-      <div className={styles.rightStripeGradient}></div>
+        <div className={styles.leftDotMatrix}></div>
+        {mainVisible && <MusicPlayer powerLevel={powerLevel} />}
+        {isDesktop && <CustomCursor />}
+        {webglReady && isDesktop && <RainMorimeEffect />}
+        <HomeLoadingScreen onComplete={handleLoadingComplete} />
+        {isTesseractActivated && isDesktop && !isStandalone && (
+          <TesseractExperience
+            chargeBattery={chargeBattery}
+            isActivated={isTesseractActivated}
+            isInverted={isInverted}
+            onDraggingChange={setIsTesseractDragging}
+            powerDisplayRef={powerDisplayRef}
+            batteryIconRef={batteryIconRef}
+            scrollContainerRef={scrollContainerRef}
+          />
+        )}
+        <div className={styles.gridBackground}></div>
+        <div className={styles.glowEffect}></div>
+        <div className={styles.rightStripeGradient}></div>
 
       {/* 汉堡菜单按钮 (仅平板端，移动端由底部功能栏替代) */}
-      {mainVisible && (
-        <button
-          className={`${styles.hamburgerButton} ${drawerOpen ? styles.hamburgerOpen : ''}`}
-          onClick={toggleDrawer}
-          aria-label={drawerToggleLabel}
-          data-cursor-label={drawerToggleLabel}
-        >
-          <span />
-          <span />
-          <span />
-        </button>
-      )}
-
-      {/* 抽屉背景遮罩 */}
-      <div
-        className={`${styles.drawerBackdrop} ${drawerOpen ? styles.backdropVisible : ''}`}
-        onClick={closeDrawer}
-      />
-
-      {mainVisible && (
-        <>
-          <GlobalHud currentTime={currentTime} hudVisible={hudVisible || isStandalone} isGamePage={router.pathname === '/[locale]/game'} />
-          <LeftPanel
-            leftPanelAnimated={localPanelAnimated}
-            mainVisible={mainVisible}
-            leversVisible={localLeversVisible}
-            handleActivateTesseract={handleActivateTesseract}
-            isTesseractActivated={isTesseractActivated}
-            handleDischargeLeverPull={handleDischargeLeverPull}
-            isDischarging={isDischarging}
-            activeSection={activeSection}
-            handleGlobalBackClick={handleGlobalBackClick}
-            navLinks={navLinks}
-            handleLeftNavLinkClick={handleLeftNavLinkClick}
-            handleFriendsClick={handleFriendsClick}
-            handleTweetsClick={handleTweetsClick}
-            tweetsLabel={tNav('tweets')}
-            powerLevel={powerLevel}
-            isFateTypingActive={isFateTypingActive}
-            displayedFateText={displayedFateText}
-            isEnvParamsTyping={isEnvParamsTyping}
-            displayedEnvParams={displayedEnvParams}
-            envData={envData}
-            isInverted={isInverted}
-             drawerOpen={drawerOpen}
-             isStandalone={isStandalone}
-             isTesseractDragging={isTesseractDragging}
-             powerDisplayRef={powerDisplayRef}
-             batteryIconRef={batteryIconRef}
-           />
-         </>
-       )}
-      <div style={{
-        opacity: mainVisible ? 1 : 0,
-        pointerEvents: mainVisible ? 'auto' : 'none',
-        transition: 'opacity 0.4s ease-out',
-      }}>
-        {children}
-      </div>
-
-      {mainVisible && routeLoadingKind ? (
-        <div
-          className={`${styles.routeLoadingOverlay} ${isStandalone ? styles.routeLoadingOverlayStandalone : ''}`}
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          <div className={styles.routeLoadingCard}>
-            <span className={styles.routeLoadingSignal}>{tCommon('signalFragment')}</span>
-            <span className={styles.routeLoadingText}>
-              {routeLoadingText}
-            </span>
-          </div>
-        </div>
-      ) : null}
-
-      {/* 底部功能栏 (移动端) */}
-      {mainVisible && isMobile && (
-        <nav className={styles.bottomBar}>
+        {mainVisible && (
           <button
-            className={`${styles.bottomBarBtn} ${isHome ? styles.bottomBarDisabled : ''}`}
-            onClick={() => { if (!isHome) handleGlobalBackClick(); }}
-          >
-            <span className={styles.bottomBarIcon}>◁</span>
-            <span className={styles.bottomBarIndicator} />
-          </button>
-          <button
-            className={`${styles.bottomBarBtn} ${isHome ? styles.bottomBarCurrent : ''}`}
-            onClick={() => { if (!isHome) navigateTo(`/${locale}`); }}
-          >
-            <span className={styles.bottomBarIcon}>⬡</span>
-            <span className={styles.bottomBarIndicator} />
-          </button>
-          <button
-            className={`${styles.bottomBarBtn} ${drawerOpen ? styles.bottomBarActive : ''}`}
+            className={`${styles.hamburgerButton} ${drawerOpen ? styles.hamburgerOpen : ''}`}
             onClick={toggleDrawer}
             aria-label={drawerToggleLabel}
+            data-cursor-label={drawerToggleLabel}
           >
-            <span className={styles.bottomBarIcon}>{drawerOpen ? '✕' : '☰'}</span>
-            <span className={styles.bottomBarIndicator} />
+            <span />
+            <span />
+            <span />
           </button>
-        </nav>
-      )}
-    </div>
+        )}
+
+      {/* 抽屉背景遮罩 */}
+        <div
+          className={`${styles.drawerBackdrop} ${drawerOpen ? styles.backdropVisible : ''}`}
+          onClick={closeDrawer}
+        />
+
+        {mainVisible && (
+          <>
+            <GlobalHud currentTime={currentTime} hudVisible={hudVisible || isStandalone} isGamePage={router.pathname === '/[locale]/game'} />
+            <LeftPanel
+              leftPanelAnimated={localPanelAnimated}
+              mainVisible={mainVisible}
+              leversVisible={localLeversVisible}
+              handleActivateTesseract={handleActivateTesseract}
+              isTesseractActivated={isTesseractActivated}
+              handleDischargeLeverPull={handleDischargeLeverPull}
+              isDischarging={isDischarging}
+              activeSection={activeSection}
+              handleGlobalBackClick={handleGlobalBackClick}
+              navLinks={navLinks}
+              handleLeftNavLinkClick={handleLeftNavLinkClick}
+              handleFriendsClick={handleFriendsClick}
+              handleTweetsClick={handleTweetsClick}
+              tweetsLabel={tNav('tweets')}
+              powerLevel={powerLevel}
+              isFateTypingActive={isFateTypingActive}
+              displayedFateText={displayedFateText}
+              isEnvParamsTyping={isEnvParamsTyping}
+              displayedEnvParams={displayedEnvParams}
+              envData={envData}
+              isInverted={isInverted}
+               drawerOpen={drawerOpen}
+               isStandalone={isStandalone}
+               isTesseractDragging={isTesseractDragging}
+               powerDisplayRef={powerDisplayRef}
+               batteryIconRef={batteryIconRef}
+             />
+           </>
+         )}
+        <div style={{
+          opacity: mainVisible ? 1 : 0,
+          pointerEvents: mainVisible ? 'auto' : 'none',
+          transition: 'opacity 0.4s ease-out',
+        }}>
+          {children}
+        </div>
+
+        {mainVisible && routeLoadingState.kind ? (
+          <RouteLoadingOverlay
+            presentation={routeLoadingState.presentation}
+            routeLoadingText={routeLoadingText}
+            signalLabel={tCommon('signalFragment')}
+          />
+        ) : null}
+
+      {/* 底部功能栏 (移动端) */}
+        {mainVisible && isMobile && (
+          <nav className={styles.bottomBar}>
+            <button
+              className={`${styles.bottomBarBtn} ${isHome ? styles.bottomBarDisabled : ''}`}
+              onClick={() => { if (!isHome) handleGlobalBackClick(); }}
+            >
+              <span className={styles.bottomBarIcon}>◁</span>
+              <span className={styles.bottomBarIndicator} />
+            </button>
+            <button
+              className={`${styles.bottomBarBtn} ${isHome ? styles.bottomBarCurrent : ''}`}
+              onClick={() => { if (!isHome) navigateTo(`/${locale}`); }}
+            >
+              <span className={styles.bottomBarIcon}>⬡</span>
+              <span className={styles.bottomBarIndicator} />
+            </button>
+            <button
+              className={`${styles.bottomBarBtn} ${drawerOpen ? styles.bottomBarActive : ''}`}
+              onClick={toggleDrawer}
+              aria-label={drawerToggleLabel}
+            >
+              <span className={styles.bottomBarIcon}>{drawerOpen ? '✕' : '☰'}</span>
+              <span className={styles.bottomBarIndicator} />
+            </button>
+          </nav>
+        )}
+      </div>
+    </LayoutAnchorsContext.Provider>
   );
 }

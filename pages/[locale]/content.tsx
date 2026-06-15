@@ -4,6 +4,7 @@ import Head from 'next/head';
 import type { GetStaticPaths, GetStaticProps } from 'next';
 import { useTranslations } from 'next-intl';
 import styles from '../../styles/Home.module.scss';
+import { useLayoutAnchors } from '../../contexts/LayoutAnchorsContext';
 import { useTransition } from '../../contexts/TransitionContext';
 
 import WorksSection from '../../components/sections/WorksSection';
@@ -19,6 +20,7 @@ import LifeDetailView from '../../components/detail/LifeDetailView';
 import HreflangLinks from '../../components/shared/HreflangLinks';
 
 import { getAllPostsForLocale } from '../../lib/blog';
+import { buildBlogPostHref } from '../../lib/blog-client';
 import { siteConfig } from '../../data/site';
 import { loadProjects, loadLife, loadExperience, loadSkills, loadMessages } from '../../lib/i18n-data';
 import { locales, type Locale } from '../../i18n/config';
@@ -50,10 +52,6 @@ interface ContentPageProps {
   pageDescription: string;
 }
 
-function buildBlogPostHref(locale: Locale, slug: string) {
-  return `/${locale}/blog/${slug}?lang=${encodeURIComponent(locale)}`;
-}
-
 export default function ContentPage({
   locale,
   blogPosts,
@@ -71,6 +69,7 @@ export default function ContentPage({
 }: ContentPageProps) {
   const router = useRouter();
   const { navigateTo, setBackOverride } = useTransition();
+  const { registerScrollContainer } = useLayoutAnchors();
   const tSite = useTranslations('pages.site');
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -121,13 +120,44 @@ export default function ContentPage({
   }, [setBackOverride]);
 
   useEffect(() => {
-    const allLifeItems = [...gameData, ...travelData, ...otherData];
-    allLifeItems.forEach(item => { router.prefetch(`/${locale}/life/${item.id}`); });
-    gameProjects.forEach(p => { router.prefetch(`/${locale}/game/${p.id}`); });
-    webProjects.forEach(p => { router.prefetch(`/${locale}/web/${p.id}`); });
-    blogPosts.forEach((post) => {
-      router.prefetch(buildBlogPostHref(locale, post.slug));
-    });
+    const prefetched = new Set<string>();
+    const publicBlogPosts = blogPosts.filter((post) => post.access.mode === 'public');
+    const immediateUrls = [
+      ...webProjects.slice(0, 2).map((project) => `/${locale}/web/${project.id}`),
+      ...gameProjects.slice(0, 2).map((project) => `/${locale}/game/${project.id}`),
+      ...publicBlogPosts.slice(0, 4).map((post) => buildBlogPostHref(locale, post.slug, locale)),
+    ];
+    const idleUrls = [
+      ...gameData.slice(0, 2).map((item) => `/${locale}/life/${item.id}`),
+      ...travelData.slice(0, 1).map((item) => `/${locale}/life/${item.id}`),
+      ...otherData.slice(0, 1).map((item) => `/${locale}/life/${item.id}`),
+      ...webProjects.slice(2).map((project) => `/${locale}/web/${project.id}`),
+      ...gameProjects.slice(2).map((project) => `/${locale}/game/${project.id}`),
+      ...publicBlogPosts.slice(4).map((post) => buildBlogPostHref(locale, post.slug, locale)),
+    ];
+
+    const prefetchUrl = (url: string) => {
+      if (prefetched.has(url)) {
+        return;
+      }
+      prefetched.add(url);
+      void router.prefetch(url);
+    };
+
+    immediateUrls.forEach(prefetchUrl);
+
+    let cancelled = false;
+    const scheduleIdle = window.setTimeout(() => {
+      if (cancelled) {
+        return;
+      }
+      idleUrls.forEach(prefetchUrl);
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(scheduleIdle);
+    };
   }, [router, blogPosts, gameData, travelData, otherData, gameProjects, webProjects, locale]);
 
   useEffect(() => {
@@ -135,6 +165,10 @@ export default function ContentPage({
       scrollContainerRef.current.scrollTop = scrollPositionRef.current;
     }
   }, [isClosing]);
+
+  useEffect(() => {
+    window.dispatchEvent(new Event('arsvine:cursor-targets-dirty'));
+  }, [detail.type, isClosing]);
 
   const openDetail = useCallback((mode: DetailMode) => {
     if (scrollContainerRef.current) {
@@ -193,7 +227,7 @@ export default function ContentPage({
   }, [navigateTo, locale]);
 
   const handleBlogItemClick = useCallback((post: BlogPostMeta) => {
-    navigateTo(buildBlogPostHref(locale, post.slug));
+    navigateTo(buildBlogPostHref(locale, post.slug, locale));
   }, [navigateTo, locale]);
 
   const handleBackFromDetail = useCallback(() => {
@@ -240,7 +274,10 @@ export default function ContentPage({
       </Head>
 
       <div
-        ref={scrollContainerRef}
+        ref={(element) => {
+          scrollContainerRef.current = element;
+          registerScrollContainer(element);
+        }}
         className={`${styles.contentWrapper}${
           isDetailMounted && !isClosing ? ` ${styles.detailOpen}` : ''
         }${

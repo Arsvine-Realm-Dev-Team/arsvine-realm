@@ -1,6 +1,9 @@
 import { useEffect, useRef, type MutableRefObject } from 'react';
 
-import { collectInteractiveElements } from '../components/interactive/customCursorShared';
+import {
+  collectInteractiveElements,
+  getInteractiveCursorTarget,
+} from '../components/interactive/customCursorShared';
 
 interface UseCursorTargetRegistryOptions {
   hoverElRef: MutableRefObject<HTMLElement | null>;
@@ -18,54 +21,43 @@ export default function useCursorTargetRegistry({
   const interactiveElsRef = useRef<HTMLElement[]>([]);
 
   useEffect(() => {
-    let currentEls: HTMLElement[] = [];
-    let debounceTimer = 0;
-
-    const handleEnter = (event: Event) => {
-      onEnter(event.currentTarget as HTMLElement);
-    };
-
-    const handleLeave = (event: Event) => {
-      onLeave(event as MouseEvent, event.currentTarget as HTMLElement);
-    };
-
-    const unbind = () => {
-      currentEls.forEach((element) => {
-        element.removeEventListener('mouseenter', handleEnter);
-        element.removeEventListener('mouseleave', handleLeave);
-      });
-    };
-
-    const bind = () => {
+    const refreshTargets = () => {
       interactiveElsRef.current = collectInteractiveElements();
-      currentEls = interactiveElsRef.current;
-
-      currentEls.forEach((element) => {
-        element.addEventListener('mouseenter', handleEnter);
-        element.addEventListener('mouseleave', handleLeave);
-      });
-    };
-
-    bind();
-
-    const observer = new MutationObserver(() => {
       if (hoverElRef.current && !hoverElRef.current.isConnected) {
         onHoverTargetRemoved();
       }
+    };
 
-      window.clearTimeout(debounceTimer);
-      debounceTimer = window.setTimeout(() => {
-        unbind();
-        bind();
-      }, 100);
-    });
+    const handleEnter = (event: Event) => {
+      const target = getInteractiveCursorTarget(event.target);
+      if (!target || target === hoverElRef.current) {
+        return;
+      }
+      if (!interactiveElsRef.current.includes(target)) {
+        refreshTargets();
+      }
+      onEnter(target);
+    };
 
-    observer.observe(document.body, { childList: true, subtree: true });
+    const handleLeave = (event: Event) => {
+      const target = getInteractiveCursorTarget(event.target);
+      if (!target) {
+        return;
+      }
+      onLeave(event as MouseEvent, target);
+    };
+
+    refreshTargets();
+    document.addEventListener('mouseover', handleEnter, true);
+    document.addEventListener('mouseout', handleLeave, true);
+    window.addEventListener('resize', refreshTargets);
+    window.addEventListener('arsvine:cursor-targets-dirty', refreshTargets as EventListener);
 
     return () => {
-      window.clearTimeout(debounceTimer);
-      observer.disconnect();
-      unbind();
+      document.removeEventListener('mouseover', handleEnter, true);
+      document.removeEventListener('mouseout', handleLeave, true);
+      window.removeEventListener('resize', refreshTargets);
+      window.removeEventListener('arsvine:cursor-targets-dirty', refreshTargets as EventListener);
     };
   }, [hoverElRef, onEnter, onHoverTargetRemoved, onLeave]);
 

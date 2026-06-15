@@ -1,0 +1,1 @@
+export const CONTENT_DETAIL_EXIT_DELAY_MS = 1900;

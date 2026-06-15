@@ -2,6 +2,7 @@ import { Html, Head, Main, NextScript } from 'next/document';
 import type { DocumentContext } from 'next/document';
 import Document from 'next/document';
 import { siteConfig, getSiteUrl } from '../data/site';
+import { buildDocumentBootstrapScript, resolveRegionAttributes } from '../lib/document-bootstrap';
 import {
   htmlLangMap,
   ogLocaleMap,
@@ -9,7 +10,6 @@ import {
   isLocale,
   type Locale,
 } from '../i18n/config';
-import { isXBlockedRegion, isBilibiliBlockedRegion } from '../lib/region-visibility';
 
 /**
  * _document 在 Pages Router 下不能用 hook。
@@ -55,7 +55,8 @@ class MyDocument extends Document<DocProps> {
       country = (headerCountry || cookieCountry).toUpperCase();
     }
 
-    return { ...initialProps, locale, country, xBlocked: isXBlockedRegion(country), bilibiliBlocked: isBilibiliBlockedRegion(country) };
+    const { xBlocked, bilibiliBlocked } = resolveRegionAttributes(country);
+    return { ...initialProps, locale, country, xBlocked, bilibiliBlocked };
   }
 
   render() {
@@ -105,8 +106,7 @@ class MyDocument extends Document<DocProps> {
           */}
           <script
             dangerouslySetInnerHTML={{
-              __html:
-                '(function(){try{var d=document.documentElement;var powerRaw=sessionStorage.getItem("arsvine:power-system")||localStorage.getItem("arsvine:power-system");if(powerRaw){var power=JSON.parse(powerRaw);if(power&&power.powerLevel===100&&power.isDischarging===false){d.setAttribute("data-theme-mode","inverted");}else if(d.getAttribute("data-theme-mode")==="inverted"){d.setAttribute("data-theme-mode","default");}}var themeMode=sessionStorage.getItem("arsvine:theme-mode")||localStorage.getItem("arsvine:theme-mode");if(themeMode==="inverted"){d.setAttribute("data-theme-mode","inverted");}else if(themeMode==="default"&&d.getAttribute("data-theme-mode")==="inverted"){d.setAttribute("data-theme-mode","default");}var m=document.cookie.match(/(?:^|;\\s*)GEO_COUNTRY=([^;]+)/);var c=m?decodeURIComponent(m[1]).toUpperCase():"";if(c&&d.getAttribute("data-country")!==c)d.setAttribute("data-country",c);var xb=c==="CN"||c==="IR"||c==="KP"||c==="TM";if(xb&&d.getAttribute("data-x-blocked")!=="true")d.setAttribute("data-x-blocked","true");if(!xb&&d.getAttribute("data-x-blocked")==="true")d.removeAttribute("data-x-blocked");var bb=c!==""&&c!=="CN"&&c!=="HK"&&c!=="MO"&&c!=="TW";if(bb&&d.getAttribute("data-bilibili-blocked")!=="true")d.setAttribute("data-bilibili-blocked","true");if(!bb&&d.getAttribute("data-bilibili-blocked")==="true")d.removeAttribute("data-bilibili-blocked");}catch(e){}})();',
+              __html: buildDocumentBootstrapScript(),
             }}
           />
           {process.env.NEXT_PUBLIC_UMAMI_SRC && (

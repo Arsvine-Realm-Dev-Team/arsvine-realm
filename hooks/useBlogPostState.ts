@@ -1,33 +1,32 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { MDXRemoteSerializeResult } from 'next-mdx-remote';
+import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 
 import type { BlogPostMeta, TranslationStatus } from '../types';
 import { type Locale } from '../i18n/config';
 import type { BlogContentLocale } from '../lib/blog';
+import {
+  blogPostStateReducer,
+  createInitialBlogPostState,
+  type BlogPostViewState,
+} from '../lib/blog-post-state';
+import {
+  blogContentLocaleLabels,
+  buildBlogPostHref,
+  buildBlogVariantRequestKey,
+  buildPostVariantApiPath,
+  getRequestedContentLocaleFromPath,
+  resolveDefaultContentLocale,
+  type BlogVariantPayload,
+} from '../lib/blog-client';
+import type { GrantCheckResponse } from '../lib/content/access-api';
 
-export const blogContentLocaleLabels: Record<BlogContentLocale, string> = {
-  'zh-CN': '简中',
-  'zh-TW': '繁中',
-  en: 'English',
-  ja: '日本語',
-  ru: 'Русский',
-  fr: 'Français',
-};
-
-export function isBlogContentLocale(value: unknown): value is BlogContentLocale {
-  return typeof value === 'string' && value in blogContentLocaleLabels;
-}
-
-export interface BlogVariantPayload {
-  meta: BlogPostMeta;
-  mdxSource: MDXRemoteSerializeResult;
-}
+export { blogContentLocaleLabels, buildBlogPostHref };
+export type { BlogVariantPayload, BlogPostViewState };
 
 interface UseBlogPostStateOptions {
   routerAsPath: string;
   locale: Locale;
   meta: BlogPostMeta;
-  mdxSource: MDXRemoteSerializeResult | null;
+  mdxSource: BlogVariantPayload['mdxSource'] | null;
   translationStatus: TranslationStatus;
   actualLocale: Locale;
   actualContentLocale: BlogContentLocale;
@@ -37,33 +36,31 @@ interface UseBlogPostStateOptions {
   isProtected: boolean;
 }
 
-function getRequestedContentLocaleFromPath(asPath: string): BlogContentLocale | null {
-  const query = asPath.split('?')[1]?.split('#')[0];
-  if (!query) {
-    return null;
-  }
-
-  const lang = new URLSearchParams(query).get('lang');
-  return lang && isBlogContentLocale(lang) ? lang : null;
+interface PostVariantErrorResponse {
+  ok: false;
+  code: 'METHOD_NOT_ALLOWED' | 'VALIDATION_FAILED' | 'FORBIDDEN' | 'NOT_FOUND' | 'INTERNAL_ERROR';
+  message: string;
 }
 
-function resolveDefaultContentLocale(
-  pageLocale: Locale,
-  availableLocales: BlogContentLocale[],
-  fallbackLocale: BlogContentLocale,
-): BlogContentLocale {
-  if (availableLocales.includes(pageLocale)) {
-    return pageLocale;
-  }
-  return fallbackLocale;
+interface PostVariantSuccessResponse extends BlogVariantPayload {
+  ok: true;
 }
 
-function buildProtectedPostApiPath(locale: BlogContentLocale, slug: string) {
-  const search = new URLSearchParams({
-    locale,
-    slug,
-  });
-  return `/api/post-variant?${search.toString()}`;
+type PostVariantResponse = PostVariantSuccessResponse | PostVariantErrorResponse;
+
+interface UseBlogPostStateResult {
+  defaultContentLocale: BlogContentLocale;
+  requestedContentLocale: BlogContentLocale;
+  selectedContentLocale: BlogContentLocale;
+  selectedVariant: BlogVariantPayload | null;
+  viewState: BlogPostViewState;
+  loadingLang: BlogContentLocale | null;
+  loadError: string;
+  effectiveStatus: TranslationStatus;
+  effectiveOriginLocale: Locale;
+  updateContentLocaleQuery: (nextContentLocale: BlogContentLocale) => void;
+  markAuthGranted: () => void;
+  retryRequestedContentLocale: () => void;
 }
 
 function writeContentLocaleQuery(nextContentLocale: BlogContentLocale) {
@@ -76,12 +73,20 @@ function writeContentLocaleQuery(nextContentLocale: BlogContentLocale) {
   window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
 }
 
-export function buildBlogPostHref(
-  locale: Locale,
-  slug: string,
-  contentLocale: BlogContentLocale,
-) {
-  return `/${locale}/blog/${slug}?lang=${encodeURIComponent(contentLocale)}`;
+function getVariantLoadErrorMessage(response: PostVariantErrorResponse | null) {
+  if (!response) {
+    return 'Unable to load article content.';
+  }
+
+  if (response.code === 'NOT_FOUND') {
+    return 'Requested article locale is unavailable.';
+  }
+
+  if (response.code === 'VALIDATION_FAILED') {
+    return 'Requested article locale is invalid.';
+  }
+
+  return response.message || 'Unable to load article content.';
 }
 
 export default function useBlogPostState({
@@ -96,86 +101,74 @@ export default function useBlogPostState({
   contentVariants,
   access,
   isProtected,
-}: UseBlogPostStateOptions) {
+}: UseBlogPostStateOptions): UseBlogPostStateResult {
   const defaultContentLocale = useMemo(
     () => resolveDefaultContentLocale(locale, availableContentLocales, actualContentLocale),
     [actualContentLocale, availableContentLocales, locale],
   );
-  const [requestedContentLocale, setRequestedContentLocale] = useState<BlogContentLocale>(
-    () => getRequestedContentLocaleFromPath(routerAsPath) ?? defaultContentLocale,
-  );
-  const [authState, setAuthState] = useState<'checking' | 'required' | 'granted'>(
-    !isProtected || access.mode === 'public' ? 'granted' : 'checking',
-  );
-  const [lazyVariants, setLazyVariants] = useState<Partial<Record<BlogContentLocale, BlogVariantPayload>>>({});
-  const [loadingLang, setLoadingLang] = useState<BlogContentLocale | null>(null);
-  const [selectedContentLocale, setSelectedContentLocale] = useState<BlogContentLocale>(actualContentLocale);
-  const [loadError, setLoadError] = useState('');
+  const requiresAuth = isProtected && access.mode !== 'public';
+  const initialRequestedContentLocale = getRequestedContentLocaleFromPath(routerAsPath) ?? defaultContentLocale;
 
-  const allVariants = useMemo(
-    () => ({ ...contentVariants, ...lazyVariants }),
-    [contentVariants, lazyVariants],
+  const [state, dispatch] = useReducer(
+    blogPostStateReducer,
+    {
+      requestedContentLocale: initialRequestedContentLocale,
+      actualContentLocale,
+      requiresAuth,
+    },
+    createInitialBlogPostState,
   );
+  const inflightRequestRef = useRef<AbortController | null>(null);
+
   const baseVariant = useMemo(
     () => (mdxSource ? { meta, mdxSource } : null),
     [mdxSource, meta],
   );
-  const selectedVariant = allVariants[selectedContentLocale] ?? baseVariant;
+
+  const allVariants = useMemo(() => {
+    const baseVariants = baseVariant
+      ? { [actualContentLocale]: baseVariant }
+      : {};
+
+    return {
+      ...contentVariants,
+      ...state.lazyVariants,
+      ...baseVariants,
+    } as Partial<Record<BlogContentLocale, BlogVariantPayload>>;
+  }, [actualContentLocale, baseVariant, contentVariants, state.lazyVariants]);
+
+  const selectedVariant = allVariants[state.displayedContentLocale] ?? null;
   const suppressFallbackBanner =
-    selectedContentLocale !== actualContentLocale || requestedContentLocale !== actualContentLocale;
+    state.displayedContentLocale !== actualContentLocale
+    || state.requestedContentLocale !== actualContentLocale;
   const effectiveStatus: TranslationStatus = suppressFallbackBanner ? 'source' : translationStatus;
   const effectiveOriginLocale: Locale = ((selectedVariant?.meta.originLocale)
     ?? meta.originLocale
     ?? actualLocale) as Locale;
 
   const updateContentLocaleQuery = useCallback((nextContentLocale: BlogContentLocale) => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    setRequestedContentLocale(nextContentLocale);
-    writeContentLocaleQuery(nextContentLocale);
+    dispatch({ type: 'setRequestedLocale', locale: nextContentLocale });
   }, []);
 
   const markAuthGranted = useCallback(() => {
-    setAuthState('granted');
+    dispatch({ type: 'authResolved', granted: true });
   }, []);
 
-  const loadVariant = useCallback(async (nextContentLocale: BlogContentLocale) => {
-    setLoadingLang(nextContentLocale);
-    setLoadError('');
-
-    try {
-      const response = await fetch(buildProtectedPostApiPath(nextContentLocale, meta.slug));
-      const data = (await response.json()) as BlogVariantPayload | { error?: string };
-
-      if (!response.ok || !('meta' in data) || !('mdxSource' in data)) {
-        if (response.status === 403) {
-          setAuthState('required');
-          return null;
-        }
-        throw new Error('failed_to_load_variant');
-      }
-
-      setLazyVariants((prev) => ({ ...prev, [nextContentLocale]: data }));
-      return data;
-    } catch {
-      setLoadError('Unable to load article content.');
-      return null;
-    } finally {
-      setLoadingLang((current) => (current === nextContentLocale ? null : current));
-    }
-  }, [meta.slug]);
+  const retryRequestedContentLocale = useCallback(() => {
+    dispatch({ type: 'retryRequestedLocale' });
+  }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- slug/query 切换时必须同步重置当前文章语言与缓存态，避免上一文章的局部状态泄漏
-    setRequestedContentLocale(getRequestedContentLocaleFromPath(routerAsPath) ?? defaultContentLocale);
-    setLazyVariants({});
-    setLoadingLang(null);
-    setLoadError('');
-    setSelectedContentLocale(actualContentLocale);
-    setAuthState(!isProtected || access.mode === 'public' ? 'granted' : 'checking');
-  }, [access.mode, actualContentLocale, defaultContentLocale, isProtected, routerAsPath]);
+    inflightRequestRef.current?.abort();
+    inflightRequestRef.current = null;
+
+    dispatch({
+      type: 'resetArticle',
+      requestedContentLocale: getRequestedContentLocaleFromPath(routerAsPath) ?? defaultContentLocale,
+      actualContentLocale,
+      requiresAuth,
+    });
+  }, [actualContentLocale, defaultContentLocale, requiresAuth, routerAsPath]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -183,101 +176,159 @@ export default function useBlogPostState({
     }
 
     const currentLang = getRequestedContentLocaleFromPath(window.location.href);
-    if (currentLang === requestedContentLocale) {
+    if (currentLang === state.requestedContentLocale) {
       return;
     }
 
-    writeContentLocaleQuery(requestedContentLocale);
-  }, [requestedContentLocale]);
+    writeContentLocaleQuery(state.requestedContentLocale);
+  }, [state.requestedContentLocale]);
 
   useEffect(() => {
-    if (!isProtected || access.mode === 'public' || !access.group) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- 公开文章必须在进入 effect 时立即越过受保护态，避免短暂显示错误 gate
-      setAuthState('granted');
+    if (!requiresAuth || !access.group) {
+      dispatch({ type: 'authResolved', granted: true });
       return;
     }
 
-    let cancelled = false;
+    const controller = new AbortController();
 
-    fetch(`/api/grant-check?group=${encodeURIComponent(access.group)}`)
-      .then((response) => response.json())
-      .then((data: { ok: boolean; granted: boolean }) => {
-        if (cancelled) {
+    void fetch(`/api/grant-check?group=${encodeURIComponent(access.group)}`, {
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const data = (await response.json()) as GrantCheckResponse;
+        if (!response.ok || !data.ok) {
+          dispatch({ type: 'authResolved', granted: false });
           return;
         }
-        setAuthState(data.granted ? 'granted' : 'required');
+        dispatch({ type: 'authResolved', granted: data.granted });
       })
-      .catch(() => {
-        if (!cancelled) {
-          setAuthState('required');
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) {
+          return;
         }
+
+        console.error('[useBlogPostState] grant-check failed:', error);
+        dispatch({ type: 'authResolved', granted: false });
       });
 
     return () => {
-      cancelled = true;
+      controller.abort();
     };
-  }, [access.group, access.mode, isProtected]);
+  }, [access.group, requiresAuth]);
 
   useEffect(() => {
-    if (authState !== 'granted') {
+    if (state.authState !== 'granted') {
+      inflightRequestRef.current?.abort();
+      inflightRequestRef.current = null;
       return;
     }
 
-    const targetContentLocale = requestedContentLocale;
-    const hasBaseVariantForSelected = Boolean(
-      baseVariant && selectedContentLocale === actualContentLocale,
+    const requestedVariant = allVariants[state.requestedContentLocale];
+    if (requestedVariant) {
+      if (
+        state.displayedContentLocale !== state.requestedContentLocale
+        || state.viewState !== 'ready'
+      ) {
+        dispatch({ type: 'displayCachedLocale', locale: state.requestedContentLocale });
+      }
+      return;
+    }
+
+    const requestKey = buildBlogVariantRequestKey(
+      meta.slug,
+      state.requestedContentLocale,
+      state.authState,
     );
 
-    if (targetContentLocale !== selectedContentLocale) {
-      if (loadingLang === targetContentLocale) {
-        return;
-      }
+    if (state.activeRequestKey === requestKey) {
+      return;
+    }
 
-      if (allVariants[targetContentLocale]) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- 目标语言已在缓存中时，立即切换显示可避免重复加载与空白态
-        setSelectedContentLocale(targetContentLocale);
-        return;
-      }
+    inflightRequestRef.current?.abort();
+    const controller = new AbortController();
+    inflightRequestRef.current = controller;
 
-      void loadVariant(targetContentLocale).then((payload) => {
-        if (payload) {
-          setSelectedContentLocale(targetContentLocale);
+    dispatch({
+      type: 'startVariantRequest',
+      requestKey,
+      locale: state.requestedContentLocale,
+    });
+
+    void fetch(buildPostVariantApiPath(state.requestedContentLocale, meta.slug), {
+      signal: controller.signal,
+      cache: 'no-store',
+    })
+      .then(async (response) => {
+        const data = (await response.json()) as PostVariantResponse;
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        if (!response.ok || !data.ok) {
+          const errorResponse = (data && !data.ok ? data : null) as PostVariantErrorResponse | null;
+          dispatch({
+            type: 'variantFailed',
+            requestKey,
+            locale: state.requestedContentLocale,
+            code: errorResponse?.code ?? 'INTERNAL_ERROR',
+            message: getVariantLoadErrorMessage(errorResponse),
+          });
+          return;
+        }
+
+        dispatch({
+          type: 'variantLoaded',
+          requestKey,
+          locale: state.requestedContentLocale,
+          payload: data,
+        });
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        console.error('[useBlogPostState] post-variant failed:', error);
+        dispatch({
+          type: 'variantFailed',
+          requestKey,
+          locale: state.requestedContentLocale,
+          code: 'INTERNAL_ERROR',
+          message: 'Unable to load article content.',
+        });
+      })
+      .finally(() => {
+        if (inflightRequestRef.current === controller) {
+          inflightRequestRef.current = null;
         }
       });
-      return;
-    }
-
-    if (hasBaseVariantForSelected || allVariants[selectedContentLocale]) {
-      return;
-    }
-    if (loadingLang === selectedContentLocale) {
-      return;
-    }
-
-    void loadVariant(selectedContentLocale);
   }, [
-    actualContentLocale,
     allVariants,
-    authState,
-    baseVariant,
-    loadVariant,
-    loadingLang,
-    requestedContentLocale,
-    selectedContentLocale,
+    meta.slug,
+    state.activeRequestKey,
+    state.authState,
+    state.displayedContentLocale,
+    state.requestedContentLocale,
+    state.viewState,
   ]);
+
+  useEffect(() => () => {
+    inflightRequestRef.current?.abort();
+    inflightRequestRef.current = null;
+  }, []);
 
   return {
     defaultContentLocale,
-    requestedContentLocale,
-    authState,
+    requestedContentLocale: state.requestedContentLocale,
+    selectedContentLocale: state.displayedContentLocale,
     selectedVariant,
-    selectedContentLocale,
-    loadingLang,
-    loadError,
+    viewState: state.viewState,
+    loadingLang: state.loadingLocale,
+    loadError: state.errorMessage,
     effectiveStatus,
     effectiveOriginLocale,
     updateContentLocaleQuery,
     markAuthGranted,
-    setSelectedContentLocale,
+    retryRequestedContentLocale,
   };
 }

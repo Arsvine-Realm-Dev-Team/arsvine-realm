@@ -41,8 +41,6 @@ interface ProjectsModule {
   webProjects: Project[];
   gameProjects: Project[];
   earlyProjects: Project[];
-  learnProjects: Project[];
-  workProjects: Project[];
   copyableTokens: typeof projectsZH.copyableTokens;
 }
 
@@ -109,17 +107,9 @@ function loadLocalizedModule<T>(registry: LocalizedModuleMap<T>, locale: Locale)
   return registry[locale] ?? registry[defaultLocale];
 }
 
-function hasLocalizedVariant<T>(registry: LocalizedModuleMap<T>, locale: Locale): boolean {
-  return locale in registry;
-}
-
 /** 加载 locale 对应的 projects 模块，缺失时回退默认 locale */
 export function loadProjects(locale: Locale): ProjectsModule {
   return loadLocalizedModule(projectModules, locale);
-}
-
-export function hasProjectsLocaleVariant(locale: Locale): boolean {
-  return hasLocalizedVariant(projectModules, locale);
 }
 
 /**
@@ -169,10 +159,6 @@ export function resolveWebProject(
 
 export function loadLife(locale: Locale): LifeModule {
   return loadLocalizedModule(lifeModules, locale);
-}
-
-export function hasLifeLocaleVariant(locale: Locale): boolean {
-  return hasLocalizedVariant(lifeModules, locale);
 }
 
 /**

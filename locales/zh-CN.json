@@ -12,6 +12,7 @@
     "decoding": "正在解码传输…",
     "signalFragment": "// 信号片段",
     "endTransmission": "— 传输结束 —",
+    "retry": "重试",
     "returnToIndex": "返回索引",
     "returnToMain": "返回主页",
     "imageNotAvailable": "图片不可用",

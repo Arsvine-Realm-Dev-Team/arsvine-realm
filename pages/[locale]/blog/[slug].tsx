@@ -15,11 +15,13 @@ import useBlogPostState, {
   blogContentLocaleLabels,
   buildBlogPostHref,
   type BlogVariantPayload,
+  type BlogPostViewState,
 } from '../../../hooks/useBlogPostState';
 import {
   getPostBySlugAndLocale,
   getPostMetaBySlugAndLocale,
   getAllPostsForLocale,
+  getProtectedPostPublicMeta,
   getPostSlugs,
   getAvailablePostContentLocales,
   getBlogPostEntry,
@@ -35,6 +37,7 @@ import { useTransition } from '../../../contexts/TransitionContext';
 import { getSiteUrl } from '../../../data/site';
 import { locales, defaultLocale, type Locale } from '../../../i18n/config';
 import { formatReadingTime } from '../../../lib/format-reading-time';
+import type { ProtectedVerifyResponse } from '../../../lib/content/access-api';
 
 interface BlogPostPageProps {
   locale: Locale;
@@ -51,6 +54,18 @@ interface BlogPostPageProps {
   isProtected: boolean;
 }
 
+interface BlogShellProps {
+  locale: Locale;
+  meta: BlogPostMeta;
+  signalLabel: string;
+  statusText: string;
+  description?: string;
+  entered?: boolean;
+  error?: string;
+  action?: React.ReactNode;
+  isProtected?: boolean;
+}
+
 export default function BlogPostPage({
   locale,
   meta,
@@ -65,10 +80,11 @@ export default function BlogPostPage({
   isProtected,
 }: BlogPostPageProps) {
   const router = useRouter();
+  const tCommon = useTranslations('common');
   const {
     defaultContentLocale,
     requestedContentLocale,
-    authState,
+    viewState,
     selectedVariant,
     selectedContentLocale,
     loadingLang,
@@ -77,7 +93,7 @@ export default function BlogPostPage({
     effectiveOriginLocale,
     updateContentLocaleQuery,
     markAuthGranted,
-    setSelectedContentLocale,
+    retryRequestedContentLocale,
   } = useBlogPostState({
     routerAsPath: router.asPath,
     locale,
@@ -92,11 +108,19 @@ export default function BlogPostPage({
     isProtected,
   });
 
-  if (router.isFallback || authState === 'checking') {
-    return <BlogLoadingShell />;
+  if (router.isFallback || viewState === 'authChecking') {
+    return (
+      <BlogStateShell
+        locale={locale}
+        meta={meta}
+        signalLabel={tCommon('signalFragment')}
+        statusText={tCommon('decoding')}
+        isProtected={isProtected}
+      />
+    );
   }
 
-  if (authState === 'required' && access.mode === 'totp' && access.group) {
+  if (viewState === 'authRequired' && access.mode === 'totp' && access.group) {
     return (
       <ProtectedPostGate
         locale={locale}
@@ -109,7 +133,25 @@ export default function BlogPostPage({
   }
 
   if (!selectedVariant) {
-    return <BlogLoadingShell />;
+    return (
+      <BlogStateShell
+        locale={locale}
+        meta={meta}
+        signalLabel={tCommon('signalFragment')}
+        statusText={viewState === 'loadFailed' ? tCommon('loading') : tCommon('decoding')}
+        error={loadError}
+        action={loadError ? (
+          <button
+            type="button"
+            className={styles.articleLocaleRetry}
+            onClick={retryRequestedContentLocale}
+          >
+            {tCommon('retry')}
+          </button>
+        ) : null}
+        isProtected={isProtected}
+      />
+    );
   }
 
   return (
@@ -122,14 +164,15 @@ export default function BlogPostPage({
       translationStatus={effectiveStatus}
       actualLocale={actualLocale}
       originLocale={effectiveOriginLocale}
+      viewState={viewState}
       selectedContentLocale={selectedContentLocale}
-      setSelectedContentLocale={setSelectedContentLocale}
       availableContentLocales={availableContentLocales}
       loadingLang={loadingLang}
       actualContentLocale={actualContentLocale}
       defaultContentLocale={defaultContentLocale}
       updateContentLocaleQuery={updateContentLocaleQuery}
       loadError={loadError}
+      retryRequestedContentLocale={retryRequestedContentLocale}
     />
   );
 }
@@ -184,13 +227,13 @@ function ProtectedPostGate({
         }),
       });
 
-      const json = (await response.json()) as {
-        ok: boolean;
-        error?: { message?: string };
-      };
+      const json = (await response.json()) as ProtectedVerifyResponse;
 
       if (!response.ok || !json.ok) {
-        throw new Error(json.error?.message || t('invalidToken'));
+        if ('error' in json) {
+          throw new Error(json.error.message || t('invalidToken'));
+        }
+        throw new Error(t('invalidToken'));
       }
 
       await onVerified();
@@ -229,6 +272,7 @@ function ProtectedPostGate({
       <Head>
         <title>{`${meta.title} // Blog`}</title>
         <meta name="description" content={meta.excerpt} />
+        <meta name="robots" content="noindex,nofollow,noarchive" />
         <meta property="og:title" content={meta.title} />
         <meta property="og:description" content={meta.excerpt} />
         <meta property="og:type" content="article" />
@@ -305,28 +349,53 @@ function ProtectedPostGate({
   );
 }
 
-function BlogLoadingShell() {
+function BlogStateShell({
+  locale,
+  meta,
+  signalLabel,
+  statusText,
+  description,
+  error,
+  action,
+  isProtected = false,
+}: BlogShellProps) {
   const { isInverted } = useApp();
-  const tCommon = useTranslations('common');
   const [entered, setEntered] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => setEntered(true), 100);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setEntered(true), 100);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
     <div className={`${styles.pageWrapper} ${isInverted ? hudStyles.inverted : ''}`}>
-      <Head><title>{tCommon('loading')}</title></Head>
+      <Head>
+        <title>{`${meta.title} // Blog`}</title>
+        <meta name="description" content={meta.excerpt} />
+        {isProtected ? <meta name="robots" content="noindex,nofollow,noarchive" /> : null}
+        <HreflangLinks basePath={`/blog/${meta.slug}`} />
+      </Head>
       <div className={styles.mainContent}>
         <header className={`${styles.headerSection} ${entered ? styles.entered : ''}`}>
           <div className={styles.headerContent}>
-            <span className={styles.headerSignal}>{tCommon('signalFragment')}</span>
+            <span className={styles.headerSignal}>{signalLabel}</span>
+            <h1 className={styles.headerTitle}>{meta.title}</h1>
+            <div className={styles.headerMeta}>
+              {meta.date && <span className={styles.headerDate}>{meta.date}</span>}
+              {meta.readingMinutes > 0 ? <span className={styles.headerReadingTime}>{meta.readingMinutes}m</span> : null}
+            </div>
+            {description ? <p className={styles.headerExcerpt}>{description}</p> : null}
+            {error ? (
+              <div className={styles.articleLocaleErrorRow}>
+                <p className={accessStyles.error}>{error}</p>
+                {action}
+              </div>
+            ) : null}
           </div>
         </header>
         <section className={styles.contentSection}>
           <div className={styles.loadingIndicator}>
-            <span className={styles.loadingText}>{tCommon('decoding')}</span>
+            <span className={styles.loadingText}>{statusText}</span>
           </div>
         </section>
       </div>
@@ -342,24 +411,26 @@ function BlogDetailContent({
   translationStatus,
   actualLocale,
   originLocale,
+  viewState,
   selectedContentLocale,
-  setSelectedContentLocale,
   availableContentLocales,
   loadingLang,
   actualContentLocale,
   defaultContentLocale,
   updateContentLocaleQuery,
   loadError,
+  retryRequestedContentLocale,
 }: Omit<BlogPostPageProps, 'messages' | 'contentVariants' | 'access' | 'isProtected' | 'actualContentLocale' | 'mdxSource'> & {
   mdxSource: MDXRemoteSerializeResult;
+  viewState: BlogPostViewState;
   selectedContentLocale: BlogContentLocale;
-  setSelectedContentLocale: React.Dispatch<React.SetStateAction<BlogContentLocale>>;
   originLocale: Locale;
   loadingLang: BlogContentLocale | null;
   actualContentLocale: BlogContentLocale;
   defaultContentLocale: BlogContentLocale;
   updateContentLocaleQuery: (nextContentLocale: BlogContentLocale) => void;
   loadError: string;
+  retryRequestedContentLocale: () => void;
 }) {
   const { isInverted } = useApp();
   const { navigateTo } = useTransition();
@@ -506,19 +577,18 @@ function BlogDetailContent({
   ], [tNav]);
 
   const handleContentLocaleChange = useCallback((nextContentLocale: BlogContentLocale) => {
-    if (nextContentLocale === selectedContentLocale || loadingLang) return;
-    if (nextContentLocale === actualContentLocale) {
-      setSelectedContentLocale(nextContentLocale);
-      updateContentLocaleQuery(nextContentLocale);
+    if (loadingLang) {
+      return;
+    }
+    if (nextContentLocale === selectedContentLocale && viewState !== 'loadFailed') {
       return;
     }
     updateContentLocaleQuery(nextContentLocale);
   }, [
-    actualContentLocale,
     loadingLang,
     selectedContentLocale,
-    setSelectedContentLocale,
     updateContentLocaleQuery,
+    viewState,
   ]);
 
   return (
@@ -526,6 +596,7 @@ function BlogDetailContent({
       <Head>
         <title>{`${meta.title} // Blog`}</title>
         <meta name="description" content={meta.excerpt} />
+        {meta.access.mode === 'totp' ? <meta name="robots" content="noindex,nofollow,noarchive" /> : null}
         <meta property="og:title" content={meta.title} />
         <meta property="og:description" content={meta.excerpt} />
         <meta property="og:type" content="article" />
@@ -579,7 +650,19 @@ function BlogDetailContent({
                 ))}
               </div>
             )}
-            {loadError ? <p className={accessStyles.error}>{loadError}</p> : null}
+            {loadError ? (
+              <div className={styles.articleLocaleErrorRow}>
+                <p className={accessStyles.error}>{loadError}</p>
+                <button
+                  type="button"
+                  className={styles.articleLocaleRetry}
+                  onClick={retryRequestedContentLocale}
+                  disabled={Boolean(loadingLang)}
+                >
+                  {tCommon('retry')}
+                </button>
+              </div>
+            ) : null}
             {meta.tags.length > 0 && (
               <div className={styles.headerTags}>
                 {meta.tags.map((tag) => (
@@ -596,7 +679,7 @@ function BlogDetailContent({
           ref={(el) => { sectionRefs.current['content'] = el; }}
           data-nav-id="content"
         >
-          {(!titleDone || Boolean(loadingLang)) && (
+          {(!titleDone || viewState === 'loadingVariant') && (
             <div className={styles.loadingIndicator}>
               <span className={styles.loadingText}>{tCommon('decoding')}</span>
             </div>
@@ -618,6 +701,7 @@ function BlogDetailContent({
             {prevPost ? (
               <Link
                 href={buildBlogPostHref(locale, prevPost.slug, defaultContentLocale)}
+                prefetch={prevPost.access.mode === 'public'}
                 className={`${styles.footerNavButton} ${styles.footerNavPrev}`}
                 onClick={(e) => { e.preventDefault(); navigateTo(buildBlogPostHref(locale, prevPost.slug, defaultContentLocale)); }}
                 data-cursor-label="PREVIOUS"
@@ -628,6 +712,7 @@ function BlogDetailContent({
             ) : (
               <Link
                 href={`/${locale}/blog`}
+                prefetch={false}
                 className={`${styles.footerNavButton} ${styles.footerNavPrev}`}
                 onClick={handleBack}
                 data-cursor-label="BACK"
@@ -639,6 +724,7 @@ function BlogDetailContent({
             {nextPost ? (
               <Link
                 href={buildBlogPostHref(locale, nextPost.slug, defaultContentLocale)}
+                prefetch={nextPost.access.mode === 'public'}
                 className={`${styles.footerNavButton} ${styles.footerNavNext}`}
                 onClick={(e) => { e.preventDefault(); navigateTo(buildBlogPostHref(locale, nextPost.slug, defaultContentLocale)); }}
                 data-cursor-label="NEXT"
@@ -649,6 +735,7 @@ function BlogDetailContent({
             ) : (
               <Link
                 href={`/${locale}/blog`}
+                prefetch={false}
                 className={`${styles.footerNavButton} ${styles.footerNavNext}`}
                 onClick={handleBack}
                 data-cursor-label="BACK"
@@ -716,7 +803,7 @@ export const getStaticProps: GetStaticProps<BlogPostPageProps> = async ({ params
         props: {
           locale,
           messages,
-          meta: metaResult.meta,
+          meta: getProtectedPostPublicMeta(metaResult.meta),
           mdxSource: null,
           allPosts,
           translationStatus: metaResult.translationStatus,

@@ -12,6 +12,7 @@
     "decoding": "DECODING TRANSMISSION…",
     "signalFragment": "// SIGNAL_FRAGMENT",
     "endTransmission": "— END TRANSMISSION —",
+    "retry": "Retry",
     "returnToIndex": "RETURN TO INDEX",
     "returnToMain": "RETURN TO MAIN",
     "imageNotAvailable": "Image not available",
