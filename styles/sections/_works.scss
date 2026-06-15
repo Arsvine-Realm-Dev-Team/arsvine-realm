@@ -1,0 +1,305 @@
+.worksSection {
+  align-items: stretch;
+  content-visibility: visible;
+}
+
+.projectGrid {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(15px, 2vw, 25px);
+  width: 100%;
+}
+
+.projectCard {
+  background-color: rgba(var(--ark-secondary-rgb), 0.1);
+  border: 1px solid var(--ark-border);
+  padding: 15px;
+  position: relative;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  cursor: default;
+
+  &:hover {
+    background-color: rgba(var(--ark-secondary-rgb), 0.18);
+    border-color: var(--ark-primary);
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(var(--ark-primary-rgb), 0.1);
+
+    .cardBorderTopLeft,
+    .cardBorderBottomRight {
+      opacity: 1;
+      width: 30px;
+      height: 30px;
+    }
+
+    .projectImagePlaceholder {
+      filter: brightness(1.1);
+    }
+
+    .imageScanlineOverlay {
+      opacity: 0.4;
+    }
+
+    .projectLink {
+      background-color: var(--ark-primary);
+      color: var(--ark-dark-blue);
+    }
+  }
+}
+
+.cardBorderTopLeft,
+.cardBorderBottomRight {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: var(--ark-primary);
+  border-style: solid;
+  border-width: 0;
+  opacity: 0.6;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.cardBorderTopLeft {
+  top: -1px;
+  left: -1px;
+  border-top-width: 2px;
+  border-left-width: 2px;
+}
+
+.cardBorderBottomRight {
+  bottom: -1px;
+  right: -1px;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+}
+
+.projectImageContainer {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.projectImagePlaceholder {
+  width: 100%;
+  padding-top: 56.25%;
+  background-color: var(--ark-primary);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: 1px solid var(--ark-border);
+  position: relative;
+  overflow: hidden;
+}
+
+.imageScanlineOverlay {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom,
+      transparent 50%,
+      rgba(0, 0, 0, 0.15) 50%);
+  background-size: 100% 4px;
+  opacity: 0.2;
+  pointer-events: none;
+  animation: scanMove 10s linear infinite;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.projectTitle {
+  font-family: var(--font-hud);
+  font-size: var(--fs-lg);
+  font-weight: bold;
+  color: var(--ark-primary);
+  margin-top: 0;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.titleBracket {
+  color: var(--ark-border);
+  opacity: 0.7;
+  font-weight: normal;
+  margin: 0 5px;
+  font-size: 0.85em;
+}
+
+.projectDescription {
+  font-family: var(--font-hud);
+  font-size: var(--fs-xs);
+  color: var(--ark-text-secondary);
+  line-height: 1.7;
+  margin-top: 0;
+  margin-bottom: 15px;
+  padding-left: 10px;
+  opacity: 0.8;
+  text-align: left;
+}
+
+.projectMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-family: var(--font-hud);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.projectYear {
+  color: var(--ark-primary);
+  opacity: 0.8;
+  border: 1px solid rgba(var(--ark-primary-rgb), 0.3);
+  padding: 1px 6px;
+}
+
+.projectRole {
+  color: var(--ark-text-secondary);
+  opacity: 0.6;
+}
+
+.projectHighlights {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 15px 0;
+  font-family: var(--font-hud);
+  font-size: 11px;
+  color: var(--ark-text-secondary);
+  opacity: 0.7;
+  line-height: 1.8;
+
+  li {
+    padding-left: 14px;
+    position: relative;
+
+    &::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: var(--ark-primary);
+      opacity: 0.6;
+    }
+  }
+}
+
+.confidentialCard {
+  .projectImageContainer {
+    opacity: 0.6;
+  }
+}
+
+.confidentialPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--ark-secondary-rgb), 0.15) !important;
+  padding-top: 56.25%;
+  position: relative;
+  border: 1px dashed var(--ark-border);
+}
+
+.confidentialIcon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -70%);
+  font-size: 28px;
+  opacity: 0.4;
+}
+
+.confidentialLabel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 50%);
+  font-family: var(--font-hud);
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--ark-text-secondary);
+  opacity: 0.4;
+  text-transform: uppercase;
+}
+
+.projectTech {
+  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.techTag {
+  background-color: rgba(var(--ark-primary-rgb), 0.15);
+  color: var(--ark-primary);
+  font-family: var(--font-mono);
+  font-size: var(--fs-base);
+  padding: 4px 10px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.projectLink {
+  position: absolute;
+  right: 15px;
+  bottom: 15px;
+  display: inline-block;
+  font-family: var(--font-hud);
+  font-size: var(--fs-caption);
+  color: var(--ark-primary);
+  text-decoration: none;
+  border: 1px solid var(--ark-primary);
+  padding: 6px 12px;
+  transition: background-color 0.3s, color 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: none;
+  z-index: 3;
+
+  @media (max-width: 1023px) {
+    cursor: pointer;
+  }
+}
+
+.worksSectionTitleIcon {
+  width: 100px;
+  height: 100px;
+  margin-left: 10px;
+  vertical-align: middle;
+  filter: grayscale(100%) brightness(1.2);
+  opacity: 0.6;
+}
+
+.worksTitleWithBackground {
+  position: relative;
+  z-index: 1;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -60%;
+    left: 18%;
+    width: 320px;
+    height: 320px;
+    transform: translate(-50%, -50%);
+    background-image: url('/decor/portfolio-title.webp');
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: contain;
+    opacity: 0.3;
+    z-index: -10;
+    filter: grayscale(100%) brightness(1.2);
+    pointer-events: none;
+  }
+}
+
+.inverted {
+  .worksTitleWithBackground::before {
+    filter: grayscale(100%) brightness(0.6);
+  }
+}

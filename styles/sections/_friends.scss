@@ -1,0 +1,132 @@
+.friendLinkSection {
+  width: var(--content-width);
+  margin-left: var(--content-offset);
+  min-height: 100vh;
+  scroll-margin-top: 0;
+  padding: var(--spacing-section-top) var(--spacing-section-pad) clamp(40px, 5vw, 80px) 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+  color: var(--ark-text);
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 2.5vw + 1rem, 3.5rem);
+    font-weight: 300;
+    color: var(--ark-primary);
+    margin-bottom: clamp(20px, 3vw, 40px);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--ark-border);
+    padding-bottom: 10px;
+    text-align: left;
+    width: 100%;
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+.friendLinkGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(12px, 2vw, 20px);
+
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.friendLinkServicesHeading {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 1.5vw + 0.75rem, 2.25rem);
+  font-weight: 300;
+  color: var(--ark-primary);
+  margin: clamp(40px, 5vw, 64px) 0 clamp(20px, 3vw, 40px);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--ark-border);
+  padding-bottom: 10px;
+  text-align: left;
+  width: 100%;
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.friendLinkCard {
+  background-color: rgba(var(--ark-secondary-rgb), 0.1);
+  border: 1px solid rgba(var(--ark-border-rgb), 0.2);
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  text-decoration: none;
+  color: var(--ark-text);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    background-color: rgba(var(--ark-secondary-rgb), 0.16);
+    border-color: rgba(var(--ark-primary-rgb), 0.32);
+    transform: translateY(-5px);
+  }
+
+  .inverted & {
+    background-color: rgba(var(--ark-secondary-inverted-rgb), 0.08);
+    border-color: rgba(var(--ark-border-inverted-rgb), 0.14);
+
+    &:hover {
+      border-color: rgba(var(--ark-highlight-pink-rgb), 0.28);
+    }
+  }
+}
+
+.friendLinkAvatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.friendLinkInfo {
+  h3 {
+    margin: 0 0 5px;
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    color: var(--ark-text);
+    transition: color 0.3s ease;
+
+    .inverted & {
+      color: var(--ark-text-inverted);
+    }
+  }
+
+  p {
+    margin: 0;
+    font-size: var(--fs-xs);
+    color: var(--ark-text-secondary);
+    transition: color 0.3s ease;
+
+    .inverted & {
+      color: var(--ark-text-secondary-inverted);
+    }
+  }
+}
+
+.friendLinkCard:hover .friendLinkInfo h3 {
+  color: var(--ark-primary);
+
+  .inverted & {
+    color: var(--ark-primary-inverted);
+  }
+}

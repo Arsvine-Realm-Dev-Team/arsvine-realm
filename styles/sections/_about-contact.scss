@@ -1,0 +1,519 @@
+.footerInfo {
+  font-family: var(--font-hud);
+  font-size: var(--fs-caption);
+  color: var(--ark-text-secondary);
+  opacity: 0.7;
+  padding-left: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ark-border);
+  text-align: left;
+  line-height: 1.5;
+
+  p {
+    margin: 0 0 4px 0;
+    font-size: inherit;
+  }
+
+  a {
+    font-size: inherit;
+    color: inherit;
+    text-decoration: none;
+    padding: 1px 6px;
+    margin: 0 -6px;
+    border-radius: 2px;
+    transition: background-color 0.25s ease, color 0.25s ease, opacity 0.25s ease;
+
+    &:hover {
+      background-color: #e6e6e6;
+      color: #1a1a1a;
+      opacity: 1;
+    }
+  }
+}
+
+.aboutContentContainer {
+  display: flex;
+  align-items: flex-start;
+}
+
+.aboutTextContent {
+  margin-right: 60px;
+}
+
+.aboutImageContainer {
+  width: 150px;
+  margin-left: 12px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.aboutImage {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: invert(1) grayscale(100%);
+  opacity: 0.8;
+  transition: filter 0.5s ease-in-out;
+
+  .inverted & {
+    filter: grayscale(100%);
+  }
+}
+
+.contactSection {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 30px;
+  position: relative;
+  padding-bottom: 50px;
+  background-image: url('/decor/contour-map.webp');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  margin-bottom: 0px;
+}
+
+.logIconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: rgba(var(--ark-primary-rgb), 0.035);
+  box-shadow: inset 0 0 0 1px rgba(var(--ark-primary-rgb), 0.04);
+  color: var(--ark-text-secondary);
+  flex-shrink: 0;
+  transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s ease;
+}
+
+.logIcon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  fill: currentColor;
+  stroke: none;
+  color: var(--ark-primary);
+  opacity: 0.8;
+  transition: color 0.3s, opacity 0.3s;
+
+  .logItem:hover & {
+    color: var(--ark-text);
+    opacity: 1;
+  }
+}
+
+.scanner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg,
+      rgba(178, 242, 187, 0.6) 0deg,
+      rgba(178, 242, 187, 0.1) 30deg,
+      transparent 30.1deg 360deg);
+  animation: rotateScanner 4s linear infinite;
+  animation-direction: reverse;
+  opacity: 0.8;
+  z-index: 1;
+}
+
+.logItem {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-hud);
+  font-size: var(--fs-md);
+  z-index: 3;
+  pointer-events: auto;
+
+  &.radarContact1 {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: none;
+  }
+}
+
+.logLink,
+.logItem.radarContact1 {
+  text-decoration: none;
+  display: inline-block;
+  position: relative;
+}
+
+.emailText {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%) scaleX(0);
+  transform-origin: left center;
+  opacity: 0;
+  margin-left: 10px;
+  padding: 6px 12px;
+  background-color: var(--ark-primary);
+  color: var(--ark-dark-blue);
+  font-size: var(--fs-caption);
+  white-space: nowrap;
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.logItem.radarContact1:hover .emailText {
+  transform: translateY(-50%) scaleX(1);
+  opacity: 1;
+}
+
+.contactSection .logItem:hover .logIconContainer {
+  background-color: rgba(var(--ark-primary-rgb), 0.12);
+  box-shadow: inset 0 0 0 1px rgba(var(--ark-primary-rgb), 0.08);
+}
+
+.copyFeedback {
+  position: absolute;
+  bottom: 105%;
+  left: 50%;
+  color: var(--ark-primary);
+  padding: 3px 8px;
+  font-size: var(--fs-caption);
+  font-family: var(--font-hud);
+  white-space: nowrap;
+  opacity: 0;
+  z-index: 5;
+  pointer-events: none;
+  animation: floatUpFadeOut 1.5s ease-out forwards;
+}
+
+.radarDisplay {
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  position: relative;
+  margin: 20px 0 30px auto;
+  background-color: var(--ark-dark-blue);
+  border: 1px solid var(--ark-border);
+  overflow: hidden;
+  background-image: none;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    background-size: 100px 100px;
+    animation: moveGrid 1s linear infinite;
+  }
+
+  &::before {
+    background-image: repeating-linear-gradient(to bottom,
+        rgba(200, 200, 200, 0.1) 0,
+        rgba(200, 200, 200, 0.1) 1px,
+        transparent 1px,
+        transparent 20px
+      );
+  }
+
+  &::after {
+    background-image: repeating-linear-gradient(to right,
+        rgba(200, 200, 200, 0.1) 0,
+        rgba(200, 200, 200, 0.1) 1px,
+        transparent 1px,
+        transparent 20px
+      );
+  }
+}
+
+.radarDisplay .radarRipple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid rgba(178, 242, 187, 0.9);
+  box-shadow: 0 0 0 0px rgba(178, 242, 187, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.1);
+  transform-origin: center center;
+  animation: contactRippleExpandShadow 3.5s ease-out infinite;
+  z-index: 2;
+}
+
+.radarDisplay .ripple1 {
+  animation-delay: 0s;
+}
+
+.radarDisplay .radarRippleSmall {
+  animation-name: contactRippleExpandShadowSmall;
+}
+
+.radarDisplay .smallRipple1 {
+  animation-delay: 0.4s;
+  top: 25%;
+  left: 20%;
+}
+
+.radarDisplay .smallRipple2 {
+  animation-delay: 1.2s;
+  top: 75%;
+  left: 80%;
+}
+
+.radarDisplay .smallRipple3 {
+  animation-delay: 2s;
+  top: 80%;
+  left: 35%;
+}
+
+.radarContact1 {
+  top: -18.5vh;
+  left: 18%;
+}
+
+.radarContact2 {
+  top: 78vh;
+  left: 80%;
+}
+
+.radarContact3 {
+  top: 88vh;
+  left: 40%;
+}
+
+.radarContact4 {
+  position: absolute;
+  top: 55%;
+  left: 90%;
+  transform: translate(-50%, -50%);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: none;
+}
+
+.radarContact5 {
+  position: absolute;
+  top: 70%;
+  left: 10%;
+  transform: translate(-50%, -50%);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: none;
+}
+
+.radarContact6 {
+  position: absolute;
+  top: 70%;
+  right: 50%;
+  transform: translate(50%, -50%);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: none;
+}
+
+.radarContact7 {
+  top: 88vh;
+  left: 60%;
+}
+
+.contactIconRipple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.1);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid rgba(178, 242, 187, 1);
+  box-shadow: 0 0 3px 1px rgba(178, 242, 187, 0.6);
+  opacity: 1;
+  pointer-events: none;
+  z-index: -1;
+  animation: contactRippleExpandShadow 2.5s ease-out infinite;
+}
+
+.radarContact2 .contactIconRipple {
+  animation-delay: 0.2s;
+}
+
+.radarContact3 .contactIconRipple {
+  animation-delay: 0.4s;
+}
+
+.radarContact4 .contactIconRipple {
+  animation-delay: 0.6s;
+}
+
+.radarContact5 .contactIconRipple {
+  animation-delay: 0.8s;
+}
+
+.radarContact6 .contactIconRipple {
+  animation-delay: 1s;
+}
+
+.radarContact7 .contactIconRipple {
+  animation-delay: 1.2s;
+}
+
+.siteStatsContainer {
+  font-family: var(--font-hud);
+  color: var(--ark-text-secondary);
+  opacity: 0.8;
+  padding-left: 12px;
+  text-align: left;
+  line-height: 1.5;
+  text-transform: none;
+  letter-spacing: normal;
+
+  p {
+    margin: 0 0 4px 0;
+    font-size: var(--fs-base);
+  }
+}
+
+.statValue {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.aboutContentInner {
+  & > .siteStatsContainer,
+  & > .aboutLinks,
+  & > .footerInfo,
+  & > .aboutImageContainer {
+    margin-top: 5px;
+  }
+}
+
+.aboutLinks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 10px;
+  align-items: center;
+  width: fit-content;
+}
+
+.aboutIconItem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-decoration: none;
+  position: relative;
+  line-height: 0;
+  padding: 0;
+  margin: 0;
+
+  .logIconContainer {
+    transition: background-color 0.3s, border-color 0.3s;
+  }
+}
+
+.aboutIconItem:hover {
+  .logIconContainer {
+    background-color: rgba(var(--ark-primary-rgb), 0.12);
+    box-shadow: inset 0 0 0 1px rgba(var(--ark-primary-rgb), 0.08);
+  }
+
+  .logIcon {
+    color: var(--ark-text);
+    opacity: 1;
+  }
+}
+
+.aboutIconRss .contactIconRipple {
+  animation-delay: 0.2s;
+}
+
+.aboutIconMap .contactIconRipple {
+  animation-delay: 0.4s;
+}
+
+.aboutNewImageWrapper {
+  position: absolute;
+  top: 100px;
+  right: 70px;
+  width: 12vw;
+  max-width: 300px;
+  min-width: 150px;
+  height: auto;
+  z-index: 3;
+}
+
+.aboutNewImageContainer {
+  position: relative;
+  width: 100%;
+  height: auto;
+}
+
+.aboutNewImageBase {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.aboutNewImageNormal {
+  opacity: 1;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.aboutNewImageInverted {
+  opacity: 0;
+  filter: invert(1);
+  transition: opacity 0.5s ease-in-out;
+}
+
+.inverted {
+  .contactIconRipple {
+    animation-name: contactRippleExpandShadowInverted;
+    animation-duration: 2.5s;
+  }
+
+  .radarDisplay .radarRipple {
+    border-color: rgba(var(--ark-primary-rgb), 0.9);
+    box-shadow: 0 0 0 0px rgba(var(--ark-primary-rgb), 0.5);
+    animation-name: contactRippleExpandShadowInverted;
+  }
+
+  .radarDisplay .radarRippleSmall {
+    border-color: rgba(var(--ark-primary-rgb), 0.9);
+    box-shadow: 0 0 0 0px rgba(var(--ark-primary-rgb), 0.5);
+    animation-name: contactRippleExpandShadowSmallInverted;
+  }
+
+  .radarDisplay .scanner {
+    background: conic-gradient(from 0deg,
+        rgba(var(--ark-primary-rgb), 0.6) 0deg,
+        rgba(var(--ark-primary-rgb), 0.1) 30deg,
+        transparent 30.1deg 360deg);
+  }
+
+  .aboutIconItem:hover {
+    .logIcon {
+      color: #ffffff;
+    }
+  }
+
+  .aboutNewImageNormal {
+    opacity: 0;
+  }
+
+  .aboutNewImageInverted {
+    opacity: 1;
+  }
+}

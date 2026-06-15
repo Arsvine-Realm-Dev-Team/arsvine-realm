@@ -1,0 +1,140 @@
+.copyrightSection {
+  max-width: 880px;
+
+  h2,
+  .copyrightArticle,
+  .copyrightStamp {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.65s cubic-bezier(0.25, 0.8, 0.25, 1),
+      transform 0.65s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  .copyrightArticle {
+    transition-delay: 0.08s;
+  }
+
+  .copyrightStamp {
+    transition-delay: 0.16s;
+  }
+}
+
+.sectionAnchor {
+  scroll-margin-top: 0;
+}
+
+.copyrightEntered {
+  h2,
+  .copyrightArticle,
+  .copyrightStamp {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.copyrightArticle {
+  width: 100%;
+  color: var(--ark-text);
+  font-family: var(--font-reading, var(--font-body));
+  font-size: clamp(0.875rem, 0.4vw + 0.75rem, 1rem);
+  line-height: 1.85;
+
+  &[lang='en'] {
+    font-family: var(--font-body);
+  }
+
+  h3 {
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 1vw + 0.75rem, 1.75rem);
+    font-weight: 300;
+    color: var(--ark-primary);
+    letter-spacing: 1.5px;
+    margin: 0 0 clamp(16px, 2vw, 24px);
+    text-transform: uppercase;
+  }
+
+  p {
+    margin: 0 0 clamp(12px, 1.4vw, 18px);
+  }
+
+  ol {
+    margin: 0 0 clamp(12px, 1.4vw, 18px);
+    padding-left: 1.4em;
+
+    li {
+      margin-bottom: 0.4em;
+    }
+  }
+
+  a {
+    color: var(--ark-primary);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(var(--ark-primary-rgb), 0.4);
+    transition: color 0.25s, border-color 0.25s;
+
+    &:hover {
+      color: var(--ark-highlight-green, var(--ark-primary));
+      border-bottom-color: currentColor;
+    }
+  }
+}
+
+.copyrightDivider {
+  width: 100%;
+  border: none;
+  border-top: 1px dashed var(--ark-border);
+  margin: clamp(28px, 4vw, 48px) 0;
+}
+
+.copyrightBindingDivider {
+  width: 100%;
+  border: none;
+  border-top: 1px dashed rgba(var(--ark-border-rgb), 0.75);
+  margin: 0 0 clamp(16px, 2vw, 24px);
+}
+
+.copyrightStamp {
+  width: 100%;
+  margin-top: clamp(28px, 4vw, 48px);
+  font-family: var(--font-hud);
+  font-size: var(--fs-caption);
+  color: var(--ark-text-secondary);
+  opacity: 0.7;
+  letter-spacing: 1px;
+}
+
+.arrowBar {
+  position: absolute;
+  right: 0;
+  top: 20%;
+  bottom: 7%;
+  width: 40px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.arrowContainer {
+  position: absolute;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  animation: scrollArrows 0.6s linear infinite;
+}
+
+.arrow {
+  font-family: var(--font-mono);
+  font-size: var(--fs-md);
+  color: var(--ark-border);
+  transform: rotate(270deg);
+  height: 30px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .inverted & {
+    color: var(--ark-border-inverted);
+  }
+}
