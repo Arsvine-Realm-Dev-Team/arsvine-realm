@@ -29,6 +29,9 @@ interface ExplainProps {
 
 const MOBILE_QUERY = '(max-width: 767px)';
 
+const useIsomorphicLayoutEffect =
+  typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+
 export default function Explain({ children, note }: ExplainProps) {
   const [open, setOpen] = useState(false);
   const [mobileTop, setMobileTop] = useState<number | null>(null);
@@ -56,7 +59,7 @@ export default function Explain({ children, note }: ExplainProps) {
   }, [open]);
 
   // 移动端：测量触发器底部，注入 inline top；并在 scroll/resize 时关闭。
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (!open) return;
     if (typeof window === 'undefined') return;
     if (!window.matchMedia(MOBILE_QUERY).matches) {

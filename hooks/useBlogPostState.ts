@@ -184,6 +184,13 @@ export default function useBlogPostState({
   }, [state.requestedContentLocale]);
 
   useEffect(() => {
+    // 只在 reducer 处于 'checking' 时发起授权探测：每次 resetArticle 都会把 authState 拉回
+    // 'checking'，这里随之重跑；否则在「同一 group 的受保护文章之间互跳」场景下，
+    // [requiresAuth, access.group] 引用不变，effect 不会触发，会停在 authChecking 永远不出来。
+    if (state.authState !== 'checking') {
+      return;
+    }
+
     if (!requiresAuth || !access.group) {
       dispatch({ type: 'authResolved', granted: true });
       return;
@@ -196,6 +203,9 @@ export default function useBlogPostState({
     })
       .then(async (response) => {
         const data = (await response.json()) as GrantCheckResponse;
+        if (controller.signal.aborted) {
+          return;
+        }
         if (!response.ok || !data.ok) {
           dispatch({ type: 'authResolved', granted: false });
           return;
@@ -214,7 +224,7 @@ export default function useBlogPostState({
     return () => {
       controller.abort();
     };
-  }, [access.group, requiresAuth]);
+  }, [access.group, requiresAuth, state.authState]);
 
   useEffect(() => {
     if (state.authState !== 'granted') {
