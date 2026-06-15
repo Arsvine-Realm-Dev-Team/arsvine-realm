@@ -347,6 +347,7 @@ export default function MainLayout({ children }) {
             displayedFateText={displayedFateText}
             isEnvParamsTyping={isEnvParamsTyping}
             displayedEnvParams={displayedEnvParams}
+            envData={envData}
             isInverted={isInverted}
              drawerOpen={drawerOpen}
              isStandalone={isStandalone}
