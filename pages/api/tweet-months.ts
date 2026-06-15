@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getTweetMonthGroupsPage } from '../../../lib/tweets/github';
+import { getTweetMonthGroupsPage } from '../../lib/tweets/github';
 
 function parsePositiveInt(rawValue: string | string[] | undefined, fallback: number) {
   const value = Array.isArray(rawValue) ? rawValue[0] : rawValue;

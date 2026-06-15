@@ -54,6 +54,7 @@ const CustomCursor = () => {
   const snapTarget = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
   const currentLabel = useRef('');
   const hoverEl = useRef<HTMLElement | null>(null);
+  const interactiveElsRef = useRef<HTMLElement[]>([]);
 
   const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
   const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
@@ -156,6 +157,16 @@ const CustomCursor = () => {
     }
   }, []);
 
+  const collectInteractiveElements = useCallback(() => {
+    interactiveElsRef.current = Array.from(document.querySelectorAll(SELECTOR)).filter((el) => {
+      const htmlEl = el as HTMLElement;
+      if (htmlEl.closest('[data-cursor-no-magnetic]') && !htmlEl.hasAttribute('data-cursor-magnetic')) {
+        return false;
+      }
+      return true;
+    }) as HTMLElement[];
+  }, []);
+
   useEffect(() => {
     const tick = () => {
       if (isHovering.current && (!hoverEl.current || !isCursorInteractive(hoverEl.current))) {
@@ -210,21 +221,18 @@ const CustomCursor = () => {
 
       if (isHovering.current) return;
 
-      const elements = document.querySelectorAll(SELECTOR);
       let closest: Element | null = null;
       let closestDist = Infinity;
 
-      elements.forEach((el) => {
-        const htmlEl = el as HTMLElement;
-        if (htmlEl.closest('[data-cursor-no-magnetic]') && !htmlEl.hasAttribute('data-cursor-magnetic')) return;
+      interactiveElsRef.current.forEach((htmlEl) => {
         if (!isCursorInteractive(htmlEl)) return;
-        const rect = el.getBoundingClientRect();
+        const rect = htmlEl.getBoundingClientRect();
         const cx = rect.left + rect.width / 2;
         const cy = rect.top + rect.height / 2;
         const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
         if (dist < MAGNETIC_DISTANCE && dist < closestDist) {
           closestDist = dist;
-          closest = el;
+          closest = htmlEl;
         }
       });
 
@@ -278,7 +286,7 @@ const CustomCursor = () => {
       resetHoverState();
     };
 
-    let currentEls: NodeListOf<Element> = document.querySelectorAll(SELECTOR);
+    let currentEls: HTMLElement[] = [];
 
     const unbind = () => {
       currentEls.forEach((el) => {
@@ -288,10 +296,9 @@ const CustomCursor = () => {
     };
 
     const bind = () => {
-      currentEls = document.querySelectorAll(SELECTOR);
+      collectInteractiveElements();
+      currentEls = interactiveElsRef.current;
       currentEls.forEach((el) => {
-        const htmlEl = el as HTMLElement;
-        if (htmlEl.closest('[data-cursor-no-magnetic]') && !htmlEl.hasAttribute('data-cursor-magnetic')) return;
         el.addEventListener('mouseenter', handleEnter);
         el.addEventListener('mouseleave', handleLeave);
       });
@@ -318,7 +325,7 @@ const CustomCursor = () => {
       observer.disconnect();
       unbind();
     };
-  }, [resetHoverState, syncHoverTarget]);
+  }, [collectInteractiveElements, resetHoverState, syncHoverTarget]);
 
   useEffect(() => {
     const handleScroll = () => {

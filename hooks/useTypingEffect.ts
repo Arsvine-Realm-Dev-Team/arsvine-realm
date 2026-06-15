@@ -88,7 +88,7 @@ function getTypingProfile(text: string) {
 export function useFateTypingEffect(textVisible: boolean): FateTypingState {
   const tSite = useTranslations('pages.site');
   const [displayedFateText, setDisplayedFateText] = useState('');
-  const [isFateTypingActive, setIsFateTypingActive] = useState(false);
+  const isFateTypingActive = textVisible;
 
   useEffect(() => {
     if (!textVisible) return;
@@ -100,7 +100,6 @@ export function useFateTypingEffect(textVisible: boolean): FateTypingState {
     let timeouts: ReturnType<typeof setTimeout>[] = [];
     let cancelled = false;
     const abortControllers: AbortController[] = [];
-    setIsFateTypingActive(true);
 
     const schedule = (fn: () => void, delay: number) => {
       const id = setTimeout(() => {
@@ -223,7 +222,6 @@ export function useFateTypingEffect(textVisible: boolean): FateTypingState {
       abortControllers.forEach((c) => c.abort());
       timeouts = [];
       setDisplayedFateText('');
-      setIsFateTypingActive(false);
     };
   }, [textVisible, tSite]);
 
@@ -235,7 +233,7 @@ export function useFateTypingEffect(textVisible: boolean): FateTypingState {
  */
 export function useEnvParamsTypingEffect(textVisible: boolean): EnvParamsTypingState {
   const [displayedEnvParams, setDisplayedEnvParams] = useState('');
-  const [isEnvParamsTyping, setIsEnvParamsTyping] = useState(false);
+  const isEnvParamsTyping = textVisible;
   const [envData, setEnvData] = useState<EnvData | null>(null);
   const [envDataVersion, setEnvDataVersion] = useState(0);
   const currentTempRef = useRef(55.0);
@@ -247,7 +245,6 @@ export function useEnvParamsTypingEffect(textVisible: boolean): EnvParamsTypingS
       const envDeleteDelay = 20;
 
       let timeouts = [];
-      setIsEnvParamsTyping(true);
 
       const typeString = (str, index, delay, callback) => {
         if (index < str.length) {
@@ -334,7 +331,6 @@ export function useEnvParamsTypingEffect(textVisible: boolean): EnvParamsTypingS
       return () => {
         timeouts.forEach(clearTimeout);
         setDisplayedEnvParams('');
-        setIsEnvParamsTyping(false);
         setEnvData(null);
         setEnvDataVersion(0);
         lastGeneratedParamsRef.current = '';

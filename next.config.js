@@ -19,6 +19,12 @@ const nextConfig = {
   images: {
     remotePatterns,
   },
+  webpack: (config, { dev }) => {
+    if (!dev && process.platform === 'win32') {
+      config.cache = false;
+    }
+    return config;
+  },
 };
 
 module.exports = withBundleAnalyzer(withNextIntl(nextConfig));

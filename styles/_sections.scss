@@ -536,8 +536,14 @@
   display: block; // 确保图片表现为块级元素
   width: 100%; // 图片宽度充满容器
   height: auto; // 保持图片比例
-  filter: grayscale(100%); // 应用灰度滤镜
+  filter: invert(1) grayscale(100%); // 反转黑色条码以适配深色背景
   opacity: 0.8; // 可以稍微降低透明度，使其更融入背景
+  transition: filter 0.5s ease-in-out; // 与主题色过渡同步
+
+  // 反色模式下背景变浅，恢复黑色条码以保证对比度
+  .inverted & {
+    filter: grayscale(100%);
+  }
 }
 
 // =============================================
@@ -2060,6 +2066,7 @@
 
 .aboutNewImageInverted {
   opacity: 0;
+  filter: invert(1); // 同一张 PNG 通过 filter 在反色态下手动反转
   transition: opacity 0.5s ease-in-out;
 }
 

@@ -37,7 +37,6 @@
   width: 100%;
   padding-top: clamp(80px, 10vh, 120px);
   padding-bottom: clamp(28px, 4vw, 48px);
-  border-bottom: 1px solid rgba(var(--ark-border-rgb), 0.25);
   opacity: 0;
   transition: opacity 0.8s ease-out;
 
@@ -259,7 +258,6 @@
 .endMarker {
   padding-top: 36px;
   padding-bottom: 36px;
-  border-top: 1px solid rgba(var(--ark-border-rgb), 0.2);
   text-align: center;
 }
 

@@ -18,14 +18,19 @@ import { music } from '../lib/cdn';
 
 export const musicPlaylist: MusicTrack[] = [
   {
-    title: 'JANE DOE',
-    artist: '米津玄師, 宇多田ヒカル',
-    src: music('jane-doe.m4a'),
-  },
-  {
     title: "Don't Be So Serious",
     artist: 'Low Roar',
     src: music('dont-be-so-serious.m4a'),
+  },
+  {
+    title: "Somniomancer [null set]",
+    artist: 'Crywolf, Monster Siren Records',
+    src: music('somniomancer-null-set.m4a'),
+  },
+  {
+    title: 'JANE DOE',
+    artist: '米津玄師, 宇多田ヒカル',
+    src: music('jane-doe.m4a'),
   },
   {
     title: 'NEVER (feat. Evil Neuro)',

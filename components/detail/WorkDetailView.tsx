@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-img-element -- gallery and lightbox assets use raw img elements for arbitrary URLs and animation interop */
+/* eslint-disable react-hooks/refs -- callback refs intentionally maintain an imperative thumbnail map for lightbox closing animations */
 import React, { useState, useEffect, useRef } from 'react';
 import styles from '../../styles/WorkDetailView.module.scss';
 import Lightbox from '../interactive/Lightbox';
@@ -70,6 +72,9 @@ const WorkDetailView = ({ item }) => {
 
   // --- ADD Paragraph splitting --- 
   const paragraphs = articleContent ? articleContent.split('\n\n') : [];
+  const bindThumbnailRef = (key) => (element) => {
+    thumbnailRefs.current[key] = element;
+  };
 
   // --- ADD Function to render markdown link --- 
   const renderTextWithCopy = (text) => {
@@ -245,11 +250,9 @@ const WorkDetailView = ({ item }) => {
                       key={`${index}-img-${imgIndex}`} 
                       className={`${styles.articleImageFigure} ${imgData.isLightboxClickable ? styles.clickableFigure : ''}`} 
                       onClick={imgData.isLightboxClickable ? (e) => openLightbox(imgData.lightboxIndex, e, 'article') : undefined}
-                      ref={el => {
-                        if (imgData.isLightboxClickable && typeof imgData.lightboxIndex === 'number') {
-                           thumbnailRefs.current[`article_${imgData.lightboxIndex}`] = el;
-                        }
-                      }}
+                       ref={imgData.isLightboxClickable && typeof imgData.lightboxIndex === 'number'
+                         ? bindThumbnailRef(`article_${imgData.lightboxIndex}`)
+                         : undefined}
                    >
                     <img 
                       src={imgData.info ? imgData.info.src : imgData.src} // Handle both formats
@@ -280,7 +283,7 @@ const WorkDetailView = ({ item }) => {
                 key={index} 
                 className={styles.thumbnailButton} 
                 onClick={(e) => openLightbox(index, e, 'thumb')} // Pass sourceType 'thumb'
-                ref={el => { thumbnailRefs.current[`thumb_${index}`] = el; }} // Assign ref with 'thumb_' prefix
+                ref={bindThumbnailRef(`thumb_${index}`)} // Assign ref with 'thumb_' prefix
               >
                 <img 
                   src={img.src} 

@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { hasValidAccessGrant } from '../../../lib/content/access-grant';
+import { hasValidAccessGrant } from '../../lib/content/access-grant';
 
 type ResponseBody = { ok: true; granted: boolean } | { ok: false; error: string };
 

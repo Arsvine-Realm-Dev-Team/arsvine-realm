@@ -1,5 +1,15 @@
+import type { Ref } from 'react';
 import styles from '../../styles/Home.module.scss';
 import ActivationLever from '../interactive/ActivationLever';
+
+const DECORATIVE_BLOCKS = [
+  { flex: 4, color: 'var(--ark-highlight-green)' },
+  { flex: 36, color: '#333333' },
+  { flex: 24, color: '#444444' },
+  { flex: 19, color: '#666666' },
+  { flex: 12, color: '#888888' },
+  { flex: 5, color: '#aaaaaa' },
+];
 
 export default function LeftPanel({
   leftPanelAnimated,
@@ -25,6 +35,8 @@ export default function LeftPanel({
   drawerOpen = false,
   isStandalone = false,
   isTesseractDragging = false,
+  powerDisplayRef,
+  batteryIconRef,
 }) {
   const chargeLeverLabel = isTesseractActivated ? 'CHARGING' : 'START CHARGE';
   const dischargeLeverLabel = isDischarging
@@ -67,13 +79,13 @@ export default function LeftPanel({
           />
         )}
       </div>
-    <button
-      className={`${styles.globalBackButton} ${showBackAndNav ? styles.visible : ''}`}
-      onClick={handleGlobalBackClick}
-      data-cursor-label="BACK"
-      aria-label="BACK"
-    >
-    </button>
+      <button
+        className={`${styles.globalBackButton} ${showBackAndNav ? styles.visible : ''}`}
+        onClick={handleGlobalBackClick}
+        data-cursor-label="BACK"
+        aria-label="BACK"
+      >
+      </button>
       <div className={`${styles.globalBackButtonDivider} ${showBackAndNav ? styles.visible : ''}`}></div>
       <div className={`${styles.leftNavLinks} ${showBackAndNav ? styles.visible : ''}`}>
         {navLinks.map((link) => (
@@ -98,8 +110,11 @@ export default function LeftPanel({
           Friends
         </button>
       </div>
-      <div className={`${styles.powerDisplay} ${isTesseractDragging ? styles.attracting : ''}`}>
-        <div className={styles.batteryIcon}>
+      <div
+        ref={powerDisplayRef as Ref<HTMLDivElement>}
+        className={`${styles.powerDisplay} ${isTesseractDragging ? styles.attracting : ''}`}
+      >
+        <div ref={batteryIconRef as Ref<HTMLDivElement>} className={styles.batteryIcon}>
           {[...Array(5)].map((_, i) => {
             const shouldBeFilled = powerLevel >= (i + 1) * 20;
             const isFilled = (i === 4 && powerLevel === 100) || shouldBeFilled;
@@ -123,7 +138,31 @@ export default function LeftPanel({
           {displayedEnvParams}
         </pre>
       </div>
-    
+      <div className={styles.brailleText} aria-hidden="true">
+        ⠠⠕⠗⠁⠉⠇⠑⠀⠠⠏⠗⠊⠑⠎⠞⠑⠎⠎⠀⠠⠁⠗⠅
+      </div>
+      <div
+        className={`${styles.gradientLine} ${isInverted ? styles.gradientLineInverted : ''}`}
+        aria-hidden="true"
+      >
+        {!isInverted &&
+          DECORATIVE_BLOCKS.map((block, index) => (
+            <div
+              key={index}
+              className={styles.gradientSegment}
+              style={{ flex: block.flex, backgroundColor: block.color }}
+            />
+          ))}
+      </div>
+      <a
+        href="https://www.travellings.cn/go.html"
+        target="_blank"
+        rel="noopener noreferrer"
+        className={styles.travellingLink}
+        aria-label="Travelling"
+      >
+        <img src="/travel.svg" alt="Travelling" draggable={false} />
+      </a>
     </div>
   );
 }

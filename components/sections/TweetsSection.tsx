@@ -293,7 +293,7 @@ export default function TweetsSection({
 
     try {
       const response = await fetch(
-        `/api/tweets/months?offset=${loadedGroups.length}&limit=${monthBatchSize}`,
+        `/api/tweet-months?offset=${loadedGroups.length}&limit=${monthBatchSize}`,
         { cache: 'no-store' },
       );
       const json = await response.json() as {

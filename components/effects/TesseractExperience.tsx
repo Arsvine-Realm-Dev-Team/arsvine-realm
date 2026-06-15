@@ -1,5 +1,5 @@
 // @ts-nocheck — R3F JSX elements (group, mesh, etc.) conflict with React 18 JSX types
-import React, { Suspense, useRef, useState, useEffect, useMemo } from 'react';
+import React, { Suspense, useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Physics, usePlane } from '@react-three/cannon';
 import { Line } from '@react-three/drei';
@@ -113,13 +113,20 @@ function SceneLogic({ isConnecting, tesseractRef, batteryPosition3D, setConnecti
 }
 
 // Tesseract 3D 场景主组件
-const TesseractExperience = ({ chargeBattery, isActivated, isInverted, onDraggingChange }) => {
+const TesseractExperience = ({
+  chargeBattery,
+  isActivated,
+  isInverted,
+  onDraggingChange,
+  powerDisplayRef,
+  batteryIconRef,
+}) => {
   const [batteryPosition3D, setBatteryPosition3D] = useState(null); // 电池 3D NDC 坐标
   const [isConnecting, setIsConnecting] = useState(false); // Tesseract 是否连接到电池
   const tesseractRef = useRef(null); // Tesseract 组件引用
   const [isTesseractDragging, setIsTesseractDragging] = useState(false); // Tesseract 是否被拖拽
   const glRef = useRef(null); // R3F Canvas WebGLRenderer 实例引用
-  const batteryElementRef = useRef<HTMLElement | null>(null); // 电池容器 DOM，引力位移直接写在它的 style.transform
+  const batteryElementRef = useRef(null); // 电池容器 DOM，引力位移直接写在它的 style.transform
   const [connectionLinePoints, setConnectionLinePoints] = useState([ // 连接线起点和终点
     new THREE.Vector3(0, 0, 0),
     new THREE.Vector3(0, 0, 0),
@@ -127,28 +134,25 @@ const TesseractExperience = ({ chargeBattery, isActivated, isInverted, onDraggin
 
   // 获取电池图标 DOM 位置并转换为 NDC 坐标
   useEffect(() => {
-    const batterySelector = '[class*="powerDisplay"]'; // 电池容器选择器
-    const batteryElement = document.querySelector(batterySelector) as HTMLElement | null;
+    const batteryElement = powerDisplayRef?.current ?? null;
     batteryElementRef.current = batteryElement;
 
     if (!batteryElement) {
-      console.error("[TesseractExperience] Battery element not found, selector:", batterySelector);
-      setBatteryPosition3D(null);
+      console.error('[TesseractExperience] Battery element ref is unavailable.');
       return;
     }
 
     const updatePosition = () => {
       const canvasElement = glRef.current?.domElement; // Canvas DOM 元素
-      const iconSelector = '[class*="batteryIcon"]'; // 电池图标选择器
-      const iconElement = batteryElement.querySelector(iconSelector);
+      const iconElement = batteryIconRef?.current ?? null;
 
       if (!canvasElement) {
-        console.error("[TesseractExperience] Canvas element not found (glRef).");
+        console.error('[TesseractExperience] Canvas element not found (glRef).');
         setBatteryPosition3D(null);
         return;
       }
       if (!iconElement) {
-        console.error("[TesseractExperience] Battery icon element not found in powerDisplay.");
+        console.error('[TesseractExperience] Battery icon ref is unavailable.');
         setBatteryPosition3D(null);
         return;
       }
@@ -205,16 +209,9 @@ const TesseractExperience = ({ chargeBattery, isActivated, isInverted, onDraggin
       }
       batteryElementRef.current = null;
     };
-  }, []); // 仅在挂载和卸载时运行
+  }, [batteryIconRef, powerDisplayRef]); // 仅在挂载和 ref 可用后运行
 
-  // 根据 Tesseract 拖拽状态，控制 Canvas 鼠标事件响应
-  // 拖拽时允许 Canvas 捕获事件，否则禁用以允许下方 UI 交互
   useEffect(() => {
-    const canvas = glRef.current?.domElement;
-    if (canvas) {
-      canvas.style.pointerEvents = isTesseractDragging ? 'auto' : 'none';
-    }
-    // 向父组件冒泡拖拽态，供电池"被吸引"视觉反馈使用
     onDraggingChange?.(isTesseractDragging);
   }, [isTesseractDragging, onDraggingChange]);
 
@@ -246,7 +243,7 @@ const TesseractExperience = ({ chargeBattery, isActivated, isInverted, onDraggin
       <Canvas
         shadows // 启用阴影
         camera={{ position: [-3, -1, 8], fov: 50 }} // 相机
-        style={{ 
+        style={{
           background: 'transparent', // 背景透明
           userSelect: 'none', // 禁用文本选择
           WebkitUserSelect: 'none',

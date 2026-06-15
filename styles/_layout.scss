@@ -833,6 +833,12 @@
     display: block;
     width: 100%;
     height: auto;
+    transition: filter 0.5s ease-in-out;
+  }
+
+  // 反色模式下，浅灰图形反成深灰，保持在浅色背景上的可见度
+  .inverted & img {
+    filter: invert(1);
   }
 }
 

@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { serialize } from 'next-mdx-remote/serialize';
-import { getBlogPostEntry, getPostBySlugAndContentLocale, type BlogContentLocale } from '../../../../../lib/blog';
-import { hasValidAccessGrant } from '../../../../../lib/content/access-grant';
+import { getBlogPostEntry, getPostBySlugAndContentLocale, type BlogContentLocale } from '../../lib/blog';
+import { hasValidAccessGrant } from '../../lib/content/access-grant';
 
 const VALID_LOCALES = ['zh-CN', 'zh-TW', 'en', 'ja', 'ru', 'fr'] as const;
 
@@ -15,17 +15,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return res.status(405).json({ error: 'method_not_allowed' });
   }
 
-  const { locale, slug } = req.query;
-  if (typeof locale !== 'string' || typeof slug !== 'string') {
+  const localeParam = typeof req.query.locale === 'string' ? req.query.locale : '';
+  const slugParam = typeof req.query.slug === 'string' ? req.query.slug : '';
+  if (!localeParam || !slugParam) {
     return res.status(400).json({ error: 'missing_locale_or_slug' });
   }
 
-  if (!(VALID_LOCALES as readonly string[]).includes(locale)) {
+  if (!(VALID_LOCALES as readonly string[]).includes(localeParam)) {
     return res.status(400).json({ error: 'invalid_locale' });
   }
 
   try {
-    const entry = await getBlogPostEntry(slug);
+    const entry = await getBlogPostEntry(slugParam);
     if (!entry) {
       return res.status(404).json({ error: 'not_found' });
     }
@@ -42,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       }
     }
 
-    const variant = await getPostBySlugAndContentLocale(slug, locale as BlogContentLocale);
+    const variant = await getPostBySlugAndContentLocale(slugParam, localeParam as BlogContentLocale);
     const mdxSource = await serialize(variant.content);
 
     res.setHeader('Cache-Control', 'private, no-store');

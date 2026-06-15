@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element -- lightbox animation needs direct control over the rendered image element */
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import styles from '../../styles/Lightbox.module.scss';

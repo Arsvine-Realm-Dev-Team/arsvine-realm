@@ -57,13 +57,10 @@ export default function Explain({ children, note }: ExplainProps) {
 
   // 移动端：测量触发器底部，注入 inline top；并在 scroll/resize 时关闭。
   useLayoutEffect(() => {
-    if (!open) {
-      setMobileTop(null);
-      return;
-    }
+    if (!open) return;
     if (typeof window === 'undefined') return;
     if (!window.matchMedia(MOBILE_QUERY).matches) {
-      setMobileTop(null);
+      queueMicrotask(() => setMobileTop(null));
       return;
     }
     const trigger = triggerRef.current;

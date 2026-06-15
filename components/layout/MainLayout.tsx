@@ -90,8 +90,18 @@ export default function MainLayout({ children }) {
   // 桌面 Tesseract 拖拽态 —— 用于让电池在用户拖动物体时给出"被吸引"视觉反馈
   // 不放进 AppContext / PowerSystemState：纯 3D 场景的瞬态 UI 信号，不属于电力系统逻辑
   const [isTesseractDragging, setIsTesseractDragging] = useState(false);
+  const powerDisplayRef = useRef<HTMLDivElement | null>(null);
+  const batteryIconRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    const schedulePanelSync = (nextPanelAnimated: boolean, nextLeversVisible: boolean) => {
+      const timeoutId = window.setTimeout(() => {
+        setLocalPanelAnimated(nextPanelAnimated);
+        setLocalLeversVisible(nextLeversVisible);
+      }, 0);
+      return () => clearTimeout(timeoutId);
+    };
+
     const wasStandalone = prevStandaloneRef.current;
     prevStandaloneRef.current = isStandalone;
 
@@ -108,26 +118,34 @@ export default function MainLayout({ children }) {
       return () => { clearTimeout(t1); clearTimeout(t2); };
     } else if (isStandalone) {
       // 进入独立页 → 快速收回面板
-      setLocalPanelAnimated(false);
-      setLocalLeversVisible(false);
+      return schedulePanelSync(false, false);
     } else {
       // 正常流程（包括初始加载）→ 直接同步全局状态，不干扰
-      setLocalPanelAnimated(leftPanelAnimated);
-      setLocalLeversVisible(leversVisible);
+      return schedulePanelSync(leftPanelAnimated, leversVisible);
     }
   }, [isStandalone, leftPanelAnimated, leversVisible]);
 
   const [forceHomeSection, setForceHomeSection] = useState(false);
-  if (isHome && forceHomeSection) {
-    setForceHomeSection(false);
-  }
+  useEffect(() => {
+    if (isHome && forceHomeSection) {
+      const timeoutId = window.setTimeout(() => {
+        setForceHomeSection(false);
+      }, 0);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [forceHomeSection, isHome]);
   const activeSection = (forceHomeSection || isHome) ? 'home' : 'content';
 
   // Latch: once WebGL is ready, never unmount it (avoids GPU context destruction during transitions)
   const [webglReady, setWebglReady] = useState(false);
-  if (animationsComplete && !webglReady) {
-    setWebglReady(true);
-  }
+  useEffect(() => {
+    if (animationsComplete && !webglReady) {
+      const timeoutId = window.setTimeout(() => {
+        setWebglReady(true);
+      }, 0);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [animationsComplete, webglReady]);
 
   // 移动端：拉杆激活后直接充电（桌面端由 TesseractExperience 组件负责充电）
   const chargeBatteryRef = useRef(chargeBattery);
@@ -278,6 +296,8 @@ export default function MainLayout({ children }) {
           isActivated={isTesseractActivated}
           isInverted={isInverted}
           onDraggingChange={setIsTesseractDragging}
+          powerDisplayRef={powerDisplayRef}
+          batteryIconRef={batteryIconRef}
         />
       )}
       <div className={styles.gridBackground}></div>
@@ -328,12 +348,14 @@ export default function MainLayout({ children }) {
             isEnvParamsTyping={isEnvParamsTyping}
             displayedEnvParams={displayedEnvParams}
             isInverted={isInverted}
-            drawerOpen={drawerOpen}
-            isStandalone={isStandalone}
-            isTesseractDragging={isTesseractDragging}
-          />
-        </>
-      )}
+             drawerOpen={drawerOpen}
+             isStandalone={isStandalone}
+             isTesseractDragging={isTesseractDragging}
+             powerDisplayRef={powerDisplayRef}
+             batteryIconRef={batteryIconRef}
+           />
+         </>
+       )}
       <div style={{
         opacity: mainVisible ? 1 : 0,
         pointerEvents: mainVisible ? 'auto' : 'none',

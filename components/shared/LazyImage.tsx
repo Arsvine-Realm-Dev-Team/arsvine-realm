@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element -- this component intentionally wraps a raw img for progressive loading without next/image constraints */
 import React, { useState, useEffect, useRef } from 'react';
 import styles from '../../styles/LazyImage.module.scss';
 

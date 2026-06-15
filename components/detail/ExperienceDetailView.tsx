@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element -- gallery thumbnails use raw img elements for arbitrary asset URLs and lightbox transitions */
 import React, { useState, useEffect, useRef } from 'react';
 import styles from '../../styles/ExperienceDetailView.module.scss';
 import Lightbox from '../interactive/Lightbox';

@@ -7,9 +7,6 @@ const next = require('next');
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({
   dev,
-  // Next 16 dev defaults to Turbopack. In this workspace on Windows,
-  // Turbopack fails to create junctions for @vercel/speed-insights.
-  ...(dev ? { webpack: true } : {}),
 });
 const handle = app.getRequestHandler();
 

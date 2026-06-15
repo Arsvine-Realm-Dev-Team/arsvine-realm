@@ -22,23 +22,16 @@ export const friendLinksData: FriendLink[] = [
   {
     id: 'Yuki_Official',
     name: 'Yuki_Official',
-    description: 'Kemomimi - Our KAMI',
+    description: '咱深爱着大家',
     url: 'https://steamcommunity.com/profiles/76561198839060049',
     avatar: 'https://shared.fastly.steamstatic.com/community_assets/images/items/1372280/d036f6a9a3d65c5c6cb7b25f52eb5e8a881c474d.gif',
   },
   {
     id: 'CY1二乃天外飞仙',
     name: 'CY1二乃天外飞仙',
-    description: '',
+    description: '我真的不是紫毛控',
     url: 'https://steamcommunity.com/profiles/76561199837991110',
     avatar: 'https://avatars.fastly.steamstatic.com/3e5e7c5da4fe573703b5edc1ea27f85e0687371c_full.jpg',
-  },
-  {
-    id: '泠汐',
-    name: '泠汐',
-    description: '',
-    url: 'https://steamcommunity.com/profiles/76561199867197822',
-    avatar: 'https://avatars.fastly.steamstatic.com/da84f95cb931851e3eb5f6e4ebff115c7b250604_full.jpg',
   },
   {
     id: '小宁arning',
@@ -46,6 +39,13 @@ export const friendLinksData: FriendLink[] = [
     description: '给我提供了许多摄影素材，Respect！',
     url: 'https://space.bilibili.com/22792017',
     avatar: avatar('avatar-arning-1.webp'),
+  },
+  {
+    id: 'may_rain',
+    name: '梅莉薇尔·伊芙利特',
+    description: '可以留白嘛',
+    url: 'https://space.bilibili.com/168753059',
+    avatar: avatar('avatar-may-rain-1.webp'),
   },
   {
     id: 'Lyric_Epic',

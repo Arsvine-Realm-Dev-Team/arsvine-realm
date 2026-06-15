@@ -32,7 +32,7 @@ export default function useVisitorLanguageCode(): string | null {
     for (const candidate of candidates) {
       const normalized = normalizeLanguageCode(candidate);
       if (!normalized) continue;
-      setLanguageCode(normalized);
+      queueMicrotask(() => setLanguageCode(normalized));
       return;
     }
   }, []);

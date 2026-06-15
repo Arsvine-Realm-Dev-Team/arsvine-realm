@@ -50,9 +50,31 @@ export default function AboutSection({
           </p>
           <p>© {yearRange} {siteConfig.author}.</p>
         </div>
-
+        <div className={styles.aboutImageContainer}>
+          <img
+            src="/about-qr.svg"
+            alt="Website QR Code"
+            className={styles.aboutImage}
+            draggable={false}
+          />
+        </div>
       </div>
-
+      <div className={styles.aboutNewImageWrapper} aria-hidden="true">
+        <div className={styles.aboutNewImageContainer}>
+          <img
+            src="/icons/android-chrome-512x512.png"
+            alt=""
+            className={`${styles.aboutNewImageBase} ${styles.aboutNewImageNormal}`}
+            draggable={false}
+          />
+          <img
+            src="/icons/android-chrome-512x512.png"
+            alt=""
+            className={`${styles.aboutNewImageBase} ${styles.aboutNewImageInverted}`}
+            draggable={false}
+          />
+        </div>
+      </div>
     </div>
   );
 }

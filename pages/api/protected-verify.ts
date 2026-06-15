@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { setAccessGrantCookie } from '../../../lib/content/access-grant';
-import { enforceRateLimit } from '../../../lib/content/rate-limit';
-import { verifyTotpGroupToken } from '../../../lib/content/totp';
+import { setAccessGrantCookie } from '../../lib/content/access-grant';
+import { enforceRateLimit } from '../../lib/content/rate-limit';
+import { verifyTotpGroupToken } from '../../lib/content/totp';
 
 type ResponseBody =
   | { ok: true; redirectTo: string }

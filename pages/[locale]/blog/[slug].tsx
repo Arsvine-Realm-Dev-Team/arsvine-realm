@@ -84,7 +84,11 @@ function resolveDefaultContentLocale(
 }
 
 function buildProtectedPostApiPath(locale: BlogContentLocale, slug: string) {
-  return `/api/protected/posts/${encodeURIComponent(locale)}/${encodeURIComponent(slug)}`;
+  const search = new URLSearchParams({
+    locale,
+    slug,
+  });
+  return `/api/post-variant?${search.toString()}`;
 }
 
 function buildBlogPostHref(locale: Locale, slug: string, contentLocale: BlogContentLocale) {
@@ -206,7 +210,7 @@ export default function BlogPostPage({
     }
 
     let cancelled = false;
-    fetch(`/api/access/check-grant?group=${encodeURIComponent(access.group)}`)
+    fetch(`/api/grant-check?group=${encodeURIComponent(access.group)}`)
       .then((r) => r.json())
       .then((data: { ok: boolean; granted: boolean }) => {
         if (cancelled) return;
@@ -342,7 +346,7 @@ function ProtectedPostGate({
     setError('');
 
     try {
-      const response = await fetch('/api/protected/verify', {
+      const response = await fetch('/api/protected-verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

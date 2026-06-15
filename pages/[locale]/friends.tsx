@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element -- friend avatars are arbitrary remote URLs and should remain plain img elements */
 import Head from 'next/head';
 import type { GetStaticPaths, GetStaticProps } from 'next';
 import { useTranslations } from 'next-intl';
@@ -20,13 +21,15 @@ interface FriendsPageProps {
 export default function FriendsPage({
   friends,
   services,
+  pageTitle,
+  pageDescription,
 }: FriendsPageProps) {
   const t = useTranslations('pages.friends');
   return (
     <>
       <Head>
-        <title>{t('title')}</title>
-        <meta name="description" content={t('description')} />
+        <title>{pageTitle || t('title')}</title>
+        <meta name="description" content={pageDescription || t('description')} />
         <meta property="og:type" content="website" />
         <HreflangLinks basePath="/friends" />
       </Head>

@@ -39,7 +39,7 @@ export default function AccessPage({ locale, group, nextPath }: AccessPageProps)
     setError('');
 
     try {
-      const response = await fetch('/api/protected/verify', {
+      const response = await fetch('/api/protected-verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
