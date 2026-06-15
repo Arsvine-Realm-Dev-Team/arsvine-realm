@@ -1,41 +1,18 @@
 import { useEffect, useRef, useCallback } from 'react';
 import gsap from 'gsap';
 import styles from '../../styles/CustomCursor.module.scss';
-
-const MAGNETIC_DISTANCE = 120;
-const MAGNETIC_STRENGTH = 0.4;
-const SELECTOR = 'a, button, .btn, [role="button"], [data-cursor-magnetic]';
-
-const isCursorInteractive = (el: HTMLElement | null) => {
-  if (!el || !el.isConnected) return false;
-  const rect = el.getBoundingClientRect();
-  if (rect.width <= 0 || rect.height <= 0) return false;
-
-  let current: HTMLElement | null = el;
-  while (current) {
-    const style = window.getComputedStyle(current);
-    if (
-      style.display === 'none' ||
-      style.visibility === 'hidden' ||
-      parseFloat(style.opacity || '1') === 0
-    ) {
-      return false;
-    }
-    current = current.parentElement;
-  }
-
-  return true;
-};
-
-const getInteractiveCursorTarget = (target: EventTarget | null): HTMLElement | null => {
-  if (!(target instanceof HTMLElement)) return null;
-  const candidate = target.closest(SELECTOR) as HTMLElement | null;
-  if (!candidate) return null;
-  if (candidate.closest('[data-cursor-no-magnetic]') && !candidate.hasAttribute('data-cursor-magnetic')) {
-    return null;
-  }
-  return isCursorInteractive(candidate) ? candidate : null;
-};
+import useCursorTargetRegistry from '../../hooks/useCursorTargetRegistry';
+import {
+  MAGNETIC_DISTANCE,
+  MAGNETIC_STRENGTH,
+  clamp,
+  findClosestInteractiveElement,
+  getCursorTargetBounds,
+  getInteractiveCursorTarget,
+  isCursorInteractive,
+  lerp,
+  resolveCursorLabel,
+} from './customCursorShared';
 
 const CustomCursor = () => {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -52,12 +29,7 @@ const CustomCursor = () => {
   const rafId = useRef<number>(0);
   const isHovering = useRef(false);
   const snapTarget = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
-  const currentLabel = useRef('');
   const hoverEl = useRef<HTMLElement | null>(null);
-  const interactiveElsRef = useRef<HTMLElement[]>([]);
-
-  const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-  const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
   const applyPosition = useCallback((x: number, y: number) => {
     const hLine = hLineRef.current;
@@ -108,12 +80,7 @@ const CustomCursor = () => {
     if (!el || !isCursorInteractive(el)) return null;
 
     const rect = el.getBoundingClientRect();
-    const target = {
-      x: rect.left + rect.width / 2,
-      y: rect.top + rect.height / 2,
-      w: rect.width + 12,
-      h: rect.height + 12,
-    };
+    const target = getCursorTargetBounds(el, 12);
 
     snapTarget.current = target;
     dotSize.current = { w: target.w, h: target.h };
@@ -134,7 +101,6 @@ const CustomCursor = () => {
     hoverEl.current = null;
     isHovering.current = false;
     snapTarget.current = null;
-    currentLabel.current = '';
     dotSize.current = { w: 24, h: 24 };
 
     const dot = dotRef.current;
@@ -155,16 +121,6 @@ const CustomCursor = () => {
       gsap.killTweensOf(labelEl);
       gsap.to(labelEl, { opacity: 0, duration: 0.15 });
     }
-  }, []);
-
-  const collectInteractiveElements = useCallback(() => {
-    interactiveElsRef.current = Array.from(document.querySelectorAll(SELECTOR)).filter((el) => {
-      const htmlEl = el as HTMLElement;
-      if (htmlEl.closest('[data-cursor-no-magnetic]') && !htmlEl.hasAttribute('data-cursor-magnetic')) {
-        return false;
-      }
-      return true;
-    }) as HTMLElement[];
   }, []);
 
   useEffect(() => {
@@ -214,6 +170,41 @@ const CustomCursor = () => {
     return () => cancelAnimationFrame(rafId.current);
   }, [applyPosition, resetHoverState, syncHoverTarget]);
 
+  const handleRegisteredEnter = useCallback((el: HTMLElement) => {
+    if (!isCursorInteractive(el)) return;
+
+    hoverEl.current = el;
+    isHovering.current = true;
+    snapTarget.current = getCursorTargetBounds(el);
+
+    const label = resolveCursorLabel(el);
+    syncHoverTarget();
+
+    const labelEl = labelRef.current;
+    if (labelEl) {
+      labelEl.textContent = label;
+      if (label) {
+        gsap.to(labelEl, { opacity: 1, duration: 0.2 });
+      }
+    }
+
+    dotRef.current?.classList.add(styles.hovering);
+  }, [syncHoverTarget]);
+
+  const handleRegisteredLeave = useCallback((event: MouseEvent, currentTarget: HTMLElement) => {
+    const nextTarget = getInteractiveCursorTarget(event.relatedTarget);
+    if (nextTarget && nextTarget !== hoverEl.current) return;
+    if (hoverEl.current && hoverEl.current !== currentTarget) return;
+    resetHoverState();
+  }, [resetHoverState]);
+
+  const interactiveElsRef = useCursorTargetRegistry({
+    hoverElRef: hoverEl,
+    onEnter: handleRegisteredEnter,
+    onLeave: handleRegisteredLeave,
+    onHoverTargetRemoved: resetHoverState,
+  });
+
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
       mouse.current.x = e.clientX;
@@ -221,26 +212,16 @@ const CustomCursor = () => {
 
       if (isHovering.current) return;
 
-      let closest: Element | null = null;
-      let closestDist = Infinity;
-
-      interactiveElsRef.current.forEach((htmlEl) => {
-        if (!isCursorInteractive(htmlEl)) return;
-        const rect = htmlEl.getBoundingClientRect();
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
-        const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
-        if (dist < MAGNETIC_DISTANCE && dist < closestDist) {
-          closestDist = dist;
-          closest = htmlEl;
-        }
-      });
+      const closest = findClosestInteractiveElement(
+        interactiveElsRef.current,
+        e.clientX,
+        e.clientY,
+      );
 
       if (closest) {
-        const rect = (closest as HTMLElement).getBoundingClientRect();
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
-        const pull = (1 - closestDist / MAGNETIC_DISTANCE) * MAGNETIC_STRENGTH;
+        const cx = closest.rect.left + closest.rect.width / 2;
+        const cy = closest.rect.top + closest.rect.height / 2;
+        const pull = (1 - closest.distance / MAGNETIC_DISTANCE) * MAGNETIC_STRENGTH;
         mouse.current.x = lerp(e.clientX, cx, pull);
         mouse.current.y = lerp(e.clientY, cy, pull);
       }
@@ -248,84 +229,7 @@ const CustomCursor = () => {
 
     window.addEventListener('mousemove', onMouseMove);
     return () => window.removeEventListener('mousemove', onMouseMove);
-  }, []);
-
-  useEffect(() => {
-    const handleEnter = (e: Event) => {
-      const el = e.currentTarget as HTMLElement;
-      if (!isCursorInteractive(el)) return;
-      const rect = el.getBoundingClientRect();
-      hoverEl.current = el;
-      isHovering.current = true;
-      snapTarget.current = {
-        x: rect.left + rect.width / 2,
-        y: rect.top + rect.height / 2,
-        w: rect.width,
-        h: rect.height,
-      };
-
-      const label = el.getAttribute('data-cursor-label') || el.getAttribute('aria-label') || '';
-      currentLabel.current = label;
-      syncHoverTarget();
-
-      const labelEl = labelRef.current;
-      if (labelEl) {
-        labelEl.textContent = label;
-        if (label) {
-          gsap.to(labelEl, { opacity: 1, duration: 0.2 });
-        }
-      }
-
-      dotRef.current?.classList.add(styles.hovering);
-    };
-
-    const handleLeave = (e: Event) => {
-      const nextTarget = getInteractiveCursorTarget((e as MouseEvent).relatedTarget);
-      if (nextTarget && nextTarget !== hoverEl.current) return;
-      if (hoverEl.current && hoverEl.current !== e.currentTarget) return;
-      resetHoverState();
-    };
-
-    let currentEls: HTMLElement[] = [];
-
-    const unbind = () => {
-      currentEls.forEach((el) => {
-        el.removeEventListener('mouseenter', handleEnter);
-        el.removeEventListener('mouseleave', handleLeave);
-      });
-    };
-
-    const bind = () => {
-      collectInteractiveElements();
-      currentEls = interactiveElsRef.current;
-      currentEls.forEach((el) => {
-        el.addEventListener('mouseenter', handleEnter);
-        el.addEventListener('mouseleave', handleLeave);
-      });
-    };
-
-    bind();
-
-    let debounceTimer: ReturnType<typeof setTimeout>;
-    const observer = new MutationObserver(() => {
-      if (hoverEl.current && !hoverEl.current.isConnected) {
-        resetHoverState();
-      }
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
-        unbind();
-        bind();
-      }, 100);
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    return () => {
-      clearTimeout(debounceTimer);
-      observer.disconnect();
-      unbind();
-    };
-  }, [collectInteractiveElements, resetHoverState, syncHoverTarget]);
+  }, [interactiveElsRef]);
 
   useEffect(() => {
     const handleScroll = () => {
