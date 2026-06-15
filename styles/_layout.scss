@@ -126,12 +126,33 @@
   background-position: 47% 48%;
   background-repeat: no-repeat;
   background-size: 57%;
-  filter: grayscale(100%) brightness(0.8) drop-shadow(0 0 5px rgba(0, 0, 0, 0.1));
+  // CSS 变量由 LeftPanel.tsx 的 rAF 循环写入；移动端不挂监听，保持初值即原始静态外观。
+  // 注意：transform 由 JS 以 !important 写入 inline style，以反超 revealLogo
+  //   keyframe（forwards）锁住的 transform: scale(1)。
+  --avatar-dx: 0px;
+  --avatar-dy: 0px;
+  --avatar-split: 0;
+  filter:
+    grayscale(100%) brightness(0.8)
+    drop-shadow(0 0 5px rgba(0, 0, 0, 0.1))
+    drop-shadow(calc(var(--avatar-split) *  3px) 0 0 rgba(0, 220, 255, calc(var(--avatar-split) * 0.55)))
+    drop-shadow(calc(var(--avatar-split) * -3px) 0 0 rgba(255, 50, 180, calc(var(--avatar-split) * 0.55)));
+  transition: transform 120ms ease-out;
   pointer-events: none;
   position: relative;
   z-index: 3;
   clip-path: inset(45% 45% 45% 45%);
   opacity: 0;
+
+  // 触摸/无 hover 设备兜底：禁用视差与色散，回退到原始 filter 链。
+  // 与 LeftPanel.tsx 中的 isDesktop 早返回构成双重保险。
+  @media (hover: none), (pointer: coarse) {
+    --avatar-dx: 0px;
+    --avatar-dy: 0px;
+    --avatar-split: 0;
+    transform: none;
+    filter: grayscale(100%) brightness(0.8) drop-shadow(0 0 5px rgba(0, 0, 0, 0.1));
+  }
 }
 
 
@@ -575,7 +596,16 @@
 .inverted {
 
   .logoContainer {
-    filter: grayscale(100%) brightness(0.3) drop-shadow(0 0 5px rgba(0, 0, 0, 0.15));
+    // 反转模式下的基础灰阶变深，但保留视差/色散：扩展 filter 链而不是覆盖它。
+    filter:
+      grayscale(100%) brightness(0.3)
+      drop-shadow(0 0 5px rgba(0, 0, 0, 0.15))
+      drop-shadow(calc(var(--avatar-split) *  3px) 0 0 rgba(0, 220, 255, calc(var(--avatar-split) * 0.55)))
+      drop-shadow(calc(var(--avatar-split) * -3px) 0 0 rgba(255, 50, 180, calc(var(--avatar-split) * 0.55)));
+
+    @media (hover: none), (pointer: coarse) {
+      filter: grayscale(100%) brightness(0.3) drop-shadow(0 0 5px rgba(0, 0, 0, 0.15));
+    }
   }
 
   .backButton {
