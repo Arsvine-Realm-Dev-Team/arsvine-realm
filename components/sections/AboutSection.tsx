@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element -- decorative local assets rely on plain img sizing and do not benefit from next/image here */
 import { useRouter } from 'next/router';
 import { useTranslations } from 'next-intl';
 import styles from '../../styles/Home.module.scss';

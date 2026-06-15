@@ -245,14 +245,8 @@
 
 .footer {
   padding: 0 0 clamp(40px, 5vw, 80px);
-  opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 0.6s ease-out 0.6s, transform 0.6s ease-out 0.6s;
-
-  &.entered {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  opacity: 1;
+  transform: none;
 }
 
 .endMarker {
@@ -271,8 +265,9 @@
 }
 
 .footerNav {
-  display: flex;
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
   gap: clamp(12px, 2vw, 24px);
   padding-top: clamp(20px, 3vw, 36px);
   border-top: 1px solid var(--ark-border);
@@ -281,7 +276,10 @@
 .footerNavButton {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  min-width: 0;
+  min-height: 56px;
+  gap: 14px;
   padding: 10px 24px;
   background: transparent;
   border: 1px solid var(--ark-border);
@@ -327,6 +325,7 @@
 
 .footerNavTitle {
   line-height: 1.4;
+  min-width: 0;
 }
 
 /* ==================== RIGHT SIDE NAV ==================== */
@@ -458,7 +457,7 @@
   }
 
   .footerNav {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .footerNavButton {

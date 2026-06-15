@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element -- decorative SVG badge is local, non-critical, and sized by existing HUD CSS */
 import type { Ref } from 'react';
 import styles from '../../styles/Home.module.scss';
 import ActivationLever from '../interactive/ActivationLever';

@@ -7,6 +7,8 @@ import styles from '../../styles/Home.module.scss';
 import { useApp } from '../../contexts/AppContext';
 import { useTransition } from '../../contexts/TransitionContext';
 import { useResponsive } from '../../hooks/useMediaQuery';
+import useRouteLoadingKind from '../../hooks/useRouteLoadingKind';
+import useStandalonePanelState from '../../hooks/useStandalonePanelState';
 import { defaultLocale, isLocale, type Locale } from '../../i18n/config';
 
 import HomeLoadingScreen from '../shared/HomeLoadingScreen';
@@ -59,7 +61,6 @@ export default function MainLayout({ children }) {
   const { navigateTo, handleBack, isDetailOpen } = useTransition();
   const { isMobile, isDesktop } = useResponsive();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [routeLoadingKind, setRouteLoadingKind] = useState<null | 'tweets' | 'blog'>(null);
   const app = useApp();
   const {
     mainVisible, isInverted, isTesseractActivated, animationsComplete,
@@ -84,46 +85,17 @@ export default function MainLayout({ children }) {
   const queryLocale = router.query.locale;
   const locale = isLocale(queryLocale) ? queryLocale : defaultLocale;
 
-  const prevStandaloneRef = useRef(isStandalone);
-  const [localPanelAnimated, setLocalPanelAnimated] = useState(leftPanelAnimated);
-  const [localLeversVisible, setLocalLeversVisible] = useState(leversVisible);
+  const { localPanelAnimated, localLeversVisible } = useStandalonePanelState({
+    isStandalone,
+    leftPanelAnimated,
+    leversVisible,
+  });
+  const routeLoadingKind = useRouteLoadingKind(router);
   // 桌面 Tesseract 拖拽态 —— 用于让电池在用户拖动物体时给出"被吸引"视觉反馈
   // 不放进 AppContext / PowerSystemState：纯 3D 场景的瞬态 UI 信号，不属于电力系统逻辑
   const [isTesseractDragging, setIsTesseractDragging] = useState(false);
   const powerDisplayRef = useRef<HTMLDivElement | null>(null);
   const batteryIconRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const schedulePanelSync = (nextPanelAnimated: boolean, nextLeversVisible: boolean) => {
-      const timeoutId = window.setTimeout(() => {
-        setLocalPanelAnimated(nextPanelAnimated);
-        setLocalLeversVisible(nextLeversVisible);
-      }, 0);
-      return () => clearTimeout(timeoutId);
-    };
-
-    const wasStandalone = prevStandaloneRef.current;
-    prevStandaloneRef.current = isStandalone;
-
-    if (wasStandalone && !isStandalone) {
-      // 从独立页返回 → 重置并重播面板和拉杆入场动画
-      setLocalPanelAnimated(false);
-      setLocalLeversVisible(false);
-      const t1 = setTimeout(() => {
-        setLocalPanelAnimated(true);
-      }, 50);
-      const t2 = setTimeout(() => {
-        setLocalLeversVisible(true);
-      }, 850);
-      return () => { clearTimeout(t1); clearTimeout(t2); };
-    } else if (isStandalone) {
-      // 进入独立页 → 快速收回面板
-      return schedulePanelSync(false, false);
-    } else {
-      // 正常流程（包括初始加载）→ 直接同步全局状态，不干扰
-      return schedulePanelSync(leftPanelAnimated, leversVisible);
-    }
-  }, [isStandalone, leftPanelAnimated, leversVisible]);
 
   const [forceHomeSection, setForceHomeSection] = useState(false);
   useEffect(() => {
@@ -242,40 +214,6 @@ export default function MainLayout({ children }) {
     closeDrawer();
     navigateTo(`/${locale}/tweets`);
   }, [navigateTo, closeDrawer, locale]);
-
-  useEffect(() => {
-    const handleRouteChangeStart = (url: string) => {
-      const path = url.split('?')[0]?.split('#')[0] ?? url;
-      const isTweetsTarget = /^\/[A-Za-z-]+\/tweets\/?$/.test(path);
-      const isBlogTarget = /^\/[A-Za-z-]+\/blog\/[^/]+\/?$/.test(path);
-
-      if (isTweetsTarget) {
-        setRouteLoadingKind('tweets');
-        return;
-      }
-
-      if (isBlogTarget) {
-        setRouteLoadingKind('blog');
-        return;
-      }
-
-      setRouteLoadingKind(null);
-    };
-
-    const clearRouteLoading = () => {
-      setRouteLoadingKind(null);
-    };
-
-    router.events.on('routeChangeStart', handleRouteChangeStart);
-    router.events.on('routeChangeComplete', clearRouteLoading);
-    router.events.on('routeChangeError', clearRouteLoading);
-
-    return () => {
-      router.events.off('routeChangeStart', handleRouteChangeStart);
-      router.events.off('routeChangeComplete', clearRouteLoading);
-      router.events.off('routeChangeError', clearRouteLoading);
-    };
-  }, [router.events]);
 
   const routeLoadingText = routeLoadingKind === 'tweets'
     ? tTweets('loading')

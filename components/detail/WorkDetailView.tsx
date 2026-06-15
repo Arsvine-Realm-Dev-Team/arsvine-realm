@@ -1,9 +1,9 @@
 /* eslint-disable @next/next/no-img-element -- gallery and lightbox assets use raw img elements for arbitrary URLs and animation interop */
-/* eslint-disable react-hooks/refs -- callback refs intentionally maintain an imperative thumbnail map for lightbox closing animations */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import styles from '../../styles/WorkDetailView.module.scss';
 import Lightbox from '../interactive/Lightbox';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
+import useGalleryLightbox from '../../hooks/useGalleryLightbox';
 
 // Reusing ProjectCard might be complex due to layout differences in detail view.
 // Let's build a dedicated detail view component.
@@ -11,56 +11,22 @@ import { CopyToClipboard } from 'react-copy-to-clipboard';
 const WorkDetailView = ({ item }) => {
   const { title, description, tech, imageUrl, link, galleryImages, articleContent } = item || {};
   const imageStyle = imageUrl ? { backgroundImage: `url(${imageUrl})` } : {};
-
-  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  const [currentLightboxImageIndex, setCurrentLightboxImageIndex] = useState(0);
-  const [clickedThumbnailRect, setClickedThumbnailRect] = useState(null);
-  const [currentLightboxSourceInfo, setCurrentLightboxSourceInfo] = useState(null);
   const [copiedTextId, setCopiedTextId] = useState(null);
 
-  const thumbnailRefs = useRef({});
-
   const imagesForGallery = galleryImages || [];
+  const {
+    isLightboxOpen,
+    currentLightboxImageIndex,
+    clickedThumbnailRect,
+    bindThumbnailRef,
+    openLightbox,
+    closeLightbox,
+    showNextImage,
+    showPrevImage,
+    getClosingRect,
+  } = useGalleryLightbox(imagesForGallery.length);
 
   if (!item) return null;
-
-  const openLightbox = (index, event, sourceType = 'thumb') => { // ADDED sourceType, default to 'thumb'
-    if (index >= 0 && index < imagesForGallery.length) {
-      let rect = null;
-      if (event && event.currentTarget) { 
-        rect = event.currentTarget.getBoundingClientRect();
-      } else {
-        // Fallback if no event.currentTarget (e.g., if called programmatically for article images later)
-        const refKey = `${sourceType}_${index}`;
-        const thumb = thumbnailRefs.current[refKey];
-        if (thumb) rect = thumb.getBoundingClientRect();
-      }
-      setClickedThumbnailRect(rect);
-      setCurrentLightboxImageIndex(index);
-      setCurrentLightboxSourceInfo({ index, type: sourceType }); // SET source info
-      setIsLightboxOpen(true);
-    }
-  };
-
-  const closeLightbox = () => {
-    setIsLightboxOpen(false);
-    setCurrentLightboxSourceInfo(null); // CLEAR source info
-    setClickedThumbnailRect(null); // Reset thumbnailRect on close
-  };
-
-  const showNextImage = () => {
-    const nextIndex = (currentLightboxImageIndex + 1) % imagesForGallery.length;
-    setClickedThumbnailRect(null); 
-    setCurrentLightboxImageIndex(nextIndex);
-    // Keep currentLightboxSourceInfo as is for now, assuming next/prev is within the same source type context
-  };
-
-  const showPrevImage = () => {
-    const prevIndex = (currentLightboxImageIndex - 1 + imagesForGallery.length) % imagesForGallery.length;
-    setClickedThumbnailRect(null); 
-    setCurrentLightboxImageIndex(prevIndex);
-    // Keep currentLightboxSourceInfo
-  };
   // --- End State and Functions --- 
 
   // --- ADD Copy Text Handler --- 
@@ -72,53 +38,6 @@ const WorkDetailView = ({ item }) => {
 
   // --- ADD Paragraph splitting --- 
   const paragraphs = articleContent ? articleContent.split('\n\n') : [];
-  const bindThumbnailRef = (key) => (element) => {
-    thumbnailRefs.current[key] = element;
-  };
-
-  // --- ADD Function to render markdown link --- 
-  const renderTextWithCopy = (text) => {
-    const parts = text.split(/(\[[^\]]+\]\([^\)]+\))/g); // Split by markdown links
-    return parts.map((part, index) => {
-      const match = part.match(/\[([^\]]+)\]\(([^\)]+)\)/);
-      if (match) {
-        const linkText = match[1];
-        const linkUrl = match[2];
-        if (linkUrl.startsWith('copy:')) {
-          const textToCopy = linkUrl.substring(5);
-          const copyId = `copy-${index}`;
-          return (
-            <CopyToClipboard key={index} text={textToCopy} onCopy={() => handleCopy(textToCopy, copyId)}>
-              <span className={styles.copyableLink}>
-                {linkText}
-                {copiedTextId === copyId && <span className={styles.copyFeedback}>Copied!</span>}
-              </span>
-            </CopyToClipboard>
-          );
-        } else {
-          return <a key={index} href={linkUrl} target="_blank" rel="noopener noreferrer">{linkText}</a>;
-        }
-      }
-      return part;
-    });
-  };
-  // --- END ADD ---
-
-  // RENAMED and MODIFIED function for closing rect
-  const getClosingRect = () => {
-    if (!currentLightboxSourceInfo) {
-      console.warn("WorkDetailView: getClosingRect - No currentLightboxSourceInfo available.");
-      return null;
-    }
-    const { index: closingIndex, type: closingType } = currentLightboxSourceInfo;
-    const refKey = `${closingType}_${closingIndex}`;
-    const thumb = thumbnailRefs.current[refKey];
-    if (thumb) {
-      return thumb.getBoundingClientRect();
-    }
-    console.warn(`WorkDetailView: getClosingRect - No thumbnail ref found for key: ${refKey}`);
-    return null;
-  };
 
   return (
     <div className={styles.detailContainer}>
@@ -170,9 +89,6 @@ const WorkDetailView = ({ item }) => {
       {articleContent && (
         <div className={styles.articleSection}>
           {paragraphs.map((paragraph, index) => {
-            // --- ADD Image Insertion Logic for Personal Website --- 
-            let imagesToRenderAfter = []; // Use array to hold multiple images
-            // --- MODIFY: Pass paragraph to a new function --- 
             const renderParagraphContent = (paragraphText) => {
               const parts = [];
               let lastIndex = 0;
@@ -234,38 +150,9 @@ const WorkDetailView = ({ item }) => {
               
               return <>{parts.map((part, i) => <React.Fragment key={i}>{part}</React.Fragment>)}</>;
             };
-            // --- END MODIFY ---
-            
-            // To insert images between paragraphs, match by item.id and index:
-            // if (item.id === 1 && index === 1) {
-            //   const imgIdx = imagesForGallery.findIndex(img => img.src === 'your-url');
-            //   if (imgIdx !== -1) imagesToRenderAfter.push({ info: imagesForGallery[imgIdx], lightboxIndex: imgIdx, isLightboxClickable: true });
-            // }
             return (
               <React.Fragment key={index}>
                 <p>{renderParagraphContent(paragraph)}</p>
-                {/* Render the specific images if conditions are met */}
-                {imagesToRenderAfter.length > 0 && imagesToRenderAfter.map((imgData, imgIndex) => (
-                   <figure 
-                      key={`${index}-img-${imgIndex}`} 
-                      className={`${styles.articleImageFigure} ${imgData.isLightboxClickable ? styles.clickableFigure : ''}`} 
-                      onClick={imgData.isLightboxClickable ? (e) => openLightbox(imgData.lightboxIndex, e, 'article') : undefined}
-                       ref={imgData.isLightboxClickable && typeof imgData.lightboxIndex === 'number'
-                         ? bindThumbnailRef(`article_${imgData.lightboxIndex}`)
-                         : undefined}
-                   >
-                    <img 
-                      src={imgData.info ? imgData.info.src : imgData.src} // Handle both formats
-                      alt={imgData.info ? imgData.info.caption : imgData.caption} 
-                      className={styles.articleImage}
-                    />
-                    {(imgData.info ? imgData.info.caption : imgData.caption) && 
-                      <figcaption className={styles.articleImageCaption}>
-                        {imgData.info ? imgData.info.caption : imgData.caption}
-                      </figcaption>
-                    }
-                  </figure>
-                ))}
               </React.Fragment>
             );
           })}
@@ -282,8 +169,8 @@ const WorkDetailView = ({ item }) => {
               <button 
                 key={index} 
                 className={styles.thumbnailButton} 
-                onClick={(e) => openLightbox(index, e, 'thumb')} // Pass sourceType 'thumb'
-                ref={bindThumbnailRef(`thumb_${index}`)} // Assign ref with 'thumb_' prefix
+                onClick={(e) => openLightbox(index, e, 'thumb')}
+                ref={bindThumbnailRef(`thumb_${index}`)}
               >
                 <img 
                   src={img.src} 

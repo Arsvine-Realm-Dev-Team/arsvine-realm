@@ -6,6 +6,10 @@ import { Line } from '@react-three/drei';
 import * as THREE from 'three';
 import Tesseract from './Tesseract'; // 导入 Tesseract 组件
 
+function resolvePhysicsMesh(tesseractRef) {
+  return tesseractRef?.current?.meshRef?.current ?? tesseractRef?.current ?? null;
+}
+
 // 物理碰撞的不可见地面
 function Plane(props) {
   const [ref] = usePlane(() => ({
@@ -24,7 +28,15 @@ function Plane(props) {
 }
 
 // 场景逻辑处理 (例如更新连接线 + 拖动时让电池 DOM 向 Tesseract 偏移产生"引力")
-function SceneLogic({ isConnecting, tesseractRef, batteryPosition3D, setConnectionLinePoints, batteryElementRef, isDragging }) {
+function SceneLogic({
+  isConnecting,
+  tesseractRef,
+  batteryPosition3D,
+  setConnectionLinePoints,
+  batteryElementRef,
+  batteryIconElementRef,
+  isDragging,
+}) {
   // 跨帧累积偏移量（写在 DOM 上），useFrame 内逐帧 lerp 平滑过渡
   const currentOffsetRef = useRef({ x: 0, y: 0 });
 
@@ -32,7 +44,7 @@ function SceneLogic({ isConnecting, tesseractRef, batteryPosition3D, setConnecti
     // --- 1) 连接线更新（原有逻辑）---
     if (isConnecting && tesseractRef.current && batteryPosition3D) {
       const tesseractWorldPos = new THREE.Vector3();
-      const physicsMesh = tesseractRef.current.meshRef ? tesseractRef.current.meshRef.current : tesseractRef.current;
+      const physicsMesh = resolvePhysicsMesh(tesseractRef);
 
       if (physicsMesh) {
         physicsMesh.getWorldPosition(tesseractWorldPos);
@@ -58,7 +70,7 @@ function SceneLogic({ isConnecting, tesseractRef, batteryPosition3D, setConnecti
     let targetY = 0;
 
     if (isDragging && tesseractRef.current) {
-      const physicsMesh = tesseractRef.current.meshRef ? tesseractRef.current.meshRef.current : tesseractRef.current;
+      const physicsMesh = resolvePhysicsMesh(tesseractRef);
       if (physicsMesh) {
         // Tesseract 世界坐标 → NDC → Canvas 屏幕像素
         const worldPos = new THREE.Vector3();
@@ -73,9 +85,9 @@ function SceneLogic({ isConnecting, tesseractRef, batteryPosition3D, setConnecti
         const tesseractScreenY = canvasRect.top + ((1 - projected.y) / 2) * canvasRect.height;
 
         // 电池图标中心点屏幕坐标（取 batteryIcon 而不是整个 powerDisplay 容器，定位更准）
-        const iconEl = batteryEl.querySelector('[class*="batteryIcon"]');
+        const iconEl = batteryIconElementRef.current;
         if (!iconEl) return;
-        const iconRect = (iconEl as HTMLElement).getBoundingClientRect();
+        const iconRect = iconEl.getBoundingClientRect();
         // 用 transform 后的实际中心计算到 Tesseract 的方向，
         // 但反推偏移量时要减去已经累计的 transform，得到"原始锚点"上的方向
         const cur = currentOffsetRef.current;
@@ -274,7 +286,7 @@ const TesseractExperience = ({
             <Physics gravity={[0, -9.82, 0]}> {/* 物理世界及重力 */}
               <Plane position={[0, -3, 0]} /> {/* 地面 */} 
               {batteryPosition3D ? ( // 电池位置计算完成后渲染 Tesseract
-                <Tesseract
+              <Tesseract
                   ref={tesseractRef}
                   position={[0, 1, 0]} // Tesseract 初始位置 (Y 轴会被物理引擎覆盖)
                   batteryPosition3D={batteryPosition3D}
@@ -306,6 +318,7 @@ const TesseractExperience = ({
                 batteryPosition3D={batteryPosition3D}
                 setConnectionLinePoints={setConnectionLinePoints}
                 batteryElementRef={batteryElementRef}
+                batteryIconElementRef={batteryIconRef}
                 isDragging={isTesseractDragging}
              />
           )}

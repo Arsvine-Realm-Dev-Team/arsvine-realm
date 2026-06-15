@@ -1,78 +1,25 @@
 /* eslint-disable @next/next/no-img-element -- gallery thumbnails use raw img elements for arbitrary asset URLs and lightbox transitions */
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import styles from '../../styles/ExperienceDetailView.module.scss';
 import Lightbox from '../interactive/Lightbox';
+import useGalleryLightbox from '../../hooks/useGalleryLightbox';
 
 const ExperienceDetailView = ({ item }) => {
-  const { title, duration, location, details, type, galleryImages } = item || {};
-
-  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  const [currentLightboxImageIndex, setCurrentLightboxImageIndex] = useState(0);
-  const [clickedThumbnailRect, setClickedThumbnailRect] = useState(null);
-  const [currentLightboxSourceInfo, setCurrentLightboxSourceInfo] = useState(null);
-
-  const thumbnailRefs = useRef({});
+  const { title, duration, location, details, galleryImages } = item || {};
+  const imagesForGallery = galleryImages || [];
+  const {
+    isLightboxOpen,
+    currentLightboxImageIndex,
+    clickedThumbnailRect,
+    bindThumbnailRef,
+    openLightbox,
+    closeLightbox,
+    showNextImage,
+    showPrevImage,
+    getClosingRect,
+  } = useGalleryLightbox(imagesForGallery.length);
 
   if (!item) return null;
-
-  const imagesForGallery = galleryImages || [];
-
-  
-  const openLightbox = (index, event, sourceType = 'thumb') => { // ADDED sourceType, default to 'thumb'
-    if (index >= 0 && index < imagesForGallery.length) {
-      let rect = null;
-      if (event && event.currentTarget) { 
-        rect = event.currentTarget.getBoundingClientRect();
-      } else {
-        const refKey = `${sourceType}_${index}`;
-        const thumb = thumbnailRefs.current[refKey];
-        if (thumb) rect = thumb.getBoundingClientRect();
-      }
-      setClickedThumbnailRect(rect);
-      setCurrentLightboxImageIndex(index);
-      setCurrentLightboxSourceInfo({ index, type: sourceType }); // SET source info
-      setIsLightboxOpen(true);
-    }
-  };
-
-  
-  const closeLightbox = () => {
-    setIsLightboxOpen(false);
-    setCurrentLightboxSourceInfo(null); // CLEAR source info
-    setClickedThumbnailRect(null);
-  };
-
-  
-  const showNextImage = () => {
-    const nextIndex = (currentLightboxImageIndex + 1) % imagesForGallery.length;
-    setClickedThumbnailRect(null);
-    setCurrentLightboxImageIndex(nextIndex);
-    // Keep currentLightboxSourceInfo for now
-  };
-
-  
-  const showPrevImage = () => {
-    const prevIndex = (currentLightboxImageIndex - 1 + imagesForGallery.length) % imagesForGallery.length;
-    setClickedThumbnailRect(null);
-    setCurrentLightboxImageIndex(prevIndex);
-    // Keep currentLightboxSourceInfo
-  };
-
-  // RENAMED and MODIFIED function for closing rect
-  const getClosingRect = () => {
-    if (!currentLightboxSourceInfo) {
-      console.warn("ExperienceDetailView: getClosingRect - No currentLightboxSourceInfo available.");
-      return null;
-    }
-    const { index: closingIndex, type: closingType } = currentLightboxSourceInfo;
-    const refKey = `${closingType}_${closingIndex}`;
-    const thumb = thumbnailRefs.current[refKey];
-    if (thumb) {
-      return thumb.getBoundingClientRect();
-    }
-    console.warn(`ExperienceDetailView: getClosingRect - No thumbnail ref found for key: ${refKey}`);
-    return null;
-  };
 
   return (
     <div className={styles.detailContainer}>
@@ -120,8 +67,8 @@ const ExperienceDetailView = ({ item }) => {
               <button 
                 key={imgIndex} 
                 className={styles.thumbnailButton} 
-                onClick={(e) => openLightbox(imgIndex, e, 'thumb')} // Pass sourceType 'thumb'
-                ref={el => { thumbnailRefs.current[`thumb_${imgIndex}`] = el; }} // Assign ref with 'thumb_' prefix
+                onClick={(e) => openLightbox(imgIndex, e, 'thumb')}
+                ref={bindThumbnailRef(`thumb_${imgIndex}`)}
               >
                 <img 
                   src={img.src} 
@@ -143,7 +90,7 @@ const ExperienceDetailView = ({ item }) => {
           thumbnailRect={clickedThumbnailRect} // Pass thumbnailRect
           currentIndex={currentLightboxImageIndex} // Pass currentIndex
           totalImages={imagesForGallery.length}   // Pass totalImages
-          getClosingRectForIndex={getClosingRect} // CHANGED prop to pass the new function
+          getClosingRectForIndex={getClosingRect}
         />
       )}
 

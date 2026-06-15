@@ -116,7 +116,7 @@ export function TransitionProvider({ children, pageWrapperRef }: TransitionProvi
     // 目标是博客详情页：URL 形如 /<locale>/blog/<slug>
     const goingBlogDetail = /^\/[A-Za-z-]+\/blog\/[^/]+/.test(url);
 
-    const pushThen = (target: string, cb: () => void, pushOpts?: any) => {
+    const pushThen = (target: string, cb: () => void, pushOpts?: { scroll?: boolean }) => {
       const onComplete = () => {
         router.events.off('routeChangeComplete', onComplete);
         cb();
