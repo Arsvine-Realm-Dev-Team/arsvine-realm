@@ -93,6 +93,16 @@ function coerceCookieLocale(value: string | undefined): Locale | undefined {
   }
 }
 
+// shouldBypass / pickLocaleFromHeader / coerceCookieLocale / LOOKS_LIKE_LOCALE 均为纯函数
+// （不依赖 NextRequest / NextResponse），通过 __internals 集中 export 给 vitest 单测覆盖。
+// 业务代码请继续走 `proxy` 入口；不要从 __internals 直接拿 helper 用，会绕过 cookie 写入。
+export const __internals = {
+  shouldBypass,
+  pickLocaleFromHeader,
+  coerceCookieLocale,
+  LOOKS_LIKE_LOCALE,
+};
+
 /**
  * 解析当前请求的"有效 country"，优先级：
  *   1. URL ?_geo=XX 显式覆盖（dev 调试 / 用户切换 VPN 后强制刷新）
