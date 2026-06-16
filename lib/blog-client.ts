@@ -2,7 +2,13 @@ import type { MDXRemoteSerializeResult } from 'next-mdx-remote';
 
 import type { BlogPostMeta } from '../types';
 import { type Locale } from '../i18n/config';
-import type { BlogContentLocale } from './blog';
+import { type BlogContentLocale, isBlogContentLocale } from './blog';
+
+// 客户端模块的 isBlogContentLocale 是从 lib/blog.ts 单一真相 re-export；
+// 之前各自一份（签名 `string` vs `unknown`、实现 labels vs array），
+// 容易漂移，统一到 lib/blog.ts。
+
+export { isBlogContentLocale };
 
 export const blogContentLocaleLabels: Record<BlogContentLocale, string> = {
   'zh-CN': '简中',
@@ -16,10 +22,6 @@ export const blogContentLocaleLabels: Record<BlogContentLocale, string> = {
 export interface BlogVariantPayload {
   meta: BlogPostMeta;
   mdxSource: MDXRemoteSerializeResult;
-}
-
-export function isBlogContentLocale(value: unknown): value is BlogContentLocale {
-  return typeof value === 'string' && value in blogContentLocaleLabels;
 }
 
 export function getRequestedContentLocaleFromPath(asPath: string): BlogContentLocale | null {

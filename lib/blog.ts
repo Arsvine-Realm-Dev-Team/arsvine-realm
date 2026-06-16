@@ -34,8 +34,10 @@ type BlogIndexVariant = {
   readingMinutes?: number;
 };
 
-export function isBlogContentLocale(value: string): value is BlogContentLocale {
-  return (blogContentLocales as readonly string[]).includes(value);
+export function isBlogContentLocale(value: unknown): value is BlogContentLocale {
+  return (
+    typeof value === 'string' && (blogContentLocales as readonly string[]).includes(value)
+  );
 }
 
 function normalizeAccess(access?: ContentPostAccess): ContentPostAccess {
