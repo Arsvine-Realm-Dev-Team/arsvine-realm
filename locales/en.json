@@ -75,7 +75,10 @@
     "tweets": "Tweets",
     "life": "Life",
     "contact": "Contact",
-    "about": "About"
+    "about": "About",
+    "friends": "Friends",
+    "groupContent": "Content",
+    "groupStandalone": "Standalone"
   },
   "detail": {
     "gallery": "Gallery",

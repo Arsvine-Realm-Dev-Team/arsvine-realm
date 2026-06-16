@@ -4,6 +4,7 @@ import type { Locale } from '../i18n/config';
 interface NavLink {
   label: string;
   hash: string;
+  group: 'content' | 'standalone';
 }
 
 const commonLabelFallbacks: Record<Locale, Record<'openMenu' | 'closeMenu', string>> = {
@@ -43,12 +44,14 @@ export default function useDrawerNavigation({
   }, []);
 
   const navLinks = useMemo<NavLink[]>(() => ([
-    { label: tNav('works'), hash: 'works' },
-    { label: tNav('experience'), hash: 'experience' },
-    { label: tNav('blog'), hash: 'blog' },
-    { label: tNav('life'), hash: 'life' },
-    { label: tNav('contact'), hash: 'contact' },
-    { label: tNav('about'), hash: 'about' },
+    { label: tNav('works'), hash: 'works', group: 'content' },
+    { label: tNav('experience'), hash: 'experience', group: 'content' },
+    { label: tNav('blog'), hash: 'blog', group: 'content' },
+    { label: tNav('life'), hash: 'life', group: 'content' },
+    { label: tNav('contact'), hash: 'contact', group: 'content' },
+    { label: tNav('tweets'), hash: 'tweets', group: 'standalone' },
+    { label: tNav('about'), hash: 'about', group: 'standalone' },
+    { label: tNav('friends'), hash: 'friends', group: 'standalone' },
   ]), [tNav]);
 
   const resolveCommonLabel = useCallback((key: 'openMenu' | 'closeMenu') => {

@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element -- decorative SVG badge is local, non-critical, and sized by existing HUD CSS */
-import { useEffect, useRef, type Ref } from 'react';
+import { Fragment, useEffect, useRef, type Ref } from 'react';
+import { useTranslations } from 'next-intl';
 import styles from '../../styles/Home.module.scss';
 import ActivationLever from '../interactive/ActivationLever';
 import { useResponsive } from '../../hooks/useMediaQuery';
@@ -65,9 +66,6 @@ export default function LeftPanel({
   handleGlobalBackClick,
   navLinks,
   handleLeftNavLinkClick,
-  handleFriendsClick,
-  handleTweetsClick,
-  tweetsLabel,
   powerLevel,
   isFateTypingActive,
   displayedFateText,
@@ -81,6 +79,7 @@ export default function LeftPanel({
   batteryIconRef,
   envData = null as EnvData | null,
 }) {
+  const tNav = useTranslations('mainNav');
   const chargeLeverLabel = isTesseractActivated ? 'CHARGING' : 'START CHARGE';
   const dischargeLeverLabel = isDischarging
     ? 'DISCHARGING'
@@ -216,27 +215,34 @@ export default function LeftPanel({
       </button>
       <div className={`${styles.globalBackButtonDivider} ${showBackAndNav ? styles.visible : ''}`}></div>
       <div className={`${styles.leftNavLinks} ${showBackAndNav ? styles.visible : ''}`}>
-        {navLinks.map((link) => (
-          <button
-            key={link.label}
-            className={styles.leftNavLink}
-            onClick={() => handleLeftNavLinkClick(link)}
-          >
-            {link.label}
-          </button>
+        {navLinks.map((link, i) => (
+          <Fragment key={link.hash}>
+            {i === 0 && (
+              <div
+                role="separator"
+                aria-label={tNav('groupContent')}
+                className={styles.leftNavGroupLabel}
+              >
+                <span>{tNav('groupContent')}</span>
+              </div>
+            )}
+            {i === 5 && (
+              <div
+                role="separator"
+                aria-label={tNav('groupStandalone')}
+                className={styles.leftNavGroupLabel}
+              >
+                <span>{tNav('groupStandalone')}</span>
+              </div>
+            )}
+            <button
+              className={styles.leftNavLink}
+              onClick={() => handleLeftNavLinkClick(link)}
+            >
+              {link.label}
+            </button>
+          </Fragment>
         ))}
-        <button
-          className={styles.leftNavLink}
-          onClick={handleTweetsClick}
-        >
-          {tweetsLabel}
-        </button>
-        <button
-          className={styles.leftNavLink}
-          onClick={handleFriendsClick}
-        >
-          Friends
-        </button>
       </div>
       <div
         ref={powerDisplayRef as Ref<HTMLDivElement>}

@@ -75,7 +75,10 @@
     "tweets": "推文",
     "life": "生活",
     "contact": "聯絡",
-    "about": "關於"
+    "about": "關於",
+    "friends": "友情連結",
+    "groupContent": "內容聚合",
+    "groupStandalone": "獨立板塊"
   },
   "detail": {
     "gallery": "Gallery",

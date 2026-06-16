@@ -5,16 +5,17 @@ export const webProjects: Project[] = [
   {
     id: 1,
     title: 'Arsvine Realm',
-    description: 'A personal portfolio site built with Next.js.',
-    role: 'Design, Development & Iteration',
+    description: 'A Next.js personal site built around portfolio work, writing, and a growing personal archive.',
+    role: 'Design / Development / Content Architecture',
     year: '2026',
     status: 'shipped',
-    tech: ['UI/UX', 'DevOps'],
+    tech: ['Next.js', 'UI/UX', 'Vercel', 'i18n', 'DevOps'],
     highlights: [
-      'Sci-fi HUD visual direction',
-      'More than 42 animation patterns',
-      'Rebuilt on top of a general template',
-      'Blended with Hypergryph-inspired aesthetics',
+      'Sci-fi HUD direction with dense information design',
+      'More than 42 animation and interaction patterns',
+      'Deep redevelopment based on the RainMorime template',
+      'Multilingual content and category structure',
+      'CDN image helpers and copyable information tokens',
     ],
     link: '#',
     liveUrl: '',
@@ -23,21 +24,28 @@ export const webProjects: Project[] = [
       { src: post('arsvine-realm-sceenshot-1.png') },
       { src: post('arsvine-realm-sceenshot-2.png') },
     ],
-    articleContent: `Arsvine Realm is this very site. It is built with Next.js, deployed on Vercel, and runs on a Serverless-oriented setup. Visually, it combines sci-fi HUD elements with more than forty kinds of motion treatment, while drawing overall inspiration from Hypergryph's design sensibility.
+    articleContent: `Arsvine Realm is this site. It is not just a portfolio page, but a gradually forming personal archive system: projects, essays, interests, travel notes, art references, and still-evolving fictional settings are all gathered into the same interface order. Technically, it is built with Next.js, deployed on Vercel, and maintained through a lightweight content structure for multilingual pages, image resources, and detail articles.
 
-The project began as a redevelopment of RainMorime, a general portfolio template. From there I added a large amount of custom design and functionality so the site could present my projects and skills in a way that feels more personal. The content spans multiple areas, including web development and game-related work, with the goal of giving visitors a fuller sense of what I care about and what I can build.`,
+The project started as a redevelopment of the RainMorime portfolio template, but has since grown through many custom modifications. Visually, I wanted it to carry the cool precision of a sci-fi HUD while also borrowing the kind of dense-but-controlled information design often seen in Hypergryph's interfaces. Lines, cards, motion, tags, and empty space all serve the same purpose: making the site feel like an expandable archive terminal.
+
+On the engineering side, the project does not try to be complicated for its own sake. It focuses more on maintainability. Image URLs are generated through CDN helper functions, copyable information points inside article text are detected through copyableTokens, and project, experience, and interest content are split into independent data files. In this way, the site can work both as a public showcase and as an entrance to a personal knowledge and creation system.
+
+For me, Arsvine Realm is not merely about putting things online. It is closer to a long-term base: a place to record what I am building, what I believe in, how I design systems, and how scattered ideas can be turned into visible structure.`,
   },
   {
     id: 2,
     title: 'Endfield Gacha Simulator & Planner',
-    description: 'A web tool built with vanilla JS, HTML, and a Python backend to help players plan pulls for Arknights: Endfield.',
-    role: 'Full Stack Developer',
+    description: 'A pull simulation and resource planning tool for Arknights: Endfield, designed to turn player intuition into computable strategy.',
+    role: 'Full Stack Developer / System Designer',
     year: '2026',
     status: 'wip',
-    tech: ['JS', 'HTML', 'Python'],
+    tech: ['JavaScript', 'HTML', 'Python', 'Flask', 'Monte Carlo'],
     highlights: [
-      'Responsive layout',
-      'Dark mode support',
+      'Separate simulation and planning workflows',
+      'Strategy scoring based on Monte Carlo simulation',
+      'Support for past, current, and future banner setups',
+      'Responsive layout with dark mode support',
+      'Planned data visualisation and import features',
     ],
     link: '#',
     liveUrl: '',
@@ -45,11 +53,13 @@ The project began as a redevelopment of RainMorime, a general portfolio template
     galleryImages: [
       { src: post('endfield-planner-screenshot-1.png') },
     ],
-    articleContent: `The backend is built with Python Flask and served in production with Waitress. It handles banner data and the planning logic. On the frontend, I use vanilla JavaScript for dynamic interaction and responsive layout so the tool remains comfortable to use across different devices.
+    articleContent: `This is a gacha simulation and planning tool prepared for Arknights: Endfield. Its core goal is not to simply recreate the entertainment loop of "single pull, ten-pull, and success animation", but to help players answer a more practical question: when resources are limited, goals differ, and banners keep rotating, which pulling strategy is closer to their own optimum?
 
-The project is still in progress. I plan to add more features later, such as account data import and stronger data visualisation. The current link, https://endfield.arsvine.com, is only a placeholder for now and will point to the real deployment later.
+The project is divided into two main pages. The simulator page recreates the banner pulling process and supports past, current, and possible future banner configurations. The planner page focuses more on strategy analysis. Players can enter their resources, target characters, expected savings, and other conditions; the system then uses Monte Carlo simulation to estimate the risk and expected value of different plans, producing a score and recommendation.
 
-The project is split into two pages. The main page focuses on banner simulation, allowing players to simulate pulls across past, current, and even future banners. The other page is a planner that helps players decide how to use their resources toward specific targets. After running Monte Carlo simulations, it produces a score and recommendation.`,
+The backend is built with Python Flask, with Waitress used as the production server. It handles banner data, probability calculation, and planning logic. The frontend uses vanilla JavaScript and HTML to implement the interactive interface, with attention to responsive layout, dark mode, and a low-dependency structure. Rather than trying to become a complex platform immediately, the project first aims to make the core loop calculable, explainable, and iteratable.
+
+The project is still in progress, and https://endfield.arsvine.com is a reserved address for now. Later, I plan to add richer data visualisation, user data import, plan comparison, and banner version management. At its core, this is also a system design exercise: breaking the uncertainty of a game into data, probability, weights, and decisions, then making those decisions understandable to the player.`,
   },
 ];
 
@@ -59,8 +69,8 @@ export const earlyProjects: Project[] = [
   {
     id: 3,
     title: 'Early Projects',
-    description: 'Assorted remnants from the learning years.',
-    role: 'Student',
+    description: 'Experiments, unfinished pieces, and remnants from the learning years. They are not all mature, but they form the earliest technical trail.',
+    role: 'Student / Explorer',
     year: '201x',
     status: 'archived',
     tech: ['HTML', 'CSS', 'JavaScript', 'Python', 'C++', 'C#', 'Scratch', 'Unity'],
@@ -69,7 +79,11 @@ export const earlyProjects: Project[] = [
     galleryImages: [
       { src: gallery('gitblock-allindo.png') },
     ],
-    articleContent: `There were simply too many early projects, and records for most of them are no longer preserved.`,
+    articleContent: `My early projects are difficult to organize completely now. Some were course assignments, some were spontaneous web pages, some were game prototypes, scripts, or small utilities, and some only survive as screenshots or forgotten filenames. Looking back, they were rough, and many of them could hardly be called "engineering". But those unstable attempts gradually pushed me toward programming, game design, and system building.
+
+These projects touched HTML, CSS, JavaScript, Python, C++, C#, Scratch, and Unity. At that stage I was mostly exploring basic questions: how a button responds, how a piece of logic runs, how an interface becomes less ugly, and how a game mechanic can move from an idea into something playable.
+
+I keep them archived here not to prove that the past was impressive, but to preserve a trail. Many preferences that now seem clear actually came from those messy early experiments.`,
   },
 ];
 

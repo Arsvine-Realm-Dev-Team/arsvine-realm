@@ -75,7 +75,10 @@
     "tweets": "推文",
     "life": "生活",
     "contact": "联系",
-    "about": "关于"
+    "about": "关于",
+    "friends": "友情链接",
+    "groupContent": "内容聚合",
+    "groupStandalone": "独立板块"
   },
   "detail": {
     "gallery": "Gallery",

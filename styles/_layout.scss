@@ -939,16 +939,37 @@
       transition: opacity 0.35s ease-out, transform 0.35s ease-out,
         background-color 0.3s, color 0.3s, border-color 0.3s, padding-left 0.3s;
 
-      @for $i from 1 through 8 {
+      // content 组（标题之后 5 项，DOM 位置 2~6）
+      @for $i from 2 through 6 {
         &:nth-child(#{$i}) {
-          transition-delay: #{($i - 1) * 0.06}s,
-          #{($i - 1) * 0.06}s,
+          transition-delay: #{($i - 2) * 0.06}s,
+          #{($i - 2) * 0.06}s,
           0s,
           0s,
           0s,
           0s;
         }
       }
+      // standalone 组（第二个标题之后 3 项，DOM 位置 8~10）
+      @for $i from 8 through 10 {
+        &:nth-child(#{$i}) {
+          transition-delay: #{($i - 2) * 0.06}s,
+          #{($i - 2) * 0.06}s,
+          0s,
+          0s,
+          0s,
+          0s;
+        }
+      }
+    }
+
+    .leftNavGroupLabel {
+      opacity: 0.5;
+      transform: translateX(0);
+      // 第一个标题在 DOM 第 1 位
+      &:nth-child(1) { transition-delay: 0s, 0s, 0s, 0s, 0s, 0s; }
+      // 第二个标题在 DOM 第 7 位
+      &:nth-child(7) { transition-delay: #{5 * 0.06}s, #{5 * 0.06}s, 0s, 0s, 0s, 0s; }
     }
   }
 }
@@ -974,10 +995,22 @@
   transition: opacity 0.25s ease-in, transform 0.25s ease-in,
     background-color 0.3s, color 0.3s, border-color 0.3s, padding-left 0.3s;
 
-  @for $i from 1 through 8 {
+  // content 组（DOM 位置 2~6，delay 0~0.16s）
+  @for $i from 2 through 6 {
     &:nth-child(#{$i}) {
-      transition-delay: #{($i - 1) * 0.04}s,
-      #{($i - 1) * 0.04}s,
+      transition-delay: #{($i - 2) * 0.04}s,
+      #{($i - 2) * 0.04}s,
+      0s,
+      0s,
+      0s,
+      0s;
+    }
+  }
+  // standalone 组（DOM 位置 8~10，delay 0.24~0.32s）
+  @for $i from 8 through 10 {
+    &:nth-child(#{$i}) {
+      transition-delay: #{($i - 2) * 0.04}s,
+      #{($i - 2) * 0.04}s,
       0s,
       0s,
       0s,
@@ -1002,6 +1035,20 @@
       color: #ffffff;
     }
   }
+}
+
+.leftNavGroupLabel {
+  font-family: var(--font-hud);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--ark-text-secondary);
+  opacity: 0;
+  transform: translateX(20px);
+  padding: 4px 10px 2px;
+  text-transform: uppercase;
+  pointer-events: none;
+  user-select: none;
+  transition: opacity 0.35s ease-out, transform 0.35s ease-out;
 }
 
 // --- 结束: 左侧面板导航链接样式 ---
@@ -1116,6 +1163,14 @@
     transform: none !important;
     transition-delay: 0s !important;
     pointer-events: auto !important;
+  }
+
+  .leftNavGroupLabel {
+    font-size: 11px;
+    padding: 8px 12px 4px;
+    opacity: 0.5 !important;
+    transform: none !important;
+    transition-delay: 0s !important;
   }
 
   // Logo: 在抽屉中隐藏（太占空间）

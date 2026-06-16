@@ -8,16 +8,17 @@ export const webProjects: Project[] = [
   {
     id: 1,
     title: 'Arsvine Realm',
-    description: '一个使用 Next.js 构建的个人作品集网站 （Portfolio）',
-    role: 'Design & Development & Modification',
+    description: '一个以个人档案、作品展示与写作入口为核心的 Next.js 个人站。',
+    role: 'Design / Development / Content Architecture',
     year: '2026',
     status: 'shipped',
-    tech: ['UI/UX', 'DevOps'],
+    tech: ['Next.js', 'UI/UX', 'Vercel', 'i18n', 'DevOps'],
     highlights: [
-      '科幻风格 HUD 设计',
-      '超 42 种动画样式',
-      '基于通用模板再开发',
-      '融合鹰角设计美学',
+      '科幻 HUD 与鹰角式信息密度',
+      '超 42 种动画与交互动效',
+      '基于 RainMorime 模板深度再开发',
+      '多语言内容与分类结构',
+      '图片 CDN 封装与可复制信息点',
     ],
     link: '#',
     liveUrl: '',
@@ -26,21 +27,28 @@ export const webProjects: Project[] = [
       { src: post('arsvine-realm-sceenshot-1.png') },
       { src: post('arsvine-realm-sceenshot-2.png') },
     ],
-    articleContent: `Arsvine Realm，即本站。使用 Next.js 构建，部署在 Vercel 上，采用 Serverless 架构。设计上融合了科幻风格的 HUD 元素，提供了超过 42 种动画样式，整体设计灵感来源于鹰角的美学风格。
+    articleContent: `Arsvine Realm，即本站。它不是单纯的作品集页面，而是一个逐渐成型的个人档案系统：项目、文章、兴趣、旅行、艺术与一些还在发酵的设定，都被收束到同一个界面秩序里。技术上使用 Next.js 构建，部署在 Vercel 上，并通过一套相对轻量的内容结构维护多语言页面、图片资源与详情页正文。
 
-项目基于一个通用的个人作品集模板 RainMorime 进行再开发，添加了大量自定义设计和功能，以展示个人项目和技能。网站内容涵盖了多个领域的项目，包括 Web 开发、游戏开发等，旨在为访客提供一个全面了解个人能力和经历的平台。`,
+这个项目最开始基于 RainMorime 个人作品集模板再开发，但后续已经加入了大量自定义修改。视觉方向上，我希望它有一点科幻 HUD 的冷峻感，也有鹰角式界面那种“信息很多，但不是乱堆”的秩序感：线条、卡片、动效、标签和留白都服务于同一个目标——让页面像一个可以继续扩展的档案终端。
+
+工程上，它并不追求复杂到炫技，而是更重视可维护性。图片地址通过 CDN 工具函数统一生成，正文中可复制的信息点通过 copyableTokens 识别，项目、经历与兴趣内容也拆分为独立数据文件。这样一来，网站既能作为展示页，也能慢慢变成一个个人知识与创作系统的入口。
+
+对我来说，Arsvine Realm 的意义不只是“把东西放到网上”。它更像是一个长期基地：记录我正在做什么、相信什么、怎样设计系统，以及怎样把一些零散的灵感变成可见的结构。`,
   },
   {
     id: 2,
     title: '终末地卡池模拟及规划器',
-    description: '一个基于原生 JS 与 HTML，使用 Python 后端的网页，帮助玩家进行《明日方舟：终末地》中的卡池规划',
-    role: 'Full Stack Developer',
+    description: '面向《明日方舟：终末地》的抽卡模拟与资源规划工具，尝试把玩家直觉转化为可计算的策略。',
+    role: 'Full Stack Developer / System Designer',
     year: '2026',
     status: 'wip',
-    tech: ['JS', 'HTML', 'Python'],
+    tech: ['JavaScript', 'HTML', 'Python', 'Flask', 'Monte Carlo'],
     highlights: [
-      '响应式设计',
-      '深色模式支持',
+      '卡池模拟与资源规划分离',
+      '基于蒙特卡洛模拟给出策略评分',
+      '支持往期、当期与未来卡池配置',
+      '响应式页面与深色模式',
+      '后续计划加入数据可视化与导入能力',
     ],
     link: '#',
     liveUrl: '',
@@ -48,11 +56,13 @@ export const webProjects: Project[] = [
     galleryImages: [
       { src: post('endfield-planner-screenshot-1.png') },
     ],
-    articleContent: `使用 Python Flask 构建后端 API，Waitress 作为生产服务器，处理卡池数据和规划算法。前端使用原生 JavaScript 实现动态交互和响应式布局，确保在各种设备上都有良好体验。
-    
-    目前项目处于开发中，计划后续添加更多功能，如用户账户数据导入系统、数据可视化等。当前页面提供的链接 https://endfield.arsvine.com 是占位地址，后续会部署正式版本。
-    
-    项目分为两个页面，主页面提供卡池模拟功能，用户可以选择往期、当期甚至未来卡池进行抽卡模拟。另一个页面提供规划器功能，帮助玩家根据自己的资源和目标进行最优抽卡策略规划，系统在进行蒙特卡洛模拟后给出评分和建议。`,
+    articleContent: `这是一个为《明日方舟：终末地》准备的卡池模拟与规划工具。它的核心目标不是简单复刻“抽一次、十连、出货”的娱乐模拟，而是帮助玩家回答一个更实际的问题：在资源有限、目标不同、卡池不断轮换的情况下，怎样抽才更接近自己的最优策略？
+
+项目分为两个主要页面。模拟器页面负责还原卡池抽取过程，支持配置往期、当期以及未来可能出现的卡池；规划器页面则更偏策略分析，玩家可以输入资源、目标角色、期望保留量等条件，系统通过蒙特卡洛模拟估算不同方案的风险与收益，并给出评分和建议。
+
+后端使用 Python Flask 构建 API，Waitress 作为生产服务器，负责处理卡池数据、概率计算与规划逻辑。前端使用原生 JavaScript 和 HTML 实现交互界面，重点保证响应式布局、深色模式和低依赖结构。这个项目并不追求一开始就做成复杂平台，而是先把“可计算、可解释、可迭代”的核心链路跑通。
+
+目前项目仍在开发中，https://endfield.arsvine.com 是预留地址。后续我计划补充更完整的数据可视化、用户数据导入、方案对比和卡池版本管理。它本质上也是一次系统设计练习：把游戏里的不确定性拆成数据、概率、权重和决策，再让玩家看懂自己的选择。`,
   },
 ];
 
@@ -68,8 +78,8 @@ export const earlyProjects: Project[] = [
   {
     id: 3,
     title: '早期项目',
-    description: '学习过程中留下的遗产，各种各样',
-    role: 'Student',
+    description: '学习过程中留下的各种实验、半成品和遗产。它们不一定成熟，但构成了最早的技术轨迹。',
+    role: 'Student / Explorer',
     year: '201x',
     status: 'archived',
     tech: ['HTML', 'CSS', 'JavaScript', 'Python', 'C++', 'C#', 'Scratch', 'Unity'],
@@ -78,7 +88,11 @@ export const earlyProjects: Project[] = [
     galleryImages: [
       { src: gallery('gitblock-allindo.png') },
     ],
-    articleContent: `有太多早期项目，多数也没有保留记录了。`,
+    articleContent: `早期项目已经很难完整整理了。它们有的是课程作业，有的是一时兴起的网页，有的是游戏原型、脚本、小工具，也有一些只留下截图或文件名的半成品。现在回头看，它们当然粗糙，甚至很多地方称不上“工程”，但正是这些不稳定的尝试，把我一步步推向了编程、游戏设计和系统构建。
+
+这些项目横跨 HTML、CSS、JavaScript、Python、C++、C#、Scratch 和 Unity。那时候更多是在摸索：一个按钮怎样响应，一段逻辑怎样跑起来，一个界面怎样不那么难看，一个游戏机制怎样从想法变成可操作的东西。
+
+我把它们归档在这里，不是为了证明过去有多厉害，而是为了保留一条轨迹：很多现在看似清晰的偏好，其实都来自早期那些混乱的小实验。`,
   },
 ];
 
