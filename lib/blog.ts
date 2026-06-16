@@ -276,6 +276,3 @@ export function getProtectedPostPublicMeta(meta: BlogPostMeta): BlogPostMeta {
   return sanitizeProtectedPostMeta(meta);
 }
 
-export async function getAllPosts(): Promise<BlogPostMeta[]> {
-  return getAllPostsForLocale(defaultLocale);
-}
