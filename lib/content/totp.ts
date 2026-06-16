@@ -1,4 +1,4 @@
-import { createHmac } from 'node:crypto';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { TotpGroupConfig } from './types';
 
 const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -61,8 +61,17 @@ export function verifyTotp(opts: {
   const secret = base32Decode(secretBase32);
   const step = BigInt(Math.floor(nowMs / 1000 / period));
 
+  // 用 timingSafeEqual 替代 === 字符串比较。6 位数字 + HTTPS 抖动让真实攻击
+  // 极难实现，但与 access-grant 保持一致更重要：项目内安全代码不该混用
+  // 短路/非短路比较。token 与 hotp 同长度（digits），无长度差，无需额外判断。
+  const expected = Buffer.from(token);
+
   for (let offset = -window; offset <= window; offset += 1) {
-    if (hotp(secret, step + BigInt(offset), digits) === token) {
+    const generated = Buffer.from(hotp(secret, step + BigInt(offset), digits));
+    if (
+      generated.length === expected.length &&
+      timingSafeEqual(generated, expected)
+    ) {
       return true;
     }
   }
