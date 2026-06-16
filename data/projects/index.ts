@@ -106,4 +106,5 @@ export const copyableTokens: CopyableToken[] = [
   { pattern: 'www.arsvine.com', label: '主站 WWW 地址' },
   { pattern: 'https://endfield.arsvine.com', label: '终末地规划器地址，暂未上线' },
   { pattern: '2162371684', label: '个人 QQ 号' },
+  { pattern: 'Details', label: '查看详情' },
 ];
