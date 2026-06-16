@@ -4,6 +4,7 @@ import styles from '../../styles/Home.module.scss';
 import VerticalShinyText from '../shared/VerticalShinyText';
 import ActivationLever from '../interactive/ActivationLever';
 import { useApp } from '../../contexts/AppContext';
+import { useResponsive } from '../../hooks/useMediaQuery';
 
 const sectionNames = ["PORTFOLIO", "EXPERIENCE", "BLOG", "LIFE", "CONTACT", "ABOUT"];
 
@@ -31,6 +32,7 @@ export default function NavigationColumns({
     leversVisible, mainVisible, powerLevel,
     displayedFateText, isFateTypingActive,
   } = useApp();
+  const { isMobile } = useResponsive();
 
   const rightPanelRef = useRef<HTMLDivElement>(null);
   const chargeLeverLabel = isTesseractActivated ? 'CHARGING' : 'START CHARGE';
@@ -42,7 +44,6 @@ export default function NavigationColumns({
 
   useEffect(() => {
     if (!mainVisible) return;
-    const isMobile = window.matchMedia('(max-width: 767px)').matches;
     if (!isMobile || !rightPanelRef.current) return;
 
     const panel = rightPanelRef.current;
@@ -69,7 +70,7 @@ export default function NavigationColumns({
       if (mobilePanel) gsap.set(mobilePanel, { clearProps: 'all' });
       columns.forEach(col => gsap.set(col, { clearProps: 'all' }));
     };
-  }, [mainVisible]);
+  }, [mainVisible, isMobile]);
 
   return (
     <main

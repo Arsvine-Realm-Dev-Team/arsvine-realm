@@ -28,4 +28,12 @@ export function useResponsive() {
   return { isMobile, isTablet, isDesktop };
 }
 
+/**
+ * prefers-reduced-motion: reduce 媒体查询。
+ * 集中管理避免 7 处散落的 `matchMedia('(prefers-reduced-motion: reduce)')`。
+ */
+export function useReducedMotion(): boolean {
+  return useMediaQuery('(prefers-reduced-motion: reduce)');
+}
+
 export default useMediaQuery;

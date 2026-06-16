@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { AnimationSequenceState, ColumnPhase } from '../types';
 import { useSafeTimeouts } from '../lib/use-safe-timeouts';
+import { useResponsive } from './useMediaQuery';
 
 export default function useAnimationSequence(): AnimationSequenceState {
   const [isLoading, setIsLoading] = useState(true);
@@ -18,12 +19,13 @@ export default function useAnimationSequence(): AnimationSequenceState {
   const [pulsingReverseIndices, setPulsingReverseIndices] = useState(null);
 
   const safeTimers = useSafeTimeouts();
+  const { isMobile: hookIsMobile } = useResponsive();
 
   const handleLoadingComplete = () => {
     setIsLoading(false);
     setMainVisible(true);
 
-    const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+    const isMobile = hookIsMobile;
 
     if (isMobile) {
       safeTimers.setTimeout(() => { setLeftPanelAnimated(true); }, 100);

@@ -1,6 +1,7 @@
 import React, { forwardRef, useRef, useImperativeHandle, useEffect, useMemo } from 'react';
 import styles from '../../../styles/HomeLoadingScreen.module.scss';
 import gsap from 'gsap';
+import { useResponsive } from '../../../hooks/useMediaQuery';
 
 export interface IndustrialHudRef {
   container: HTMLDivElement | null;
@@ -14,12 +15,12 @@ const IndustrialHud = forwardRef<IndustrialHudRef>((_, ref) => {
   const clockTextRef = useRef<HTMLDivElement>(null);
   const scaleLeftRef = useRef<HTMLDivElement>(null);
   const scaleRightRef = useRef<HTMLDivElement>(null);
+  const { isTablet } = useResponsive();
 
   useImperativeHandle(ref, () => ({
     container: bgHudLayerRef.current,
     hudElements: hudElementsRef.current,
     initAnimations: () => {
-      const isTablet = window.matchMedia('(max-width: 1023px)').matches;
       if (!isTablet) {
         if (scaleLeftRef.current) {
           gsap.to(scaleLeftRef.current, { y: '-50%', duration: 10, ease: 'none', repeat: -1 });

@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { useReducedMotion } from './useMediaQuery';
 
 type LoadingTaskStatus = 'ready' | 'fallback';
 
@@ -98,6 +99,7 @@ export const useLoadingSystem = (startLogging: boolean = true) => {
   const [progress, setProgress] = useState(0);
   const [logLines, setLogLines] = useState<Array<{ id: number; text: string }>>([]);
   const [showSplitLines, setShowSplitLines] = useState(false);
+  const reducedMotion = useReducedMotion();
 
   const startTimeRef = useRef<number | null>(null);
   const completedWeightRef = useRef(0);
@@ -228,11 +230,10 @@ export const useLoadingSystem = (startLogging: boolean = true) => {
 
   useEffect(() => {
     if (!showSplitLines) return;
-    const reducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const delay = reducedMotion ? 100 : 600;
     const id = setTimeout(() => setLoading(false), delay);
     return () => clearTimeout(id);
-  }, [showSplitLines]);
+  }, [showSplitLines, reducedMotion]);
 
   return {
     progress,

@@ -1,5 +1,6 @@
 import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import styles from '../../styles/Explain.module.scss';
+import { useResponsive } from '../../hooks/useMediaQuery';
 
 /**
  * 句级注解 / 语句解释。
@@ -27,8 +28,6 @@ interface ExplainProps {
   note: string;
 }
 
-const MOBILE_QUERY = '(max-width: 767px)';
-
 const useIsomorphicLayoutEffect =
   typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
@@ -38,6 +37,7 @@ export default function Explain({ children, note }: ExplainProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const triggerRef = useRef<HTMLSpanElement>(null);
   const tooltipId = useId();
+  const { isMobile } = useResponsive();
 
   // 仅在 open 时挂监听，避免无谓订阅；关闭时自动解绑。
   useEffect(() => {
@@ -62,7 +62,7 @@ export default function Explain({ children, note }: ExplainProps) {
   useIsomorphicLayoutEffect(() => {
     if (!open) return;
     if (typeof window === 'undefined') return;
-    if (!window.matchMedia(MOBILE_QUERY).matches) {
+    if (!isMobile) {
       queueMicrotask(() => setMobileTop(null));
       return;
     }
@@ -70,12 +70,12 @@ export default function Explain({ children, note }: ExplainProps) {
     if (!trigger) return;
     const rect = trigger.getBoundingClientRect();
     setMobileTop(Math.round(rect.bottom + 8));
-  }, [open]);
+  }, [open, isMobile]);
 
   useEffect(() => {
     if (!open) return;
     if (typeof window === 'undefined') return;
-    if (!window.matchMedia(MOBILE_QUERY).matches) return;
+    if (!isMobile) return;
     const close = () => setOpen(false);
     // capture: true 捕获祖先滚动容器（pageWrapper 等）的 scroll
     window.addEventListener('scroll', close, { capture: true, passive: true });
@@ -84,7 +84,7 @@ export default function Explain({ children, note }: ExplainProps) {
       window.removeEventListener('scroll', close, true);
       window.removeEventListener('resize', close);
     };
-  }, [open]);
+  }, [open, isMobile]);
 
   return (
     <span className={styles.explainWrapper} ref={ref}>

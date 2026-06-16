@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import styles from '../../styles/HomeLoadingScreen.module.scss';
 import gsap from 'gsap';
 import { useLoadingSystem } from '../../hooks/useLoadingSystem';
+import { useReducedMotion, useResponsive } from '../../hooks/useMediaQuery';
 import TerminalConsole, { TerminalConsoleRef } from './LoadingScreen/TerminalConsole';
 import IndustrialHud, { IndustrialHudRef } from './LoadingScreen/IndustrialHud';
 import LogoTitle, { LogoTitleRef } from './LoadingScreen/LogoTitle';
@@ -11,6 +12,8 @@ const HomeLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   const [visible, setVisible] = useState(true);
   const [loadingUiReady, setLoadingUiReady] = useState(false);
   const { progress, logLines, showSplitLines, loading } = useLoadingSystem(loadingUiReady);
+  const { isMobile } = useResponsive();
+  const reducedMotion = useReducedMotion();
   
   const onCompleteRef = useRef(onComplete);
   useEffect(() => {
@@ -32,10 +35,8 @@ const HomeLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   useEffect(() => {
     if (!visible) return;
 
-    const reducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const timelines: gsap.core.Timeline[] = [];
 
-    const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
     const logoTransform = isMobile
       ? { yPercent: -50 }
       : { xPercent: -50, yPercent: -50 };
@@ -95,7 +96,6 @@ const HomeLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
 
     if (onCompleteRef.current) onCompleteRef.current();
 
-    const reducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const wipeDur = reducedMotion ? 0.6 : 1.2;
     const subDur = reducedMotion ? 0.3 : 0.5;
 
@@ -124,7 +124,7 @@ const HomeLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
     if (extraElements.length > 0) exitTl.to(extraElements, { opacity: 0, duration: subDur * 0.7 }, 0);
 
     return () => { exitTl.kill(); };
-  }, [loading]);
+  }, [loading, reducedMotion]);
 
   return visible ? (
     <>

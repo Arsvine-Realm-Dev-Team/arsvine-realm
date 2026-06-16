@@ -1,6 +1,7 @@
 import { createContext, useContext, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useApp } from './AppContext';
+import { useResponsive } from '../hooks/useMediaQuery';
 
 interface TransitionContextValue {
   navigateTo: (url: string, options?: { scroll?: boolean }) => void;
@@ -63,12 +64,15 @@ const DIAG_COLLAPSE_OPTS: KeyframeAnimationOptions = {
   fill: 'forwards',
 };
 
-const checkMobile = () =>
-  typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+const checkMobile = () => {
+  // fallback for非 hook 上下文（handleLoadingComplete 等）—— 主流程已走 useResponsive。
+  return typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+};
 
 export function TransitionProvider({ children, pageWrapperRef }: TransitionProviderProps) {
   const router = useRouter();
   const { retractColumns, expandColumns } = useApp();
+  const { isMobile: hookIsMobile } = useResponsive();
   const isTransitioning = useRef(false);
   const queuedNav = useRef<{ url: string; options?: { scroll?: boolean } } | null>(null);
   const backOverrideRef = useRef<(() => void) | null>(null);
@@ -157,7 +161,7 @@ export function TransitionProvider({ children, pageWrapperRef }: TransitionProvi
       }).catch(() => {});
     };
 
-    const mobile = checkMobile();
+    const mobile = hookIsMobile || checkMobile();
 
     const wapiDiagExpand = () => {
       wrapper.style.opacity = '';
@@ -268,7 +272,7 @@ export function TransitionProvider({ children, pageWrapperRef }: TransitionProvi
         pushThen(url, wapiSlideIn, options);
       }).catch(() => {});
     }
-  }, [router, pageWrapperRef, retractColumns, expandColumns, runPendingCleanups]);
+  }, [router, pageWrapperRef, retractColumns, expandColumns, runPendingCleanups, hookIsMobile]);
 
   // Keep navigateToRef updated
   useEffect(() => {
