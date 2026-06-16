@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import styles from '../../styles/Lightbox.module.scss';
+import { useSafeTimeouts } from '../../lib/use-safe-timeouts';
 
 const SWIPE_THRESHOLD = 50;
 
@@ -13,6 +14,7 @@ const Lightbox = ({ image, onClose, onPrev, onNext, thumbnailRect, currentIndex,
   const prevSrcRef = useRef<string | null>(null);
   const isFirstRender = useRef(true);
   const [isCrossfading, setIsCrossfading] = useState(false);
+  const safeTimers = useSafeTimeouts();
 
   const handleInternalNext = useCallback(() => {
     if (onNext && !isAnimatingOut && !isCrossfading) {
@@ -21,12 +23,12 @@ const Lightbox = ({ image, onClose, onPrev, onNext, thumbnailRect, currentIndex,
       if (imgElement) {
         imgElement.style.transition = 'opacity 0.15s ease-out';
         imgElement.style.opacity = '0';
-        setTimeout(() => onNext(), 150);
+        safeTimers.setTimeout(() => onNext(), 150);
       } else {
         onNext();
       }
     }
-  }, [onNext, isAnimatingOut, isCrossfading]);
+  }, [onNext, isAnimatingOut, isCrossfading, safeTimers]);
 
   const handleInternalPrev = useCallback(() => {
     if (onPrev && !isAnimatingOut && !isCrossfading) {
@@ -35,12 +37,12 @@ const Lightbox = ({ image, onClose, onPrev, onNext, thumbnailRect, currentIndex,
       if (imgElement) {
         imgElement.style.transition = 'opacity 0.15s ease-out';
         imgElement.style.opacity = '0';
-        setTimeout(() => onPrev(), 150);
+        safeTimers.setTimeout(() => onPrev(), 150);
       } else {
         onPrev();
       }
     }
-  }, [onPrev, isAnimatingOut, isCrossfading]);
+  }, [onPrev, isAnimatingOut, isCrossfading, safeTimers]);
 
   useEffect(() => {
     const imgElement = imageRef.current;
@@ -183,7 +185,7 @@ const Lightbox = ({ image, onClose, onPrev, onNext, thumbnailRect, currentIndex,
       imgElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
       imgElement.style.opacity = '0';
 
-      setTimeout(() => {
+      safeTimers.setTimeout(() => {
         onClose();
         setIsAnimatingOut(false);
       }, 450);
@@ -193,7 +195,7 @@ const Lightbox = ({ image, onClose, onPrev, onNext, thumbnailRect, currentIndex,
       imgElement.style.transform = 'scale(0.5)';
       imgElement.style.opacity = '0';
 
-      setTimeout(() => {
+      safeTimers.setTimeout(() => {
         onClose();
         setIsAnimatingOut(false);
       }, 350);
@@ -201,7 +203,7 @@ const Lightbox = ({ image, onClose, onPrev, onNext, thumbnailRect, currentIndex,
       onClose();
       setIsAnimatingOut(false);
     }
-  }, [isAnimatingOut, getClosingRectForIndex, onClose]);
+  }, [isAnimatingOut, getClosingRectForIndex, onClose, safeTimers]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length !== 1 || isAnimatingOut) return;

@@ -192,7 +192,16 @@ export async function getTweetMonthGroups(): Promise<TweetMonthGroup[]> {
     return buildStressMonthGroups();
   }
 
-  const index = await getTweetIndex();
+  let index: TweetIndexItem[];
+  try {
+    index = await getTweetIndex();
+  } catch (error) {
+    // 上游（私有 tweets 仓库）不可达时：build 阶段若无 token / SSR 在 serverless
+    // 冷启动拉 GitHub 失败 / 限流 —— 都不应让整页 build 失败。降级为空月分组，
+    // tweets 页会渲染"暂无推文"。这与 blog index 的 404 / 未配置降级策略一致。
+    console.warn('[tweets/github] upstream unreachable, falling back to empty list:', error);
+    return [];
+  }
 
   const monthlyTweets = await Promise.all(
     index.map(async (item) => {

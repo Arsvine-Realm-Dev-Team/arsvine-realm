@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import type { FateTypingState, EnvParamsTypingState, EnvData } from '../types';
+import { useSafeTimeouts } from '../lib/use-safe-timeouts';
 
 /**
  * Fate text typing effect — 节奏：
@@ -238,33 +239,33 @@ export function useEnvParamsTypingEffect(textVisible: boolean): EnvParamsTypingS
   const [envDataVersion, setEnvDataVersion] = useState(0);
   const currentTempRef = useRef(55.0);
   const lastGeneratedParamsRef = useRef('');
+  const safeTimers = useSafeTimeouts();
+  // hook 顺序严格按"先所有 useState、useRef、useSafeTimeouts，再 useEffect"——后面 useEffect
+  // 不能放进 if/else 否则会破坏 React Hook 规则；safeTimers 只是 ref 集合，提前或延后都安全。
 
   useEffect(() => {
     if (textVisible) {
       const typingDelay = 35;
       const envDeleteDelay = 20;
 
-      let timeouts = [];
-
-      const typeString = (str, index, delay, callback) => {
+      const typeString = (str: string, index: number, delay: number, callback?: () => void) => {
         if (index < str.length) {
           setDisplayedEnvParams(prev => prev + str[index]);
-          const timeoutId = setTimeout(() => typeString(str, index + 1, delay, callback), delay);
-          timeouts.push(timeoutId);
+          safeTimers.setTimeout(() => typeString(str, index + 1, delay, callback), delay);
         } else if (callback) {
-          const timeoutId = setTimeout(callback, 0);
-          timeouts.push(timeoutId);
+          safeTimers.setTimeout(callback, 0);
         }
       };
 
-      const deleteEnvParamsString = (currentStr, delay, callback) => {
+      const deleteEnvParamsString = (currentStr: string, delay: number, callback?: () => void) => {
         if (currentStr.length > 0) {
           setDisplayedEnvParams(prev => prev.slice(0, -1));
-          const timeoutId = setTimeout(() => deleteEnvParamsString(currentStr.slice(0, -1), delay, callback), delay);
-          timeouts.push(timeoutId);
+          safeTimers.setTimeout(
+            () => deleteEnvParamsString(currentStr.slice(0, -1), delay, callback),
+            delay,
+          );
         } else if (callback) {
-          const timeoutId = setTimeout(callback, 0);
-          timeouts.push(timeoutId);
+          safeTimers.setTimeout(callback, 0);
         }
       };
 
@@ -304,10 +305,9 @@ export function useEnvParamsTypingEffect(textVisible: boolean): EnvParamsTypingS
         lastGeneratedParamsRef.current = newParams;
         typeString(newParams, 0, typingDelay, () => {
           const updateTime = 8000 + Math.floor(Math.random() * 7000);
-          const restartTimeout = setTimeout(() => {
+          safeTimers.setTimeout(() => {
             startTyping();
           }, updateTime);
-          timeouts.push(restartTimeout);
         });
       };
 
@@ -323,20 +323,18 @@ export function useEnvParamsTypingEffect(textVisible: boolean): EnvParamsTypingS
         }
       };
 
-      const initialDelay = setTimeout(() => {
+      safeTimers.setTimeout(() => {
         startTyping();
       }, 1000);
-      timeouts.push(initialDelay);
 
       return () => {
-        timeouts.forEach(clearTimeout);
         setDisplayedEnvParams('');
         setEnvData(null);
         setEnvDataVersion(0);
         lastGeneratedParamsRef.current = '';
       };
     }
-  }, [textVisible]);
+  }, [textVisible, safeTimers]);
 
   return { displayedEnvParams, isEnvParamsTyping, envData, envDataVersion };
 }
