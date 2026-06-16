@@ -1,3 +1,5 @@
+import { lerp, clamp } from '../../lib/raf-lerp';
+
 export const MAGNETIC_DISTANCE = 120;
 export const MAGNETIC_STRENGTH = 0.4;
 export const GENERIC_CURSOR_INTERACTIVE_SELECTOR = 'a, button, .btn, [role="button"]';
@@ -10,13 +12,7 @@ export interface CursorTargetBounds {
   h: number;
 }
 
-export function lerp(a: number, b: number, t: number) {
-  return a + (b - a) * t;
-}
-
-export function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
-}
+export { lerp, clamp };
 
 export function isCursorInteractive(el: HTMLElement | null) {
   if (!el || !el.isConnected) return false;
