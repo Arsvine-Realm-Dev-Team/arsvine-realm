@@ -29,6 +29,7 @@
 - **窗口级监听器**（mousemove / scroll / visibilitychange）必须 `passive: true` 且在 cleanup 中 `removeEventListener`。`AbortController` 也是合法选择。
 - **rAF 循环必须可取消**：把 `rafId = requestAnimationFrame(tick)` 的最新 id 存 ref，cleanup 调用 `cancelAnimationFrame(rafId)`。
 - **直接写 DOM 而非 setState 是允许的，且推荐**用于 60fps 视觉跟踪（光标、视差、HUD 数字打字）。这是 CustomCursor / GlobalHud / LeftPanel 头像视差的统一模式，避免 React 重渲染开销与 React Compiler 警告。
+- **写 `transform` 必须用 `setProperty(..., 'important')`**——`revealLogo` 关键帧 `forwards` fill 锁 `transform: scale(1)`，写 `style.transform =` 静默失效。LeftPanel 头像视差有现成范例；任何新增「DOM 直写 transform + 既有 keyframe」动画遵循同一模式。
 - **需要 SSR 安全的 hook**（`useMediaQuery`）必须 lazy-init `useState`：`useState(() => typeof window === 'undefined' ? false : ...)`，否则 hydration 会跑 mismatch。
 - **持久化** 走 `sessionStorage` / `localStorage`。常量 key 名集中在 `lib/document-bootstrap.ts`（如 `POWER_SYSTEM_STORAGE_KEY`）以便在 `_document.tsx` 的 inline bootstrap 脚本里也能读到。
 
