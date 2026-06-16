@@ -7,8 +7,8 @@ import { useSafeTimeouts } from '../../lib/use-safe-timeouts';
 const SWIPE_THRESHOLD = 50;
 
 const Lightbox = ({ image, onClose, onPrev, onNext, thumbnailRect, currentIndex, totalImages, getClosingRectForIndex }) => {
-  const imageRef = useRef(null);
-  const overlayRef = useRef(null);
+  const imageRef = useRef<HTMLImageElement | null>(null);
+  const overlayRef = useRef<HTMLDivElement | null>(null);
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const prevSrcRef = useRef<string | null>(null);
@@ -240,14 +240,14 @@ const Lightbox = ({ image, onClose, onPrev, onNext, thumbnailRect, currentIndex,
       document.body.style.width = '';
     };
 
-    const handleKeyDown = (event) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (isAnimatingOut) return;
       if (event.key === 'Escape') handleClose();
       if (event.key === 'ArrowLeft') handleInternalPrev();
       if (event.key === 'ArrowRight') handleInternalNext();
     };
 
-    const handleWheel = (event) => {
+    const handleWheel = (event: WheelEvent) => {
       if (isAnimatingOut) return;
       event.preventDefault();
       event.stopPropagation();

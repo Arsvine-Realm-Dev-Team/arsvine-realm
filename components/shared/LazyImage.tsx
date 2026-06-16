@@ -14,7 +14,7 @@ const LazyImage = ({
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(thumbnailSrc || null);
-  const imgRef = useRef(null);
+  const imgRef = useRef<HTMLImageElement | null>(null);
 
   // Generate processed image URL with quality parameters.
   // Customize this function for your image CDN (e.g. Cloudinary, Imgix, Tencent COS).

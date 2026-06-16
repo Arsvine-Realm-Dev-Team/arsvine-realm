@@ -83,7 +83,7 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
   const [isPlaying, setIsPlaying] = useState(initialPersistedPlayerState?.isPlaying ?? false); // 是否正在播放
   const [isHovering, setIsHovering] = useState(false); // 鼠标是否悬停在播放器上 (用于空闲自动收起)
   const [idleNudge, setIdleNudge] = useState(0); // 触屏等场景下手动重置空闲计时器
-  const audioRef = useRef(null); // Audio 元素引用
+  const audioRef = useRef<HTMLAudioElement | null>(null); // Audio 元素引用
   const safeTimers = useSafeTimeouts();
 
   const bumpIdleTimer = useCallback(() => {
@@ -100,7 +100,7 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
   }, [isMobile, safeTimers]);
   const [currentTime, setCurrentTime] = useState(initialPersistedPlayerState?.currentTime ?? 0); // 当前播放时间
   const [duration, setDuration] = useState(0); // 音频总时长
-  const progressBarRef = useRef(null); // 进度条填充元素引用
+  const progressBarRef = useRef<HTMLDivElement | null>(null); // 进度条填充元素引用
   const [currentTrackIndex, setCurrentTrackIndex] = useState(initialPersistedPlayerState?.currentTrackIndex ?? 0); // 当前播放歌曲在列表中的索引
   const [isPlaylistVisible, setIsPlaylistVisible] = useState(false); // 播放列表是否可见
 
@@ -113,9 +113,9 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
   const [dragOffsetX, setDragOffsetX] = useState(0); // 当前唱片的水平偏移量 (用于视觉效果)
   const [incomingTrackIndex, setIncomingTrackIndex] = useState(-1); // 即将通过拖动切换到的歌曲索引 (-1 表示无)
   const [incomingTrackOffsetX, setIncomingTrackOffsetX] = useState(0); // 即将进入唱片的水平偏移量
-  const vinylContainerRef = useRef(null); // 唱片机制容器引用
+  const vinylContainerRef = useRef<HTMLDivElement | null>(null); // 唱片机制容器引用
   const dragCurrentXRef = useRef(0); // 实时存储拖动过程中的 X 坐标 (用于 mouseup/leave 事件)
-  const handleRef = useRef(null); // 播放器抽屉把手元素引用 (用于播放状态指示动画)
+  const handleRef = useRef<HTMLDivElement | null>(null); // 播放器抽屉把手元素引用 (用于播放状态指示动画)
   const playbackIntentRef = useRef(initialPersistedPlayerState?.isPlaying ?? false); // 当前是否应在切歌后继续自动播放
   const resumeTimeRef = useRef<number | null>(initialPersistedPlayerState?.currentTime ?? null); // 刷新后待恢复的播放进度
 
@@ -196,7 +196,7 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
     audio.pause();
   }, []);
 
-  const togglePlay = (e) => {
+  const togglePlay = (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation(); // 防止事件冒泡 (例如点击唱臂区域时)
     syncPlayState(!isPlaying);
   };
@@ -214,7 +214,7 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
   }, []);
 
   // 从播放列表选择歌曲
-  const selectTrack = (index) => {
+  const selectTrack = (index: number) => {
     if (index !== currentTrackIndex) {
       playbackIntentRef.current = true;
       resumeTimeRef.current = 0;
@@ -244,7 +244,7 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
     }
   };
 
-  const handleMouseDown = (e) => {
+  const handleMouseDown = (e: React.MouseEvent<HTMLElement>) => {
     if (e.button !== 0) return;
     startDrag(e.clientX);
     e.preventDefault();

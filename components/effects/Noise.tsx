@@ -8,7 +8,7 @@ const Noise = ({
   patternRefreshInterval = 4, // 图案刷新间隔 (帧数，值越大刷新越慢)
   patternAlpha = 10,          // 噪点透明度 (0-255，值越小越透明)
 }) => {
-  const grainRef = useRef(null); // Canvas 元素引用
+  const grainRef = useRef<HTMLCanvasElement | null>(null); // Canvas 元素引用
 
   useEffect(() => {
     const canvas = grainRef.current;
