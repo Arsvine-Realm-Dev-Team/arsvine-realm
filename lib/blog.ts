@@ -40,7 +40,7 @@ export function isBlogContentLocale(value: unknown): value is BlogContentLocale 
   );
 }
 
-function normalizeAccess(access?: ContentPostAccess): ContentPostAccess {
+export function normalizeAccess(access?: ContentPostAccess): ContentPostAccess {
   if (access?.mode === 'totp') {
     return { mode: 'totp', group: access.group?.trim() || undefined };
   }

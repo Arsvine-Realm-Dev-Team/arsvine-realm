@@ -25,8 +25,10 @@ import {
   getPostSlugs,
   getAvailablePostContentLocales,
   getBlogPostEntry,
+  normalizeAccess,
   type BlogContentLocale,
 } from '../../../lib/blog';
+import type { ContentPostAccess } from '../../../lib/content/types';
 import { loadMessages } from '../../../lib/i18n-data';
 import type { BlogPostMeta, TranslationStatus } from '../../../types';
 import styles from '../../../styles/BlogDetailView.module.scss';
@@ -50,7 +52,7 @@ interface BlogPostPageProps {
   actualContentLocale: BlogContentLocale;
   availableContentLocales: BlogContentLocale[];
   contentVariants: Partial<Record<BlogContentLocale, BlogVariantPayload>>;
-  access: { mode: string; group?: string };
+  access: ContentPostAccess;
   isProtected: boolean;
 }
 
@@ -848,9 +850,3 @@ export const getStaticProps: GetStaticProps<BlogPostPageProps> = async ({ params
   }
 };
 
-function normalizeAccess(access?: { mode: string; group?: string }): { mode: string; group?: string } {
-  if (access?.mode === 'totp') {
-    return { mode: 'totp', group: access.group?.trim() || undefined };
-  }
-  return { mode: 'public' };
-}
