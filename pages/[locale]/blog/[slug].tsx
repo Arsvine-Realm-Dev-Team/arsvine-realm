@@ -277,6 +277,8 @@ function ProtectedPostGate({
         <meta property="og:description" content={meta.excerpt} />
         <meta property="og:type" content="article" />
         <meta property="og:url" content={`${getSiteUrl()}/${locale}/blog/${meta.slug}`} />
+        <meta name="twitter:title" content={meta.title} />
+        <meta name="twitter:description" content={meta.excerpt} />
         <HreflangLinks basePath={`/blog/${meta.slug}`} />
       </Head>
 
@@ -601,6 +603,8 @@ function BlogDetailContent({
         <meta property="og:description" content={meta.excerpt} />
         <meta property="og:type" content="article" />
         <meta property="og:url" content={`${getSiteUrl()}/${locale}/blog/${meta.slug}`} />
+        <meta name="twitter:title" content={meta.title} />
+        <meta name="twitter:description" content={meta.excerpt} />
         <meta property="article:published_time" content={meta.date} />
         {meta.tags.map((tag) => (
           <meta key={tag} property="article:tag" content={tag} />

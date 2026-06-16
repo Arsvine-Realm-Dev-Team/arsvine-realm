@@ -43,6 +43,8 @@ export default function TweetsPage({
         <meta property="og:description" content={t('description')} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={`${getSiteUrl()}/${locale}/tweets`} />
+        <meta name="twitter:title" content={t('title')} />
+        <meta name="twitter:description" content={t('description')} />
         <HreflangLinks basePath="/tweets" />
       </Head>
 

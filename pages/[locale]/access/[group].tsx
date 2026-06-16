@@ -99,6 +99,8 @@ export default function AccessPage({ locale, group, nextPath }: AccessPageProps)
         <meta property="og:description" content={t('description')} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={`${getSiteUrl()}/${locale}/access/${group}`} />
+        <meta name="twitter:title" content={t('title')} />
+        <meta name="twitter:description" content={t('description')} />
         <HreflangLinks basePath={`/access/${group}`} />
       </Head>
 
