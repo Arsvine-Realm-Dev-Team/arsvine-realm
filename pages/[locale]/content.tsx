@@ -121,6 +121,10 @@ export default function ContentPage({
   }, [setBackOverride]);
 
   useEffect(() => {
+    if (process.env.NODE_ENV !== 'production') {
+      return;
+    }
+
     const prefetched = new Set<string>();
     const publicBlogPosts = blogPosts.filter((post) => post.access.mode === 'public');
     const immediateUrls = [

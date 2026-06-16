@@ -65,6 +65,7 @@
 
 // 抽屉把手展开状态 (收起且播放时)
 .handle.expanded {
+  min-height: 168px;
   max-height: 50vh;
   padding: 8px 0 14px;
   justify-content: flex-start;
@@ -114,7 +115,7 @@
   justify-content: center; 
   align-items: center; 
   width: 100%;
-  min-height: 96px;
+  min-height: 150px;
   margin-top: 8px; // 与上方动画线条的间距
   padding: 0;
   overflow: hidden;
@@ -123,9 +124,9 @@
 // 抽屉把手展开时显示的歌曲标题文字
 .handleTrackTitle {
   display: block;
-  max-width: 92px;
+  max-width: 160px;
   color: var(--ark-text);
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   line-height: 1;
   letter-spacing: 0.08em;
   font-family: 'Times New Roman', Times, serif; // 特殊字体
@@ -364,6 +365,35 @@
   font-weight: bold;
   color: var(--ark-text);
   margin-bottom: 2px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.trackTitleMarquee {
+  position: relative;
+}
+
+.trackTitleMarqueeInner {
+  display: inline-flex;
+  align-items: center;
+  min-width: max-content;
+  will-change: transform;
+  animation: trackTitleMarquee var(--track-marquee-duration, 14s) linear infinite;
+
+  span {
+    display: inline-block;
+    padding-right: 48px;
+  }
+}
+
+@keyframes trackTitleMarquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(calc(-50% - 24px));
+  }
 }
 
 // .trackArtist { /* 艺术家信息的样式 (如果 JS 中启用) */ }
@@ -543,7 +573,10 @@
   }
 
   .handle.expanded {
+    min-height: 44px;
     max-height: 100px;
+    padding: 5px 0;
+    justify-content: center;
   }
 
   .handleTrackInfo {

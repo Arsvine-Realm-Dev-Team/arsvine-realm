@@ -1,0 +1,474 @@
+// Shared column structure, base hover states, and common HUD primitives.
+
+// ===== Column retract animation (mirror of loading stagger) =====
+// Loading order: children 7,8 (0s) → 2 (0.15s) → 3 (0.3s) → 4 (0.45s) → 5 (0.6s) → 6 (0.75s)
+// Retract mirror: child 6 first → 5 → 4 → 3 → 2 → 7,8 last
+.rightPanel.columnsRetracting {
+  pointer-events: none;
+
+  .verticalLine.animated {
+    animation-timing-function: ease-in !important;
+    animation-fill-mode: forwards !important;
+    animation-name: lineRetract !important;
+    animation-duration: 0.25s !important;
+
+    &:nth-child(2) {
+      animation-delay: 0.12s !important;
+    }
+
+    &:nth-child(3) {
+      animation-delay: 0.09s !important;
+    }
+
+    &:nth-child(4) {
+      animation-delay: 0.06s !important;
+    }
+
+    &:nth-child(5) {
+      animation-delay: 0.03s !important;
+    }
+
+    &:nth-child(6) {
+      animation-delay: 0s !important;
+    }
+
+    &:nth-child(7) {
+      animation-delay: 0.15s !important;
+    }
+
+    &:nth-child(8) {
+      animation-delay: 0.15s !important;
+    }
+  }
+
+  .column .verticalText .charItem > div {
+    animation: charRetract 0.2s ease-in forwards !important;
+  }
+}
+
+// ===== 负色模式覆写 (columns) =====
+.inverted {
+  .column:hover:not(.nonInteractive) {
+    &:not(.worksColumn) {
+      background-color: rgba(var(--ark-highlight-green-rgb), 0.08);
+
+      &::after,
+      &::before {
+        background: var(--ark-highlight-green);
+      }
+
+      .verticalText .charItem > div {
+        color: var(--ark-highlight-green);
+        text-shadow: 0 0 8px var(--ark-highlight-green);
+      }
+    }
+
+    .hudOverlay::after {
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 2px,
+        rgba(var(--ark-highlight-green-rgb), 0.2) 2px,
+        rgba(var(--ark-highlight-green-rgb), 0.2) 3px
+      );
+    }
+
+    .cornerHudTopLeft,
+    .cornerHudBottomRight {
+      border-color: var(--ark-highlight-green);
+      filter: drop-shadow(0 0 3px var(--ark-highlight-green));
+    }
+
+    .imageHudSquare {
+      background-color: var(--ark-highlight-green);
+      filter: drop-shadow(0 0 2px var(--ark-highlight-green));
+    }
+
+    .imageHudText {
+      color: var(--ark-highlight-green);
+      text-shadow: 0 0 3px rgba(var(--ark-highlight-green-rgb), 0.5);
+    }
+
+    .taskSquare,
+    .taskLine {
+      background-color: var(--ark-highlight-green);
+    }
+
+    .taskText {
+      color: var(--ark-highlight-green);
+    }
+
+    .branchSquare {
+      background-color: var(--ark-highlight-green);
+    }
+
+    .branchText {
+      color: var(--ark-highlight-green);
+    }
+  }
+}
+
+.column {
+  position: absolute;
+  height: 100%;
+  width: 16%;
+  cursor: none;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  z-index: 10;
+  pointer-events: auto;
+  background-color: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+
+  &:hover {
+    &:not(.nonInteractive) {
+      &:not(.worksColumn) {
+        background-color: rgba(178, 242, 187, 0.08);
+
+        &::after,
+        &::before {
+          content: '';
+          position: absolute;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 30%;
+          height: 2px;
+          background: var(--ark-highlight-green);
+        }
+
+        &::after {
+          bottom: 0;
+        }
+
+        &::before {
+          top: 0;
+        }
+
+        .verticalText .charItem > div {
+          transform: scale(1.15);
+          color: var(--ark-highlight-green);
+          text-shadow: 0 0 8px var(--ark-highlight-green);
+        }
+      }
+    }
+  }
+
+  &.nonInteractive {
+    pointer-events: none;
+    cursor: default;
+  }
+}
+
+// 桌面端列定位（从 inline style 迁移到 CSS）
+.column0 {
+  left: 0%;
+}
+
+.column1 {
+  left: 16%;
+}
+
+.column2 {
+  left: 32%;
+}
+
+.column3 {
+  left: 48%;
+}
+
+.column4 {
+  left: 64%;
+}
+
+.column5 {
+  left: 80%;
+}
+
+// 垂直线条
+.verticalLine {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 100%;
+  background-color: var(--ark-primary);
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: 0 0 3px rgba(255, 255, 255, 0.3), 0 0 1px rgba(255, 255, 255, 0.5);
+
+  &.animated {
+    animation-duration: 0.8s;
+    animation-fill-mode: forwards;
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+    animation-iteration-count: 1;
+
+    @for $i from 0 through 5 {
+      &:nth-child(#{$i + 1}) {
+        animation-delay: #{$i * 0.15}s;
+      }
+    }
+
+    &:nth-child(-n + 3) {
+      animation-name: lineAppearTopDown;
+      transform-origin: top;
+    }
+
+    &:nth-child(n + 4) {
+      animation-name: lineAppearBottomUp;
+      transform-origin: bottom;
+    }
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 3px;
+    height: 100%;
+    background-image: linear-gradient(
+      to bottom,
+      var(--ark-highlight-green) 0%,
+      rgba(178, 242, 187, 0.5) 15%,
+      transparent 40%
+    );
+    background-size: 100% 200%;
+    background-repeat: no-repeat;
+    background-position: 0% -100%;
+    opacity: 0;
+    transform: translateX(-50%);
+    transform-origin: center center;
+    filter: drop-shadow(0 0 5px var(--ark-highlight-green));
+  }
+
+  &.pulsing::after {
+    transform: translateX(-50%) scaleY(1);
+    animation: pulseMeteor 2s ease-out forwards;
+  }
+
+  &.pulsingReverse::after {
+    transform: translateX(-50%) scaleY(-1);
+    animation: pulseMeteorReverse 2s ease-out forwards;
+  }
+}
+
+// 垂直文字
+.verticalText {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(10px);
+  transition: transform 0.3s ease;
+  max-width: 100%;
+  overflow: hidden;
+
+  .charItem {
+    margin: 8px 0;
+    transform: skewX(15deg);
+    color: rgba(200, 200, 200, 0.5);
+    transition: all 0.1s ease;
+    text-shadow: 0 0 3px rgba(0, 150, 255, 0.2);
+    font-family: var(--font-display);
+    font-size: var(--fs-sub);
+    line-height: 1;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    width: 100%;
+    text-align: center;
+  }
+}
+
+// 垂直文字流式缩放（替代旧的断点）
+.verticalText .charItem {
+  font-size: clamp(0.85rem, 0.8vw + 0.3rem, 1.1rem);
+  margin: clamp(4px, 0.5vw, 8px) 0;
+}
+
+// HUD 覆盖层容器 (在每个列内)
+.hudOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    opacity: 0;
+    transition: opacity 0.2s ease-out;
+  }
+
+  &::after {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 2px,
+      rgba(178, 242, 187, 0.2) 2px,
+      rgba(178, 242, 187, 0.2) 3px
+    );
+    background-size: 100% 6px;
+    filter: blur(0.3px);
+    background-position: 0 0;
+    z-index: 1;
+    transition: opacity 0.2s ease-out, background 0.5s ease-in-out;
+  }
+
+  &::before {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+  }
+}
+
+// 共享的角标样式
+.cornerHudTopLeft,
+.cornerHudBottomRight {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-color: var(--ark-highlight-green);
+  border-style: solid;
+  border-width: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-out, border-color 0.5s ease-in-out, filter 0.5s ease-in-out;
+  filter: drop-shadow(0 0 3px var(--ark-highlight-green));
+  z-index: 3;
+}
+
+.cornerHudTopLeft {
+  top: 8px;
+  left: 8px;
+  border-top-width: 2px;
+  border-left-width: 2px;
+}
+
+.cornerHudBottomRight {
+  bottom: 8px;
+  right: 8px;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+}
+
+.imageHud {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 5;
+  opacity: 0;
+  transform: translateY(5px);
+  pointer-events: none;
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+  white-space: nowrap;
+}
+
+.imageHudSquare {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: var(--ark-highlight-green);
+  filter: drop-shadow(0 0 2px var(--ark-highlight-green));
+  transition: background-color 0.5s ease-in-out, filter 0.5s ease-in-out;
+}
+
+.imageHudText {
+  font-family: var(--font-mono);
+  font-size: var(--fs-base);
+  color: var(--ark-highlight-green);
+  letter-spacing: 1px;
+  font-weight: bold;
+  text-shadow: 0 0 3px rgba(178, 242, 187, 0.5);
+  transition: color 0.5s ease-in-out, text-shadow 0.5s ease-in-out;
+}
+
+// --- 通用列悬停效果 ---
+.column:hover:not(.nonInteractive) {
+  background-color: rgba(178, 242, 187, 0.08);
+
+  .verticalText .charItem > div {
+    transform: scale(1.15);
+    color: var(--ark-highlight-green);
+    text-shadow: 0 0 8px var(--ark-highlight-green);
+  }
+
+  .hudOverlay::after {
+    animation: scanHud 1.5s linear infinite, fadeInScanlines 0.2s ease-out forwards;
+  }
+
+  .cornerHudTopLeft,
+  .cornerHudBottomRight {
+    animation: fadeInArkCorner 0.4s ease-out 0.2s forwards;
+  }
+
+  .imageHud {
+    animation: fadeInImageHud 0.4s ease-out 0.3s forwards;
+  }
+}
+
+// --- 修改: radarRipple 基础样式 ---
+.radarRipple {
+  position: absolute;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  border: 1px solid rgba(178, 242, 187, 0.9);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.1);
+  transform-origin: center center;
+  z-index: 2;
+}
+
+// 默认隐藏非 worksColumn 的上下线
+.column:not(.worksColumn)::before,
+.column:not(.worksColumn)::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30%;
+  height: 2px;
+  background: var(--ark-highlight-green);
+  opacity: 0;
+  transition: opacity 0.2s ease-out;
+}
+
+.column:not(.worksColumn)::before {
+  top: 0;
+}
+
+.column:not(.worksColumn)::after {
+  bottom: 0;
+}
+
+.column:not(.worksColumn):hover:not(.nonInteractive) {
+  &::before,
+  &::after {
+    opacity: 1;
+  }
+}
+
+// --- Add base styles for the new random HUD elements ---
+.randomHud {
+  opacity: 0;
+}
+
+// 新增: WORK 列文字后的图标样式
+.columnIconAfter {
+  width: 20px;
+  height: 20px;
+  margin-top: 8px;
+  filter: grayscale(100%) brightness(1.5);
+  opacity: 0.5;
+}

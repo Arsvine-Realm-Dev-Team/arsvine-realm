@@ -28,6 +28,10 @@ export default function Home({ locale }: HomeProps) {
   } = useApp();
 
   useEffect(() => {
+    if (process.env.NODE_ENV !== 'production') {
+      return;
+    }
+
     router.prefetch(`/${locale}/content`);
   }, [router, locale]);
 

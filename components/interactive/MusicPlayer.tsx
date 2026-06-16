@@ -150,6 +150,8 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
 
   // 显示的歌曲标题和艺术家
   const displayTitle = currentTrack ? `${currentTrack.title} - ${currentTrack.artist}` : "";
+  const shouldMarqueeTitle = displayTitle.length > 28;
+  const marqueeDuration = `${Math.max(12, displayTitle.length * 0.38)}s`;
   const resolveCommonLabel = (key: 'expandPlaylist' | 'collapsePlaylist') => {
     const translated = tCommon(key);
     return translated === key ? commonLabelFallbacks[locale][key] : translated;
@@ -566,7 +568,19 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
       <div className={styles.playerContent}>
         <div className={styles.trackInfoContainer}> {/* 歌曲信息与播放列表切换按钮容器 */}
           <div className={styles.trackInfo}>
-            <div className={styles.trackTitle}>{displayTitle}</div>
+            <div
+              className={`${styles.trackTitle} ${shouldMarqueeTitle ? styles.trackTitleMarquee : ''}`}
+              style={shouldMarqueeTitle
+                ? { '--track-marquee-duration': marqueeDuration } as React.CSSProperties
+                : undefined}
+            >
+              {shouldMarqueeTitle ? (
+                <div className={styles.trackTitleMarqueeInner}>
+                  <span>{displayTitle}</span>
+                  <span aria-hidden="true">{displayTitle}</span>
+                </div>
+              ) : displayTitle}
+            </div>
           </div>
           <button
             className={`${styles.playlistToggleButton} ${!isFullPower ? styles.toggleButtonLowPower : ''}`}

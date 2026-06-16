@@ -60,18 +60,19 @@
   }
 }
 
-.contactSection {
+.contentSection.contactSection {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 30px;
   position: relative;
-  padding-bottom: 50px;
+  min-height: 100vh;
+  padding-bottom: 12px;
   background-image: url('/decor/contour-map.webp');
   background-size: cover;
-  background-position: center center;
+  background-position: center 70%;
   background-repeat: no-repeat;
-  margin-bottom: 0px;
+  margin-bottom: 0;
 }
 
 .logIconContainer {
