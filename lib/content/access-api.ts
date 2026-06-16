@@ -3,7 +3,11 @@ export type AccessApiErrorCode =
   | 'VALIDATION_FAILED'
   | 'GROUP_NOT_FOUND'
   | 'TOTP_INVALID'
-  | 'RATE_LIMITED';
+  | 'RATE_LIMITED'
+  | 'FORBIDDEN'
+  | 'NOT_FOUND'
+  | 'INTERNAL_ERROR'
+  | 'UPSTREAM_FAILED';
 
 export interface AccessApiError {
   code: AccessApiErrorCode;
