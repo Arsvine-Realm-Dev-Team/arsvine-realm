@@ -1,9 +1,12 @@
-import { forwardRef, useState, type Ref, type RefObject } from 'react';
+import { forwardRef, useEffect, useState, type Ref, type RefObject } from 'react';
 import { useTranslations } from 'next-intl';
 import styles from '../../styles/Home.module.scss';
+import { useSafeTimeouts } from '../../lib/use-safe-timeouts';
 import ProjectCard from '../cards/ProjectCard';
 import SkillTree from '../shared/SkillTree';
 import type { Project, SkillCategory } from '../../types';
+
+const WORK_TAB_TRANSITION_MS = 180;
 
 interface WorksSectionProps {
   worksSectionRef: RefObject<HTMLDivElement>;
@@ -34,7 +37,33 @@ const WorksSection = forwardRef(function WorksSection({
 }: WorksSectionProps, ref: Ref<HTMLDivElement>) {
   const [earlyExpanded, setEarlyExpanded] = useState(false);
   const [skillsExpanded, setSkillsExpanded] = useState(false);
+  const [displayedWorkTab, setDisplayedWorkTab] = useState(activeWorkTab);
+  const [tabTransitionStage, setTabTransitionStage] = useState<'idle' | 'fadeOut' | 'fadeIn'>('idle');
+  const safeTimers = useSafeTimeouts();
   const t = useTranslations('sections.works');
+  const activeProjects = displayedWorkTab === 'web' ? webProjects : gameProjects;
+  const activeTabRef = displayedWorkTab === 'web' ? webTabRef : gameTabRef;
+
+  useEffect(() => {
+    if (activeWorkTab === displayedWorkTab) {
+      return;
+    }
+
+    setTabTransitionStage('fadeOut');
+    let fadeInTimeoutId: number | undefined;
+    const fadeOutTimeoutId = safeTimers.setTimeout(() => {
+      setDisplayedWorkTab(activeWorkTab);
+      setTabTransitionStage('fadeIn');
+      fadeInTimeoutId = safeTimers.setTimeout(() => {
+        setTabTransitionStage('idle');
+      }, WORK_TAB_TRANSITION_MS);
+    }, WORK_TAB_TRANSITION_MS);
+
+    return () => {
+      safeTimers.clearTimeout(fadeOutTimeoutId);
+      safeTimers.clearTimeout(fadeInTimeoutId);
+    };
+  }, [activeWorkTab, displayedWorkTab, safeTimers]);
 
   return (
     <div id="works-section" ref={worksSectionRef} className={`${styles.contentSection} ${styles.worksSection}`}>
@@ -54,20 +83,18 @@ const WorksSection = forwardRef(function WorksSection({
         </button>
       </div>
       <div ref={workContentAreaRef} className={styles.workContentArea}>
-        <div ref={webTabRef} className={`${styles.workTabContent} ${activeWorkTab === 'web' ? styles.activeWorkContent : ''}`}>
+        <div
+          ref={activeTabRef}
+          className={`${styles.workTabContent} ${styles.activeWorkContent} ${
+            tabTransitionStage === 'fadeOut'
+              ? styles.workTabContentFadeOut
+              : tabTransitionStage === 'fadeIn'
+                ? styles.workTabContentFadeIn
+                : ''
+          }`}
+        >
           <div className={styles.projectGrid}>
-            {webProjects.map(project => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                onClick={handleWorkItemClick}
-              />
-            ))}
-          </div>
-        </div>
-        <div ref={gameTabRef} className={`${styles.workTabContent} ${activeWorkTab === 'game' ? styles.activeWorkContent : ''}`}>
-          <div className={styles.projectGrid}>
-            {gameProjects.map(project => (
+            {activeProjects.map(project => (
               <ProjectCard
                 key={project.id}
                 project={project}

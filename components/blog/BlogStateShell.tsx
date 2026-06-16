@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { startTransition, useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useApp } from '../../contexts/AppContext';
 import HreflangLinks from '../shared/HreflangLinks';
@@ -41,7 +41,11 @@ export default function BlogStateShell({
   const [entered, setEntered] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setEntered(true), 100);
+    const timer = setTimeout(() => {
+      startTransition(() => {
+        setEntered(true);
+      });
+    }, 100);
     return () => clearTimeout(timer);
   }, []);
 

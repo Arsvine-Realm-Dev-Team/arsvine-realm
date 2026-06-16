@@ -178,6 +178,7 @@ export function useEnvParamsTypingEffect(textVisible: boolean): EnvParamsTypingS
   const [envData, setEnvData] = useState<EnvData | null>(null);
   const [envDataVersion, setEnvDataVersion] = useState(0);
   const currentTempRef = useRef(55.0);
+  const displayedEnvParamsRef = useRef('');
   const lastGeneratedParamsRef = useRef('');
   const safeTimers = useSafeTimeouts();
   // hook 顺序严格按"先所有 useState、useRef、useSafeTimeouts，再 useEffect"——后面 useEffect
@@ -187,10 +188,19 @@ export function useEnvParamsTypingEffect(textVisible: boolean): EnvParamsTypingS
     if (textVisible) {
       const typingDelay = 35;
       const envDeleteDelay = 20;
+      const setDisplayedEnvParamsTracked = (updater: string | ((prev: string) => string)) => {
+        setDisplayedEnvParams((prev) => {
+          const next = typeof updater === 'function'
+            ? (updater as (prev: string) => string)(prev)
+            : updater;
+          displayedEnvParamsRef.current = next;
+          return next;
+        });
+      };
 
       const typeString = (str: string, index: number, delay: number, callback?: () => void) => {
         if (index < str.length) {
-          setDisplayedEnvParams(prev => prev + str[index]);
+          setDisplayedEnvParamsTracked(prev => prev + str[index]);
           safeTimers.setTimeout(() => typeString(str, index + 1, delay, callback), delay);
         } else if (callback) {
           safeTimers.setTimeout(callback, 0);
@@ -199,7 +209,7 @@ export function useEnvParamsTypingEffect(textVisible: boolean): EnvParamsTypingS
 
       const deleteEnvParamsString = (currentStr: string, delay: number, callback?: () => void) => {
         if (currentStr.length > 0) {
-          setDisplayedEnvParams(prev => prev.slice(0, -1));
+          setDisplayedEnvParamsTracked(prev => prev.slice(0, -1));
           safeTimers.setTimeout(
             () => deleteEnvParamsString(currentStr.slice(0, -1), delay, callback),
             delay,
@@ -252,7 +262,7 @@ export function useEnvParamsTypingEffect(textVisible: boolean): EnvParamsTypingS
       };
 
       const startTyping = () => {
-        const textToDelete = lastGeneratedParamsRef.current;
+        const textToDelete = displayedEnvParamsRef.current;
 
         if (textToDelete.length > 0) {
           deleteEnvParamsString(textToDelete, envDeleteDelay, () => {
@@ -268,6 +278,7 @@ export function useEnvParamsTypingEffect(textVisible: boolean): EnvParamsTypingS
       }, 1000);
 
       return () => {
+        displayedEnvParamsRef.current = '';
         setDisplayedEnvParams('');
         setEnvData(null);
         setEnvDataVersion(0);

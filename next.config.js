@@ -15,7 +15,7 @@ const nextConfig = {
   // Allow accessing the dev server via the local hosts alias (scripts/dev-host-setup).
   // COS bucket cdn.arsvine.com only accepts Referer matching *.arsvine.com, so we
   // browse dev via dev.arsvine.com:3000 instead of localhost during development.
-  allowedDevOrigins: ['dev.arsvine.com'],
+  allowedDevOrigins: ['dev.arsvine.com', '127.0.0.1', 'localhost'],
   images: {
     remotePatterns,
   },

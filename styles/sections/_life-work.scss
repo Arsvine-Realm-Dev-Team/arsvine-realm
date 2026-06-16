@@ -262,19 +262,38 @@
 }
 
 .workTabContent {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: relative;
   width: 100%;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.5s ease;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.18s ease, transform 0.18s ease;
 }
 
 .activeWorkContent {
   position: relative;
   opacity: 1;
   pointer-events: auto;
+}
+
+.workTabContentFadeOut {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.workTabContentFadeIn {
+  animation: workTabContentFadeIn 0.18s ease forwards;
+}
+
+@keyframes workTabContentFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .workGrid {

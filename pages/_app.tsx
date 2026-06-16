@@ -23,6 +23,7 @@ function MyApp({ Component, pageProps }) {
 
   // pageProps.messages 来自页面级 getStaticProps；缺失时给空对象兜底
   const messages = pageProps.messages ?? {};
+  const shouldRenderVercelTelemetry = process.env.NODE_ENV === 'production';
 
   return (
     <NextIntlClientProvider
@@ -47,8 +48,8 @@ function MyApp({ Component, pageProps }) {
             </div>
           </MainLayout>
         </TransitionProvider>
-        <Analytics />
-        <SpeedInsights />
+        {shouldRenderVercelTelemetry ? <Analytics /> : null}
+        {shouldRenderVercelTelemetry ? <SpeedInsights /> : null}
       </AppProvider>
     </NextIntlClientProvider>
   );

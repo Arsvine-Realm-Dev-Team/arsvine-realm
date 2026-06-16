@@ -47,6 +47,7 @@ const Tesseract = forwardRef<TesseractHandle, TesseractProps>(({
 }, ref) => {
   const groupRef = useRef<THREE.Group | null>(null);
   const coreRef = useRef<THREE.Mesh | null>(null);
+  const isConnectingRef = useRef(false);
   const [hovered, setHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const chargeCooldownRef = useRef(false);
@@ -211,7 +212,10 @@ const Tesseract = forwardRef<TesseractHandle, TesseractProps>(({
       groupRef.current.rotation.y += 0.007;
     }
 
-    onConnectChange(currentlyConnecting);
+    if (isConnectingRef.current !== currentlyConnecting) {
+      isConnectingRef.current = currentlyConnecting;
+      onConnectChange(currentlyConnecting);
+    }
   });
 
   return (

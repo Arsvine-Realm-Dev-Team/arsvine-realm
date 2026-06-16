@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { startTransition, useCallback, useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
 import { useTranslations } from 'next-intl';
 import { useApp } from '../../contexts/AppContext';
@@ -43,7 +43,11 @@ export default function ProtectedPostGate({
   const [entered, setEntered] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setEntered(true), 100);
+    const timer = setTimeout(() => {
+      startTransition(() => {
+        setEntered(true);
+      });
+    }, 100);
     return () => clearTimeout(timer);
   }, []);
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { startTransition, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -85,6 +85,17 @@ export default function BlogPostPage({
 }: BlogPostPageProps) {
   const router = useRouter();
   const tCommon = useTranslations('common');
+  const [hydrationReady, setHydrationReady] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      startTransition(() => {
+        setHydrationReady(true);
+      });
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   const {
     defaultContentLocale,
     requestedContentLocale,
@@ -110,6 +121,7 @@ export default function BlogPostPage({
     contentVariants,
     access,
     isProtected,
+    hydrationReady,
   });
 
   if (router.isFallback || viewState === 'authChecking') {
@@ -227,12 +239,27 @@ function BlogDetailContent({
   const [titleDone, setTitleDone] = useState(false);
 
   useEffect(() => {
-    if (!titleRef.current) { setTitleDone(true); return; }
+    if (!titleRef.current) {
+      startTransition(() => {
+        setTitleDone(true);
+      });
+      return;
+    }
     const timer = setTimeout(() => {
-      if (!titleRef.current) { setTitleDone(true); return; }
+      if (!titleRef.current) {
+        startTransition(() => {
+          setTitleDone(true);
+        });
+        return;
+      }
       const wrappers = titleRef.current.querySelectorAll(`.${styles.charWrapper}`);
       const inners = titleRef.current.querySelectorAll(`.${styles.charInner}`);
-      if (inners.length === 0) { setTitleDone(true); return; }
+      if (inners.length === 0) {
+        startTransition(() => {
+          setTitleDone(true);
+        });
+        return;
+      }
       wrappers.forEach((wrapper, i) => {
         const inner = inners[i];
         gsap.set(wrapper, { overflow: 'hidden', display: 'inline-block', position: 'relative', verticalAlign: 'top' });
@@ -243,7 +270,9 @@ function BlogDetailContent({
           duration: 0.6,
           delay: 0.4 + i * 0.06,
           ease: 'power3.out',
-          onComplete: i === inners.length - 1 ? () => setTitleDone(true) : undefined,
+          onComplete: i === inners.length - 1 ? () => startTransition(() => {
+            setTitleDone(true);
+          }) : undefined,
         });
       });
     }, 50);
@@ -251,7 +280,11 @@ function BlogDetailContent({
   }, [meta.title, selectedContentLocale]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setEntered(true), 100);
+    const timer = setTimeout(() => {
+      startTransition(() => {
+        setEntered(true);
+      });
+    }, 100);
     return () => clearTimeout(timer);
   }, []);
 
@@ -623,4 +656,3 @@ export const getStaticProps: GetStaticProps<BlogPostPageProps> = async ({ params
     return { notFound: true };
   }
 };
-

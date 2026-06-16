@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { startTransition, useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
@@ -111,7 +111,9 @@ export default function MainLayout({ children }) {
   useEffect(() => {
     if (animationsComplete && !webglReady) {
       const timeoutId = window.setTimeout(() => {
-        setWebglReady(true);
+        startTransition(() => {
+          setWebglReady(true);
+        });
       }, 0);
       return () => clearTimeout(timeoutId);
     }

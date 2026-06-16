@@ -3,50 +3,50 @@
 
 .detailContainer {
   width: 100%;
-  padding: 20px 0; 
-  position: relative; 
+  padding: 20px 0;
+  position: relative;
 }
 
 
 .detailTitle {
-  font-family: var(--font-hud); 
-  font-size: var(--fs-title); 
+  font-family: var(--font-hud);
+  font-size: var(--fs-title);
   font-weight: bold;
   color: var(--ark-primary);
-  margin-bottom: 30px; 
+  margin-bottom: 30px;
   margin-top: 0; // 调整，因为没有返回按钮
   text-align: left;
   letter-spacing: 1px;
   text-transform: uppercase;
   padding-bottom: 10px;
-  border-bottom: 1px solid var(--ark-border); 
+  border-bottom: 1px solid var(--ark-border);
 }
 
 .detailContent {
   display: flex;
-  flex-direction: column; 
+  flex-direction: column;
   gap: 30px;
 
-  @media (min-width: 768px) { 
+  @media (min-width: 768px) {
     flex-direction: row;
   }
 }
 
 .detailImageContainer {
-   flex: 1 1 35%; 
-   max-width: 450px; 
-   margin: 0 auto; 
+  flex: 1 1 35%;
+  max-width: 450px;
+  margin: 0 auto;
 
-   @media (min-width: 768px) {
-      margin: 0; 
-      max-width: none;
-   }
+  @media (min-width: 768px) {
+    margin: 0;
+    max-width: none;
+  }
 }
 
 .detailImage {
   width: 100%;
-  padding-top: 56.25%; 
-  background-color: rgba(var(--ark-primary-rgb), 0.1); 
+  padding-top: 56.25%;
+  background-color: rgba(var(--ark-primary-rgb), 0.1);
   background-size: cover;
   background-position: center;
   border: 1px solid var(--ark-border);
@@ -61,20 +61,18 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    to bottom,
-    transparent 50%,
-    rgba(0, 0, 0, 0.15) 50%
-  );
+  background: linear-gradient(to bottom,
+      transparent 50%,
+      rgba(0, 0, 0, 0.15) 50%);
   background-size: 100% 4px;
   opacity: 0.2;
   pointer-events: none;
-  animation: scanMove 10s linear infinite; 
+  animation: scanMove 10s linear infinite;
   transition: opacity 0.3s ease;
 }
 
 .detailText {
-  flex: 1 1 65%; 
+  flex: 1 1 65%;
 }
 
 .detailDescription {
@@ -88,7 +86,7 @@
 
 .detailTechContainer {
   display: flex;
-  align-items: baseline; 
+  align-items: baseline;
   gap: 10px;
   margin-top: 15px;
   margin-bottom: 25px; // 链接前的空间
@@ -101,20 +99,20 @@
   opacity: 0.7;
   text-transform: uppercase;
   letter-spacing: 1px;
-  flex-shrink: 0; 
+  flex-shrink: 0;
 }
 
 .detailTechTags {
-   display: flex;
-   flex-wrap: wrap;
-   gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .detailTechTag {
-  background-color: rgba(var(--ark-primary-rgb), 0.15); 
-  border: 1px solid rgba(var(--ark-primary-rgb), 0.3);
+  background-color: rgba(var(--ark-primary-rgb), 0.01);
+  border: 1px solid rgba(var(--ark-primary-rgb), 0.03);
   color: var(--ark-primary);
-  font-family: var(--font-mono); 
+  font-family: var(--font-mono);
   font-size: var(--fs-base);
   padding: 4px 10px;
   border-radius: 3px;
@@ -152,30 +150,31 @@
     background-color: rgba(var(--ark-primary-rgb), 0.1);
     border-color: var(--ark-border);
   }
-  
+
   .detailDescription {
-     color: var(--ark-text-secondary);
+    color: var(--ark-text-secondary);
   }
 
   .techLabel {
-     color: var(--ark-text-secondary);
+    color: var(--ark-text-secondary);
   }
 
   .detailTechTag {
-      background-color: rgba(var(--ark-primary-rgb), 0.15);
-      border-color: rgba(var(--ark-primary-rgb), 0.3);
-      color: var(--ark-primary);
+    background-color: rgba(var(--ark-primary-rgb), 0.01);
+    border-color: rgba(var(--ark-primary-rgb), 0.03);
+    color: var(--ark-primary);
   }
-  
+
   .detailLink {
-     color: var(--ark-primary);
-     border-color: var(--ark-primary);
-      &:hover {
-        background-color: var(--ark-primary);
-        color: #ffffff; // 反色模式下，粉色背景上的白色文本
-     }
+    color: var(--ark-primary);
+    border-color: var(--ark-primary);
+
+    &:hover {
+      background-color: var(--ark-primary);
+      color: #ffffff; // 反色模式下，粉色背景上的白色文本
+    }
   }
-} 
+}
 
 // --- ADD 相关图片部分样式 ---
 .relatedImagesSection {
@@ -205,10 +204,10 @@
   border: none;
   padding: 0;
   cursor: none;
-  border: 1px solid transparent; 
+  border: 1px solid transparent;
   transition: border-color 0.2s ease;
   overflow: hidden;
-  background-color: rgba(var(--ark-primary-rgb), 0.05); 
+  background-color: rgba(var(--ark-primary-rgb), 0.05);
   aspect-ratio: 16 / 9; // 保持缩略图的宽高比
 
   &:hover {
@@ -280,13 +279,13 @@
 }
 
 .inlineIconLink {
-  display: inline-flex; 
-  align-items: center; 
-  gap: 0.3em; 
-  color: var(--ark-primary); 
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  color: var(--ark-primary);
   text-decoration: none;
   position: relative; // 需要为 ripple 定位
-  vertical-align: middle; 
+  vertical-align: middle;
   padding: 0.1em 0.3em; // 添加链接本身的填充
   border-radius: 2px;
   transition: background-color 0.2s ease, color 0.2s ease; // 链接背景和颜色的过渡
@@ -295,50 +294,52 @@
   &:hover {
     text-decoration: none; // 悬停时删除下划线
     background-color: var(--ark-primary); // 应用纯色主背景
-    color: var(--ark-dark-blue); 
+    color: var(--ark-dark-blue);
 
     .inlineIcon {
-      color: var(--ark-dark-blue); 
+      color: var(--ark-dark-blue);
     }
+
     .inlineIconText {
-       background-color: transparent; 
-       color: inherit; 
+      background-color: transparent;
+      color: inherit;
     }
+
     .inlineIconSvgContainer {
-       background-color: transparent; 
+      background-color: transparent;
     }
   }
 }
 
 .inlineIcon {
-  width: 1.4em; 
-  height: 1.4em; 
-  fill: currentColor; 
-  vertical-align: middle; 
-  transition: color 0.2s ease; 
+  width: 1.4em;
+  height: 1.4em;
+  fill: currentColor;
+  vertical-align: middle;
+  transition: color 0.2s ease;
 }
 
 // --- ADD: SVG 图标容器 --- 
 .inlineIconSvgContainer {
-  display: inline-flex; 
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.2em; 
-  border-radius: 2px; 
-  background-color: transparent; 
+  padding: 0.2em;
+  border-radius: 2px;
+  background-color: transparent;
   transition: background-color 0.2s ease;
-  vertical-align: middle; 
-  margin-right: -0.2em; 
+  vertical-align: middle;
+  margin-right: -0.2em;
 }
 
 .inlineIconText {
-   // 保持文本样式与周围段落一致
-   transition: color 0.2s ease; // 仅过渡颜色
-   padding: 0.1em 0.3em; 
-   margin: -0.1em -0.3em; 
-   border-radius: 2px; 
-   background-color: transparent; 
-   color: inherit; // 继承链接颜色
+  // 保持文本样式与周围段落一致
+  transition: color 0.2s ease; // 仅过渡颜色
+  padding: 0.1em 0.3em;
+  margin: -0.1em -0.3em;
+  border-radius: 2px;
+  background-color: transparent;
+  color: inherit; // 继承链接颜色
 }
 
 // --- ADD 图标波纹效果样式 --- 
@@ -357,7 +358,7 @@
   height: 16px; // 更小的波纹效果
   border-radius: 50%;
   border: 2px solid rgba(178, 242, 187, 0);
-  box-shadow: 0 0 0 0px rgba(178, 242, 187, 0); 
+  box-shadow: 0 0 0 0px rgba(178, 242, 187, 0);
   opacity: 0;
   pointer-events: none;
   z-index: -1;
@@ -373,16 +374,17 @@
 // --- ADD 内联波纹动画关键帧 --- 
 @keyframes contactRippleExpandShadowInline {
   0% {
-    border: 2px solid rgba(178, 242, 187, 1); 
-    box-shadow: 0 0 6px 2px rgba(178, 242, 187, 0.9); 
-    opacity: 1; 
+    border: 2px solid rgba(178, 242, 187, 1);
+    box-shadow: 0 0 6px 2px rgba(178, 242, 187, 0.9);
+    opacity: 1;
     transform: translate(-50%, -50%) scale(0.1);
   }
+
   100% {
-    border: 1px solid rgba(178, 242, 187, 0); 
-    box-shadow: 0 0 0 15px rgba(178, 242, 187, 0); 
+    border: 1px solid rgba(178, 242, 187, 0);
+    box-shadow: 0 0 0 15px rgba(178, 242, 187, 0);
     opacity: 0;
-    transform: translate(-50%, -50%) scale(1.5); 
+    transform: translate(-50%, -50%) scale(1.5);
   }
 }
 
@@ -414,7 +416,7 @@
 
 // --- ADD 可复制文本样式 --- 
 .copyableTextContainer {
-  display: inline-block; 
+  display: inline-block;
   position: relative;
 }
 
@@ -423,48 +425,50 @@
   border: none;
   padding: 0;
   margin: 0;
-  font: inherit; 
-  color: var(--ark-primary); 
+  font: inherit;
+  color: var(--ark-primary);
   cursor: none;
-  transition: color 0.2s, background-color 0.2s; 
-  vertical-align: baseline; 
-  padding: 0.1em 0.3em; 
-  margin: -0.1em -0.3em; 
-  border-radius: 2px; 
-  font-weight: bold; 
+  transition: color 0.2s, background-color 0.2s;
+  vertical-align: baseline;
+  padding: 0.1em 0.3em;
+  margin: -0.1em -0.3em;
+  border-radius: 2px;
+  font-weight: bold;
 
   &:hover {
-    background-color: var(--ark-primary); 
-    color: var(--ark-dark-blue); 
+    background-color: var(--ark-primary);
+    color: var(--ark-dark-blue);
   }
 }
 
 .copyFeedback {
   position: absolute;
-  bottom: 105%; 
+  bottom: 105%;
   left: 50%;
-  color: var(--ark-primary); 
+  color: var(--ark-primary);
   padding: 3px 8px;
   font-size: var(--fs-caption);
   font-family: var(--font-hud);
   white-space: nowrap;
-  opacity: 0; 
-  z-index: 5; 
+  opacity: 0;
+  z-index: 5;
   pointer-events: none;
   animation: floatUpFadeOut 1.5s ease-out forwards;
 }
 
 @keyframes floatUpFadeOut {
   0% {
-    transform: translate(-50%, 5px); 
+    transform: translate(-50%, 5px);
     opacity: 0.8;
   }
-  80% { 
-    transform: translate(-50%, -15px); 
+
+  80% {
+    transform: translate(-50%, -15px);
     opacity: 0.8;
   }
+
   100% {
-    transform: translate(-50%, -20px); 
-    opacity: 0; 
+    transform: translate(-50%, -20px);
+    opacity: 0;
   }
 }

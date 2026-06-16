@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 /**
  * 集中管理组件生命周期内的 setTimeout / setInterval：
@@ -20,6 +20,7 @@ export function useSafeTimeouts() {
   const cancelledRef = useRef(false);
 
   useEffect(() => {
+    cancelledRef.current = false;
     const timeouts = timeoutsRef.current;
     const intervals = intervalsRef.current;
     return () => {
@@ -31,7 +32,7 @@ export function useSafeTimeouts() {
     };
   }, []);
 
-  function scheduleTimeout(fn: () => void, delay?: number) {
+  const scheduleTimeout = useCallback((fn: () => void, delay?: number) => {
     const id = window.setTimeout(() => {
       timeoutsRef.current.delete(id);
       if (cancelledRef.current) return;
@@ -39,9 +40,9 @@ export function useSafeTimeouts() {
     }, delay);
     timeoutsRef.current.add(id);
     return id;
-  }
+  }, []);
 
-  function scheduleInterval(fn: () => void, delay?: number) {
+  const scheduleInterval = useCallback((fn: () => void, delay?: number) => {
     const id = window.setInterval(() => {
       if (cancelledRef.current) {
         window.clearInterval(id);
@@ -52,24 +53,24 @@ export function useSafeTimeouts() {
     }, delay);
     intervalsRef.current.add(id);
     return id;
-  }
+  }, []);
 
-  function clearScheduledTimeout(id: number | undefined) {
+  const clearScheduledTimeout = useCallback((id: number | undefined) => {
     if (id === undefined) return;
     timeoutsRef.current.delete(id);
     window.clearTimeout(id);
-  }
+  }, []);
 
-  function clearScheduledInterval(id: number | undefined) {
+  const clearScheduledInterval = useCallback((id: number | undefined) => {
     if (id === undefined) return;
     intervalsRef.current.delete(id);
     window.clearInterval(id);
-  }
+  }, []);
 
-  return {
+  return useMemo(() => ({
     setTimeout: scheduleTimeout,
     setInterval: scheduleInterval,
     clearTimeout: clearScheduledTimeout,
     clearInterval: clearScheduledInterval,
-  };
+  }), [scheduleTimeout, scheduleInterval, clearScheduledTimeout, clearScheduledInterval]);
 }

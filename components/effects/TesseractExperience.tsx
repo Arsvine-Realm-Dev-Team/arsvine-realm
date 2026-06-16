@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useRef, useState } from 'react';
+import React, { Suspense, startTransition, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Line } from '@react-three/drei';
 import { Physics, usePlane } from '@react-three/cannon';
@@ -38,10 +38,10 @@ interface SceneLogicProps {
   isConnecting: boolean;
   tesseractRef: React.RefObject<TesseractHandle | null>;
   batteryPosition3D: BatteryPosition3D | null;
-  setConnectionLinePoints: React.Dispatch<React.SetStateAction<[THREE.Vector3, THREE.Vector3]>>;
-  canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  canvasRectRef: React.RefObject<DOMRect | null>;
   batteryElementRef: React.RefObject<HTMLDivElement | null>;
-  batteryIconElementRef: React.RefObject<HTMLDivElement | null>;
+  batteryIconRectRef: React.RefObject<DOMRect | null>;
+  linePositionAttrRef: React.RefObject<THREE.BufferAttribute | null>;
   isDragging: boolean;
 }
 
@@ -49,10 +49,10 @@ function SceneLogic({
   isConnecting,
   tesseractRef,
   batteryPosition3D,
-  setConnectionLinePoints,
-  canvasRef,
+  canvasRectRef,
   batteryElementRef,
-  batteryIconElementRef,
+  batteryIconRectRef,
+  linePositionAttrRef,
   isDragging,
 }: SceneLogicProps) {
   const currentOffsetRef = useRef({ x: 0, y: 0 });
@@ -67,15 +67,19 @@ function SceneLogic({
 
         tesseractWorldPos.clampLength(0, 50);
         batteryWorldPos.clampLength(0, 50);
-
-        setConnectionLinePoints([tesseractWorldPos, batteryWorldPos]);
+        const lineAttr = linePositionAttrRef.current;
+        if (lineAttr) {
+          lineAttr.setXYZ(0, tesseractWorldPos.x, tesseractWorldPos.y, tesseractWorldPos.z);
+          lineAttr.setXYZ(1, batteryWorldPos.x, batteryWorldPos.y, batteryWorldPos.z);
+          lineAttr.needsUpdate = true;
+        }
       }
     }
 
     const batteryEl = batteryElementRef.current;
-    const canvasElement = canvasRef.current;
-    const iconElement = batteryIconElementRef.current;
-    if (!batteryEl || !canvasElement || !iconElement) {
+    const canvasRect = canvasRectRef.current;
+    const iconRect = batteryIconRectRef.current;
+    if (!batteryEl || !canvasRect || !iconRect) {
       return;
     }
 
@@ -87,11 +91,10 @@ function SceneLogic({
       if (physicsMesh) {
         const worldPosition = new THREE.Vector3();
         physicsMesh.getWorldPosition(worldPosition);
-        const canvasRect = canvasElement.getBoundingClientRect();
         const tesseractScreen = projectWorldPositionToCanvas(worldPosition, camera, canvasRect);
         const offset = computeBatteryAttractionOffset({
           tesseractScreen,
-          iconRect: iconElement.getBoundingClientRect(),
+          iconRect,
           currentOffset: currentOffsetRef.current,
         });
         targetX = offset.x;
@@ -144,12 +147,11 @@ const TesseractExperience = ({
   const tesseractRef = useRef<TesseractHandle | null>(null);
   const [isTesseractDragging, setIsTesseractDragging] = useState(false);
   const glRef = useRef<THREE.WebGLRenderer | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const canvasRectRef = useRef<DOMRect | null>(null);
+  const batteryIconRectRef = useRef<DOMRect | null>(null);
   const batteryElementRef = useRef<HTMLDivElement | null>(null);
-  const [connectionLinePoints, setConnectionLinePoints] = useState<[THREE.Vector3, THREE.Vector3]>([
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(0, 0, 0),
-  ]);
+  const connectionLinePositions = useMemo(() => new Float32Array(6), []);
+  const linePositionAttrRef = useRef<THREE.BufferAttribute | null>(null);
 
   useEffect(() => {
     batteryElementRef.current = powerDisplayRef.current ?? null;
@@ -163,18 +165,27 @@ const TesseractExperience = ({
       const canvasElement = glRef.current?.domElement ?? null;
       const iconElement = batteryIconRef.current ?? null;
 
-      canvasRef.current = canvasElement;
-
       if (!canvasElement || !iconElement) {
-        setBatteryPosition3D(null);
+        canvasRectRef.current = null;
+        batteryIconRectRef.current = null;
+        startTransition(() => {
+          setBatteryPosition3D(null);
+        });
         return;
       }
 
+      const canvasRect = canvasElement.getBoundingClientRect();
+      const iconRect = iconElement.getBoundingClientRect();
+      canvasRectRef.current = canvasRect;
+      batteryIconRectRef.current = iconRect;
+
       const nextPosition = resolveBatteryAnchorPosition(
-        canvasElement.getBoundingClientRect(),
-        iconElement.getBoundingClientRect(),
+        canvasRect,
+        iconRect,
       );
-      setBatteryPosition3D(nextPosition);
+      startTransition(() => {
+        setBatteryPosition3D(nextPosition);
+      });
     };
 
     const initialTimeoutId = window.setTimeout(updatePosition, 100);
@@ -198,6 +209,8 @@ const TesseractExperience = ({
       if (batteryElement) {
         batteryElement.style.transform = '';
       }
+      canvasRectRef.current = null;
+      batteryIconRectRef.current = null;
       batteryElementRef.current = null;
     };
   }, [batteryIconRef, powerDisplayRef, scrollContainerRef]);
@@ -231,7 +244,6 @@ const TesseractExperience = ({
         gl={{ alpha: true }}
         onCreated={({ gl }) => {
           glRef.current = gl;
-          canvasRef.current = gl.domElement;
           gl.setClearColor(new THREE.Color(0, 0, 0), 0);
         }}
       >
@@ -265,12 +277,16 @@ const TesseractExperience = ({
           )}
 
           {isActivated && isConnecting && (
-            <Line
-              points={connectionLinePoints}
-              color="#888888"
-              lineWidth={2}
-              dashed={false}
-            />
+            <line>
+              <bufferGeometry>
+                <bufferAttribute
+                  ref={linePositionAttrRef}
+                  attach="attributes-position"
+                  args={[connectionLinePositions, 3]}
+                />
+              </bufferGeometry>
+              <lineBasicMaterial color="#888888" />
+            </line>
           )}
 
           {isActivated && (
@@ -278,10 +294,10 @@ const TesseractExperience = ({
               isConnecting={isConnecting}
               tesseractRef={tesseractRef}
               batteryPosition3D={batteryPosition3D}
-              setConnectionLinePoints={setConnectionLinePoints}
-              canvasRef={canvasRef}
+              canvasRectRef={canvasRectRef}
               batteryElementRef={batteryElementRef}
-              batteryIconElementRef={batteryIconRef}
+              batteryIconRectRef={batteryIconRectRef}
+              linePositionAttrRef={linePositionAttrRef}
               isDragging={isTesseractDragging}
             />
           )}

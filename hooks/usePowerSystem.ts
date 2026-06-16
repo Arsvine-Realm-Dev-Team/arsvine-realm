@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { startTransition, useState, useEffect, useRef, useCallback } from 'react';
 import type { PowerSystemState } from '../types';
 import { POWER_SYSTEM_STORAGE_KEY, THEME_MODE_STORAGE_KEY } from '../lib/document-bootstrap';
 
@@ -57,10 +57,11 @@ export default function usePowerSystem(mainVisible: boolean): PowerSystemState {
       return;
     }
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- persisted power state must be restored immediately after mount to avoid SSR/client hydration drift
-    setPowerLevel(persisted.powerLevel);
-    setIsTesseractActivated(persisted.isTesseractActivated);
-    setIsDischarging(persisted.isDischarging);
+    startTransition(() => {
+      setPowerLevel(persisted.powerLevel);
+      setIsTesseractActivated(persisted.isTesseractActivated);
+      setIsDischarging(persisted.isDischarging);
+    });
     isDischargingRef.current = persisted.isDischarging;
   }, []);
 

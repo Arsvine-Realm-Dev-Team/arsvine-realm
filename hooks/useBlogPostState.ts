@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
+import { startTransition, useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 
 import type { BlogPostMeta, TranslationStatus } from '../types';
 import { type Locale } from '../i18n/config';
@@ -34,6 +34,7 @@ interface UseBlogPostStateOptions {
   contentVariants: Partial<Record<BlogContentLocale, BlogVariantPayload>>;
   access: { mode: string; group?: string };
   isProtected: boolean;
+  hydrationReady: boolean;
 }
 
 interface PostVariantErrorResponse {
@@ -101,6 +102,7 @@ export default function useBlogPostState({
   contentVariants,
   access,
   isProtected,
+  hydrationReady,
 }: UseBlogPostStateOptions): UseBlogPostStateResult {
   const defaultContentLocale = useMemo(
     () => resolveDefaultContentLocale(locale, availableContentLocales, actualContentLocale),
@@ -159,18 +161,28 @@ export default function useBlogPostState({
   }, []);
 
   useEffect(() => {
+    if (!hydrationReady) {
+      return;
+    }
+
     inflightRequestRef.current?.abort();
     inflightRequestRef.current = null;
 
-    dispatch({
-      type: 'resetArticle',
-      requestedContentLocale: getRequestedContentLocaleFromPath(routerAsPath) ?? defaultContentLocale,
-      actualContentLocale,
-      requiresAuth,
+    startTransition(() => {
+      dispatch({
+        type: 'resetArticle',
+        requestedContentLocale: getRequestedContentLocaleFromPath(routerAsPath) ?? defaultContentLocale,
+        actualContentLocale,
+        requiresAuth,
+      });
     });
-  }, [actualContentLocale, defaultContentLocale, requiresAuth, routerAsPath]);
+  }, [actualContentLocale, defaultContentLocale, hydrationReady, requiresAuth, routerAsPath]);
 
   useEffect(() => {
+    if (!hydrationReady) {
+      return;
+    }
+
     if (typeof window === 'undefined') {
       return;
     }
@@ -181,9 +193,13 @@ export default function useBlogPostState({
     }
 
     writeContentLocaleQuery(state.requestedContentLocale);
-  }, [state.requestedContentLocale]);
+  }, [hydrationReady, state.requestedContentLocale]);
 
   useEffect(() => {
+    if (!hydrationReady) {
+      return;
+    }
+
     // 只在 reducer 处于 'checking' 时发起授权探测：每次 resetArticle 都会把 authState 拉回
     // 'checking'，这里随之重跑；否则在「同一 group 的受保护文章之间互跳」场景下，
     // [requiresAuth, access.group] 引用不变，effect 不会触发，会停在 authChecking 永远不出来。
@@ -192,7 +208,9 @@ export default function useBlogPostState({
     }
 
     if (!requiresAuth || !access.group) {
-      dispatch({ type: 'authResolved', granted: true });
+      startTransition(() => {
+        dispatch({ type: 'authResolved', granted: true });
+      });
       return;
     }
 
@@ -207,10 +225,14 @@ export default function useBlogPostState({
           return;
         }
         if (!response.ok || !data.ok) {
-          dispatch({ type: 'authResolved', granted: false });
+          startTransition(() => {
+            dispatch({ type: 'authResolved', granted: false });
+          });
           return;
         }
-        dispatch({ type: 'authResolved', granted: data.granted });
+        startTransition(() => {
+          dispatch({ type: 'authResolved', granted: data.granted });
+        });
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) {
@@ -218,15 +240,21 @@ export default function useBlogPostState({
         }
 
         console.error('[useBlogPostState] grant-check failed:', error);
-        dispatch({ type: 'authResolved', granted: false });
+        startTransition(() => {
+          dispatch({ type: 'authResolved', granted: false });
+        });
       });
 
     return () => {
       controller.abort();
     };
-  }, [access.group, requiresAuth, state.authState]);
+  }, [access.group, hydrationReady, requiresAuth, state.authState]);
 
   useEffect(() => {
+    if (!hydrationReady) {
+      return;
+    }
+
     if (state.authState !== 'granted') {
       inflightRequestRef.current?.abort();
       inflightRequestRef.current = null;
@@ -239,7 +267,9 @@ export default function useBlogPostState({
         state.displayedContentLocale !== state.requestedContentLocale
         || state.viewState !== 'ready'
       ) {
-        dispatch({ type: 'displayCachedLocale', locale: state.requestedContentLocale });
+        startTransition(() => {
+          dispatch({ type: 'displayCachedLocale', locale: state.requestedContentLocale });
+        });
       }
       return;
     }
@@ -258,10 +288,12 @@ export default function useBlogPostState({
     const controller = new AbortController();
     inflightRequestRef.current = controller;
 
-    dispatch({
-      type: 'startVariantRequest',
-      requestKey,
-      locale: state.requestedContentLocale,
+    startTransition(() => {
+      dispatch({
+        type: 'startVariantRequest',
+        requestKey,
+        locale: state.requestedContentLocale,
+      });
     });
 
     void fetch(buildPostVariantApiPath(state.requestedContentLocale, meta.slug), {
@@ -276,21 +308,25 @@ export default function useBlogPostState({
 
         if (!response.ok || !data.ok) {
           const errorResponse = (data && !data.ok ? data : null) as PostVariantErrorResponse | null;
-          dispatch({
-            type: 'variantFailed',
-            requestKey,
-            locale: state.requestedContentLocale,
-            code: errorResponse?.code ?? 'INTERNAL_ERROR',
-            message: getVariantLoadErrorMessage(errorResponse),
+          startTransition(() => {
+            dispatch({
+              type: 'variantFailed',
+              requestKey,
+              locale: state.requestedContentLocale,
+              code: errorResponse?.code ?? 'INTERNAL_ERROR',
+              message: getVariantLoadErrorMessage(errorResponse),
+            });
           });
           return;
         }
 
-        dispatch({
-          type: 'variantLoaded',
-          requestKey,
-          locale: state.requestedContentLocale,
-          payload: data,
+        startTransition(() => {
+          dispatch({
+            type: 'variantLoaded',
+            requestKey,
+            locale: state.requestedContentLocale,
+            payload: data,
+          });
         });
       })
       .catch((error: unknown) => {
@@ -299,12 +335,14 @@ export default function useBlogPostState({
         }
 
         console.error('[useBlogPostState] post-variant failed:', error);
-        dispatch({
-          type: 'variantFailed',
-          requestKey,
-          locale: state.requestedContentLocale,
-          code: 'INTERNAL_ERROR',
-          message: 'Unable to load article content.',
+        startTransition(() => {
+          dispatch({
+            type: 'variantFailed',
+            requestKey,
+            locale: state.requestedContentLocale,
+            code: 'INTERNAL_ERROR',
+            message: 'Unable to load article content.',
+          });
         });
       })
       .finally(() => {
@@ -318,6 +356,7 @@ export default function useBlogPostState({
     state.activeRequestKey,
     state.authState,
     state.displayedContentLocale,
+    hydrationReady,
     state.requestedContentLocale,
     state.viewState,
   ]);

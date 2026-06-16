@@ -1,3 +1,4 @@
+import React from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -115,5 +116,35 @@ describe('useSafeTimeouts', () => {
         result.current.clearInterval(undefined);
       });
     }).not.toThrow();
+  });
+
+  it('returns a stable api reference across rerenders', () => {
+    const { result, rerender } = renderHook(() => useSafeTimeouts());
+    const initialApi = result.current;
+
+    rerender();
+
+    expect(result.current).toBe(initialApi);
+    expect(result.current.setTimeout).toBe(initialApi.setTimeout);
+    expect(result.current.setInterval).toBe(initialApi.setInterval);
+    expect(result.current.clearTimeout).toBe(initialApi.clearTimeout);
+    expect(result.current.clearInterval).toBe(initialApi.clearInterval);
+  });
+
+  it('still fires callbacks when mounted under React.StrictMode', () => {
+    const StrictModeWrapper = ({ children }: { children: React.ReactNode }) => (
+      React.createElement(React.StrictMode, null, children)
+    );
+    const { result } = renderHook(() => useSafeTimeouts(), {
+      wrapper: StrictModeWrapper,
+    });
+    const fn = vi.fn();
+
+    act(() => {
+      result.current.setTimeout(fn, 100);
+      vi.advanceTimersByTime(100);
+    });
+
+    expect(fn).toHaveBeenCalledTimes(1);
   });
 });
