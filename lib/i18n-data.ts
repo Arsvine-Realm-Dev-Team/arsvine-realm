@@ -217,8 +217,14 @@ export function loadSkills(locale: Locale): SkillsModule {
   return loadLocalizedModule(skillModules, locale);
 }
 
-/** 根据 locale 选友链页底部「致谢服务」配置（来源于 site.ts） */
-export function loadServices(_locale: Locale): { heading: string; items: ServiceCredit[] } | undefined {
+/**
+ * 友链页底部"致谢服务"配置。
+ *
+ * 当前 site.ts 的 `pages.friends.services` 是单语数据；本 helper 不按 locale
+ * 切（避免引入未真正本地化的多语言字段误导调用方）。如未来要为不同 locale
+ * 提供本地化致谢文案，应先扩展 site.ts 增加多语言映射，再恢复 locale 形参。
+ */
+export function loadServices(): { heading: string; items: ServiceCredit[] } | undefined {
   return siteZH.siteConfig.pages.friends.services;
 }
 

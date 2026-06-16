@@ -97,7 +97,7 @@ export const getStaticProps: GetStaticProps<FriendsPageProps> = async ({ params 
   const locale = params!.locale as Locale;
   const messages = await loadMessages(locale);
   const friends = loadFriendLinks(locale).friendLinksData;
-  const services = loadServices(locale);
+  const services = loadServices();
 
   const friendsPage = (messages.pages as Record<string, { title?: string; description?: string }>)?.friends ?? {};
   return {
