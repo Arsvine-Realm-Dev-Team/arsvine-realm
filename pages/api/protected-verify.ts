@@ -13,7 +13,7 @@ function getClientKey(req: NextApiRequest) {
   return ip || 'unknown';
 }
 
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ProtectedVerifyResponse>,
 ) {
@@ -36,7 +36,7 @@ export default function handler(
     });
   }
 
-  const limiter = enforceRateLimit(`totp:${getClientKey(req)}:${group}`, 5, 60_000);
+  const limiter = await enforceRateLimit(`totp:${getClientKey(req)}:${group}`, 5, 60_000);
   if (!limiter.ok) {
     res.setHeader('Retry-After', String(Math.ceil(limiter.retryAfterMs / 1000)));
     return res.status(429).json({

@@ -5,6 +5,10 @@ const REPO = process.env.GITHUB_REPO?.trim();
 const BRANCH = process.env.GITHUB_BRANCH?.trim() || 'main';
 const READ_TOKEN = process.env.GITHUB_READ_TOKEN?.trim();
 
+// 上游请求超时 8s。Vercel SSR 默认 10s 上限，留 2s 余量给 MDX 编译/序列化等下游操作；
+// 不设超时 + GitHub 5xx/限流会直接拉满整页 → 504。
+const FETCH_TIMEOUT_MS = 8000;
+
 let blogIndexCache: { data: ContentBlogIndex; ts: number } | null = null;
 const BLOG_INDEX_TTL_MS = 60_000;
 
@@ -31,14 +35,23 @@ export async function fetchGitHubContent(path: string): Promise<string> {
     throw new Error('Content repository is not configured.');
   }
 
-  const response = await fetch(buildContentsUrl(path), {
-    headers: {
-      Accept: 'application/vnd.github.raw',
-      Authorization: `Bearer ${READ_TOKEN}`,
-      'X-GitHub-Api-Version': '2022-11-28',
-      'User-Agent': 'arsvine-realm-content-reader',
-    },
-  });
+  let response: Response;
+  try {
+    response = await fetch(buildContentsUrl(path), {
+      headers: {
+        Accept: 'application/vnd.github.raw',
+        Authorization: `Bearer ${READ_TOKEN}`,
+        'X-GitHub-Api-Version': '2022-11-28',
+        'User-Agent': 'arsvine-realm-content-reader',
+      },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+  } catch (error) {
+    if (error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError')) {
+      throw new Error(`Timed out fetching ${path} after ${FETCH_TIMEOUT_MS}ms`);
+    }
+    throw error;
+  }
 
   if (!response.ok) {
     throw new Error(`Failed to fetch ${path}: ${response.status} ${response.statusText}`);
@@ -76,6 +89,12 @@ export async function getContentBlogIndex(): Promise<ContentBlogIndex> {
         updatedAt: new Date(0).toISOString(),
         posts: [],
       };
+    }
+    // 上游超时 / 5xx / 限流时若有 stale cache 则回退到 stale 数据避免整页 504；
+    // 无 stale 则把错误抛出去，由调用方决定是 500 还是降级空数据。
+    if (blogIndexCache) {
+      console.warn('[content/github] blog-index fetch failed, serving stale cache:', message);
+      return blogIndexCache.data;
     }
     throw error;
   }

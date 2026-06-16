@@ -7,12 +7,15 @@ import { locales, defaultLocale, isLocale, type Locale } from './i18n/config';
 const GEO_COOKIE = 'GEO_COUNTRY';
 const GEO_COOKIE_MAX_AGE = 60 * 60 * 12; // 12h
 // 客户端可用 ?_geo=US 临时覆盖 country（dev 调试 / 用户验证开了 VPN 后效果），
-// ?_geo= 清空覆盖。覆盖也会写进 GEO_COUNTRY cookie，下次 SSR 立即反映。
+// ?_geo= 清空覆盖。覆盖也会写进 GEO_COUNTRY cookie，下次请求即生效。
 const GEO_OVERRIDE_PARAM = '_geo';
-// middleware → page handler 单跳同步：把 country 透传到下游请求 header，
-// _document.getInitialProps 优先读这个 header，确保"同一次刷新就能反映最新 geo"
-// （否则需要等浏览器写入 cookie + 第二次刷新，VPN 切换体验 = 12h 滞后）。
-const GEO_HEADER = 'x-geo-country';
+
+// 注：早先版本通过 x-geo-country 请求头把 country 注入下游 SSR，目的是让"同一次刷新"
+// 立即反映新 geo。但 SSG/ISR 页面在 Vercel CDN 共享缓存层会被多访客复用，
+// 第一访客的 country 会污染整个缓存窗口（B 站等 region UI 漂移）。
+// 现方案：proxy 只写 GEO_COUNTRY cookie；country 完全在 _document 内联脚本里
+// （buildDocumentBootstrapScript）从 cookie 读到 <html dataset> —— hydration / CSS
+// 应用前同步执行，单次刷新仍可立即生效，但不再污染 SSG 产物。
 
 // 这些 path 前缀完全跳过 proxy，避免 favicon/API/asset 被 i18n 路由污染
 const BYPASS_PREFIXES = [
@@ -114,13 +117,6 @@ function resolveCountry(request: NextRequest): { country: string; overrideAction
   return { country: cookie, overrideAction: 'none' };
 }
 
-/**
- * 同步 cookie + 透传 header 给下游 page handler。
- *
- * 关键不变量："同一次 HTTP 响应"就要让 SSR 拿到最新 country —— 因为 cookie
- * 是写在响应上的，下游 SSR 仍然读到旧 cookie。所以这里在转发请求时往
- * 请求 header 里塞 country，_document.getInitialProps 优先读它。
- */
 function attachGeo(
   response: NextResponse,
   request: NextRequest,
@@ -142,20 +138,6 @@ function attachGeo(
   return response;
 }
 
-/**
- * 用 next() 转发请求时，需要给请求 header 注入 country —— 浏览器后续刷新前
- * cookie 已生效，所以只在"放行"路径（pathname 已带 locale）需要做。
- */
-function nextWithGeoHeader(request: NextRequest, country: string): NextResponse {
-  const requestHeaders = new Headers(request.headers);
-  if (country) {
-    requestHeaders.set(GEO_HEADER, country);
-  } else {
-    requestHeaders.delete(GEO_HEADER);
-  }
-  return NextResponse.next({ request: { headers: requestHeaders } });
-}
-
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -170,10 +152,10 @@ export function proxy(request: NextRequest) {
   const firstSegment = segments[0];
 
   if (firstSegment && isLocale(firstSegment)) {
-    // 已是合法 locale 路径：直接放行，但要把 country 注入下游请求 header，
-    // 让本次 SSR 立即拿到（不依赖浏览器先吃下 Set-Cookie 再刷新）。
-    const passthrough = nextWithGeoHeader(request, country);
-    return attachGeo(passthrough, request, country, overrideAction);
+    // 已是合法 locale 路径：直接放行，response 上写 GEO_COUNTRY cookie，
+    // 客户端 bootstrap 脚本读 cookie 写 <html dataset>。SSR 不再注入 country，
+    // 避免 SSG/ISR 共享缓存被首访客 country 污染。
+    return attachGeo(NextResponse.next(), request, country, overrideAction);
   }
 
   // 裸路径：根据 cookie / Accept-Language 决定目标 locale 并 301

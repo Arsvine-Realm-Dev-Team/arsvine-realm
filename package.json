@@ -21,6 +21,7 @@
     "@react-three/cannon": "^6.6.0",
     "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.15.11",
+    "@upstash/redis": "^1.38.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/functions": "^3.7.0",
     "@vercel/speed-insights": "^2.0.0",

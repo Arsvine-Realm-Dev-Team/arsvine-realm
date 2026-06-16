@@ -21,6 +21,10 @@ function assertEnv() {
   if (!TOKEN) throw new Error('Missing TWEETS_GITHUB_TOKEN');
 }
 
+// 与 lib/content/github.ts 相同的 8s 超时策略；Vercel SSR 默认 10s 上限。
+// 推文聚合 SSR (/[locale]/tweets) 会并发拉多个 month 文件，每个都按这个超时独立计时。
+const FETCH_TIMEOUT_MS = 8000;
+
 async function fetchGitHubContent(path: string): Promise<string> {
   assertEnv();
 
@@ -28,14 +32,23 @@ async function fetchGitHubContent(path: string): Promise<string> {
     `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}` +
     `?ref=${encodeURIComponent(BRANCH)}`;
 
-  const res = await fetch(url, {
-    headers: {
-      Accept: 'application/vnd.github.raw',
-      Authorization: `Bearer ${TOKEN}`,
-      'X-GitHub-Api-Version': '2022-11-28',
-      'User-Agent': 'arsvine-realm',
-    },
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      headers: {
+        Accept: 'application/vnd.github.raw',
+        Authorization: `Bearer ${TOKEN}`,
+        'X-GitHub-Api-Version': '2022-11-28',
+        'User-Agent': 'arsvine-realm',
+      },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+  } catch (error) {
+    if (error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError')) {
+      throw new Error(`Timed out fetching ${path} after ${FETCH_TIMEOUT_MS}ms`);
+    }
+    throw error;
+  }
 
   if (!res.ok) {
     throw new Error(`Failed to fetch ${path}: ${res.status} ${res.statusText}`);
