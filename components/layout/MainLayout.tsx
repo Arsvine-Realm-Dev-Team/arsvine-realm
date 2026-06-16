@@ -13,6 +13,7 @@ import useLayoutRouteMode from '../../hooks/useLayoutRouteMode';
 import useMobileTesseractCharge from '../../hooks/useMobileTesseractCharge';
 import useRouteLoadingKind from '../../hooks/useRouteLoadingKind';
 import useStandalonePanelState from '../../hooks/useStandalonePanelState';
+import { setHudTypingOverlaySuppressed, setHudTypingRouteEnabled } from '../../lib/hud-typing-visibility';
 import { CONTENT_DETAIL_EXIT_DELAY_MS } from '../../lib/ui-timings';
 import { defaultLocale, isLocale, type Locale } from '../../i18n/config';
 
@@ -181,8 +182,21 @@ export default function MainLayout({ children }) {
     : tCommon('decoding');
 
   useEffect(() => {
+    setHudTypingRouteEnabled(!isStandalone);
+    if (isStandalone) {
+      setHudTypingOverlaySuppressed(false);
+    }
+  }, [isStandalone]);
+
+  useEffect(() => {
     window.dispatchEvent(new Event('arsvine:cursor-targets-dirty'));
   }, [router.asPath]);
+
+  useEffect(() => {
+    if (mainVisible) {
+      window.dispatchEvent(new Event('arsvine:cursor-targets-dirty'));
+    }
+  }, [mainVisible]);
 
   return (
     <LayoutAnchorsContext.Provider

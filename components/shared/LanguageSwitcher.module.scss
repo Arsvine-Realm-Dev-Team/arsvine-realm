@@ -7,6 +7,11 @@
   user-select: none;
   color: var(--ark-highlight-green, #c9d3a6);
   opacity: 0.85;
+  cursor: none;
+
+  @media (max-width: 1023px) {
+    cursor: auto;
+  }
 }
 
 .switcherGroup {
@@ -19,12 +24,16 @@
   border: none;
   padding: 2px 6px;
   margin: 0;
-  cursor: pointer;
+  cursor: none;
   color: inherit;
   font: inherit;
   letter-spacing: inherit;
   opacity: 0.55;
   transition: opacity 0.15s ease, color 0.15s ease;
+
+  @media (max-width: 1023px) {
+    cursor: auto;
+  }
 
   &:hover {
     opacity: 1;
@@ -40,4 +49,9 @@
 .switcherDivider {
   opacity: 0.35;
   padding: 0 1px;
+  cursor: none;
+
+  @media (max-width: 1023px) {
+    cursor: auto;
+  }
 }

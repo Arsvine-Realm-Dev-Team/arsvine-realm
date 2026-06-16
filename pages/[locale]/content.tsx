@@ -21,6 +21,7 @@ import HreflangLinks from '../../components/shared/HreflangLinks';
 
 import { getAllPostsForLocale } from '../../lib/blog';
 import { buildBlogPostHref } from '../../lib/blog-client';
+import { setHudTypingOverlaySuppressed } from '../../lib/hud-typing-visibility';
 import { siteConfig } from '../../data/site';
 import { loadProjects, loadLife, loadExperience, loadSkills, loadMessages } from '../../lib/i18n-data';
 import { locales, type Locale } from '../../i18n/config';
@@ -169,6 +170,14 @@ export default function ContentPage({
   useEffect(() => {
     window.dispatchEvent(new Event('arsvine:cursor-targets-dirty'));
   }, [detail.type, isClosing]);
+
+  useEffect(() => {
+    setHudTypingOverlaySuppressed(isDetailMounted && !isClosing);
+
+    return () => {
+      setHudTypingOverlaySuppressed(false);
+    };
+  }, [isClosing, isDetailMounted]);
 
   const openDetail = useCallback((mode: DetailMode) => {
     if (scrollContainerRef.current) {

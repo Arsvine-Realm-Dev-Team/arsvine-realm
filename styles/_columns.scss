@@ -648,61 +648,57 @@
 }
 
 // Column 5 (ABOUT - Focus + 5 Random HUDs)
-.column5:hover:not(.nonInteractive) {
-  overflow: visible; // 新增: 允许 HUD 溢出此列
+@media (hover: hover) and (pointer: fine) {
+  .column5:hover:not(.nonInteractive) {
+    overflow: visible;
 
-  .hudOverlay::before {
-    animation: aboutFocus 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  }
+    .hudOverlay::before {
+      animation: aboutFocus 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
 
-  // Main centered image HUD - no change to position, but adjust animation name if needed
-  >.imageHud {
-    // Use direct child selector '>' to target the main one
-    bottom: 50%;
-    left: 15px;
-    transform: translateY(50%);
-    animation: fadeInImageHudCentered 0.4s ease-out 0.3s forwards;
-  }
+    >.imageHud {
+      bottom: 50%;
+      left: 15px;
+      transform: translateY(50%);
+      animation: fadeInImageHudCentered 0.4s ease-out 0.3s forwards;
+    }
 
-  // Style and position the 5 random HUDs on hover
-  .randomHud {
-    // Apply the standard fade-in animation (slightly delayed)
-    animation: fadeInImageHud 0.4s ease-out forwards;
-  }
+    .randomHud {
+      animation: fadeInImageHud 0.4s ease-out forwards;
+    }
 
-  .randomHud1 {
-    top: 10%;
-    left: 25%;
-    animation-delay: 0.35s;
-  }
+    .randomHud1 {
+      top: 10%;
+      left: 25%;
+      animation-delay: 0.35s;
+    }
 
-  .randomHud2 {
-    top: 30%;
-    left: 80%;
-    animation-delay: 0.45s;
-    transform: scale(0.9);
-  }
+    .randomHud2 {
+      top: 30%;
+      left: 80%;
+      animation-delay: 0.45s;
+      transform: scale(0.9);
+    }
 
-  // Slightly smaller
-  .randomHud3 {
-    top: 75%;
-    left: 10%;
-    animation-delay: 0.4s;
-    transform: scale(1.1);
-  }
+    .randomHud3 {
+      top: 75%;
+      left: 10%;
+      animation-delay: 0.4s;
+      transform: scale(1.1);
+    }
 
-  // Slightly larger
-  .randomHud4 {
-    top: 85%;
-    left: 60%;
-    animation-delay: 0.5s;
-  }
+    .randomHud4 {
+      top: 85%;
+      left: 60%;
+      animation-delay: 0.5s;
+    }
 
-  .randomHud5 {
-    top: 5%;
-    left: 55%;
-    animation-delay: 0.55s;
-    transform: scale(0.95);
+    .randomHud5 {
+      top: 5%;
+      left: 55%;
+      animation-delay: 0.55s;
+      transform: scale(0.95);
+    }
   }
 }
 
@@ -1112,6 +1108,28 @@ transition: opacity 0.2s ease-out;
     transform: translateY(-50%);
   }
 
+  .column5 {
+    overflow: hidden;
+  }
+
+  .column5:hover > .imageHud {
+    right: 12px;
+    left: auto;
+    top: 50%;
+    bottom: auto;
+    transform: translateY(-50%);
+    animation: fadeInImageHud 0.4s ease-out 0.3s forwards;
+  }
+
+  .column5:hover .randomHud {
+    display: none;
+    animation: none;
+  }
+
+  .column5:hover .hudOverlay::before {
+    animation: none;
+  }
+
   // randomHud 在横向条中隐藏（空间不足）
   .randomHud {
     display: none;
@@ -1421,5 +1439,29 @@ transition: opacity 0.2s ease-out;
             rgba(224, 143, 255, 0.04) 4px);
       }
     }
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .column5 {
+    overflow: hidden;
+  }
+
+  .column5:hover > .imageHud {
+    right: 12px;
+    left: auto;
+    top: 50%;
+    bottom: auto;
+    transform: translateY(-50%);
+    animation: fadeInImageHud 0.4s ease-out 0.3s forwards;
+  }
+
+  .column5:hover .randomHud {
+    display: none;
+    animation: none;
+  }
+
+  .column5:hover .hudOverlay::before {
+    animation: none;
   }
 }

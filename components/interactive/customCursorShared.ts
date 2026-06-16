@@ -1,6 +1,7 @@
 export const MAGNETIC_DISTANCE = 120;
 export const MAGNETIC_STRENGTH = 0.4;
-export const CURSOR_INTERACTIVE_SELECTOR = 'a, button, .btn, [role="button"], [data-cursor-magnetic]';
+export const GENERIC_CURSOR_INTERACTIVE_SELECTOR = 'a, button, .btn, [role="button"]';
+export const CURSOR_INTERACTIVE_SELECTOR = `${GENERIC_CURSOR_INTERACTIVE_SELECTOR}, [data-cursor-magnetic]`;
 
 export interface CursorTargetBounds {
   x: number;
@@ -40,10 +41,15 @@ export function isCursorInteractive(el: HTMLElement | null) {
 }
 
 export function getInteractiveCursorTarget(target: EventTarget | null): HTMLElement | null {
-  if (!(target instanceof HTMLElement)) return null;
+  if (!(target instanceof Element)) return null;
 
-  const candidate = target.closest(CURSOR_INTERACTIVE_SELECTOR) as HTMLElement | null;
-  if (!candidate) return null;
+  const magneticCandidate = target.closest('[data-cursor-magnetic]');
+  if (magneticCandidate instanceof HTMLElement) {
+    return isCursorInteractive(magneticCandidate) ? magneticCandidate : null;
+  }
+
+  const candidate = target.closest(GENERIC_CURSOR_INTERACTIVE_SELECTOR);
+  if (!(candidate instanceof HTMLElement)) return null;
   if (candidate.closest('[data-cursor-no-magnetic]') && !candidate.hasAttribute('data-cursor-magnetic')) {
     return null;
   }
@@ -57,17 +63,22 @@ export function collectInteractiveElements() {
     if (htmlEl.closest('[data-cursor-no-magnetic]') && !htmlEl.hasAttribute('data-cursor-magnetic')) {
       return false;
     }
+    if (!htmlEl.hasAttribute('data-cursor-magnetic') && htmlEl.parentElement?.closest('[data-cursor-magnetic]')) {
+      return false;
+    }
     return true;
   }) as HTMLElement[];
 }
 
 export function getCursorTargetBounds(el: HTMLElement, padding = 0): CursorTargetBounds {
   const rect = el.getBoundingClientRect();
+  const customPadding = Number(el.getAttribute('data-cursor-padding'));
+  const resolvedPadding = Number.isFinite(customPadding) ? customPadding : padding;
   return {
     x: rect.left + rect.width / 2,
     y: rect.top + rect.height / 2,
-    w: rect.width + padding,
-    h: rect.height + padding,
+    w: rect.width + resolvedPadding,
+    h: rect.height + resolvedPadding,
   };
 }
 
@@ -86,10 +97,10 @@ export function findClosestInteractiveElement(
   elements.forEach((el) => {
     if (!isCursorInteractive(el)) return;
 
-    const rect = el.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    const distance = Math.hypot(pointerX - centerX, pointerY - centerY);
+    const bounds = getCursorTargetBounds(el);
+    const dx = Math.max(Math.abs(pointerX - bounds.x) - bounds.w / 2, 0);
+    const dy = Math.max(Math.abs(pointerY - bounds.y) - bounds.h / 2, 0);
+    const distance = Math.hypot(dx, dy);
 
     if (distance < MAGNETIC_DISTANCE && distance < closestDistance) {
       closestDistance = distance;

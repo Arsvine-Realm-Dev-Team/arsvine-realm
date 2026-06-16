@@ -46,6 +46,7 @@ const ActivationLever = ({ onActivate, isActive, iconType, isAnimated, cursorLab
       `}
       onClick={handleLeverClick}
       data-cursor-magnetic
+      data-cursor-padding="18"
       data-cursor-label={cursorLabel}
       aria-label={ariaLabel ?? cursorLabel}
     >

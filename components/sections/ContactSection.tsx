@@ -35,6 +35,9 @@ export default function ContactSection({
         type="button"
         className={`${styles.logItem} ${styles.radarContact1}`}
         onClick={handleCopyEmail}
+        data-cursor-magnetic
+        data-cursor-padding="18"
+        data-cursor-label={siteConfig.email}
       >
         <div className={styles.logIconContainer}>
           <svg className={styles.logIcon} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -47,7 +50,12 @@ export default function ContactSection({
       </button>
 
       {/* GitHub */}
-      <div className={`${styles.logItem} ${styles.radarContact2}`}>
+      <div
+        className={`${styles.logItem} ${styles.radarContact2}`}
+        data-cursor-magnetic
+        data-cursor-padding="18"
+        data-cursor-label="GitHub"
+      >
         <a href={siteConfig.social.github} target="_blank" rel="noopener noreferrer" className={styles.logLink}>
           <div className={styles.logIconContainer}>
             <svg className={styles.logIcon} viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
@@ -60,7 +68,13 @@ export default function ContactSection({
 
       {/* X (Twitter) — 被屏蔽地区（CN/IR/KP/TM）由 CSS 隐藏，见 globals.scss */}
       {siteConfig.social.x && (
-        <div className={`${styles.logItem} ${styles.radarContact3}`} data-hide-when-x-blocked>
+        <div
+          className={`${styles.logItem} ${styles.radarContact3}`}
+          data-hide-when-x-blocked
+          data-cursor-magnetic
+          data-cursor-padding="18"
+          data-cursor-label="X"
+        >
           <a href={siteConfig.social.x} target="_blank" rel="noopener noreferrer" className={styles.logLink} aria-label="X">
             <div className={styles.logIconContainer}>
               <svg className={styles.logIcon} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -74,7 +88,12 @@ export default function ContactSection({
 
       {/* Steam */}
       {siteConfig.social.steam && (
-        <div className={`${styles.logItem} ${styles.radarContact4}`}>
+        <div
+          className={`${styles.logItem} ${styles.radarContact4}`}
+          data-cursor-magnetic
+          data-cursor-padding="18"
+          data-cursor-label="Steam"
+        >
           <a href={siteConfig.social.steam} target="_blank" rel="noopener noreferrer" className={styles.logLink} aria-label="Steam">
             <div className={styles.logIconContainer}>
               <svg className={styles.logIcon} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -88,7 +107,13 @@ export default function ContactSection({
 
       {/* Bilibili — 海外访客（非 CN/HK/MO/TW）由 CSS 隐藏，见 globals.scss */}
       {siteConfig.social.bilibili && (
-        <div className={`${styles.logItem} ${styles.radarContact7}`} data-hide-when-bilibili-blocked>
+        <div
+          className={`${styles.logItem} ${styles.radarContact7}`}
+          data-hide-when-bilibili-blocked
+          data-cursor-magnetic
+          data-cursor-padding="18"
+          data-cursor-label="Bilibili"
+        >
           <a href={siteConfig.social.bilibili} target="_blank" rel="noopener noreferrer" className={styles.logLink} aria-label="Bilibili">
             <div className={styles.logIconContainer}>
               <svg className={styles.logIcon} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -101,7 +126,12 @@ export default function ContactSection({
       )}
 
       {/* RSS */}
-      <div className={`${styles.logItem} ${styles.radarContact5}`}>
+      <div
+        className={`${styles.logItem} ${styles.radarContact5}`}
+        data-cursor-magnetic
+        data-cursor-padding="18"
+        data-cursor-label={t('rss')}
+      >
         <a href={`/${locale}/rss.xml`} target="_blank" rel="noopener noreferrer" className={styles.logLink} aria-label={t('rss')}>
           <div className={styles.logIconContainer}>
             <svg className={styles.logIcon} viewBox="0 0 1088 1024" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ transform: 'scale(0.8)', strokeWidth: '0' }}>
@@ -118,6 +148,9 @@ export default function ContactSection({
         type="button"
         className={`${styles.logItem} ${styles.radarContact6}`}
         onClick={handleShowFriendLinks}
+        data-cursor-magnetic
+        data-cursor-padding="18"
+        data-cursor-label={t('links')}
       >
         <div className={styles.logIconContainer}>
           <svg className={styles.logIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">

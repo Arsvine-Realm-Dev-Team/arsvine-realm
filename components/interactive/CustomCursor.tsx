@@ -194,6 +194,9 @@ const CustomCursor = () => {
 
   const handleRegisteredLeave = useCallback((event: MouseEvent, currentTarget: HTMLElement) => {
     const nextTarget = getInteractiveCursorTarget(event.relatedTarget);
+    if (nextTarget && (nextTarget === hoverEl.current || nextTarget === currentTarget)) {
+      return;
+    }
     if (nextTarget && nextTarget !== hoverEl.current) return;
     if (hoverEl.current && hoverEl.current !== currentTarget) return;
     resetHoverState();

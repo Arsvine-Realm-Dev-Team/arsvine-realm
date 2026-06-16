@@ -1,9 +1,10 @@
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, useSyncExternalStore, type ReactNode } from 'react';
 import useAnimationSequence from '../hooks/useAnimationSequence';
 import usePowerSystem from '../hooks/usePowerSystem';
 import useRealtimeStats from '../hooks/useRealtimeStats';
 import useColumnHover from '../hooks/useColumnHover';
 import { useFateTypingEffect, useEnvParamsTypingEffect } from '../hooks/useTypingEffect';
+import { getHudTypingEnabledSnapshot, subscribeHudTypingVisibility } from '../lib/hud-typing-visibility';
 import type { AppContextValue } from '../types';
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -31,8 +32,18 @@ export function AppProvider({ children }: AppProviderProps) {
   const stats = useRealtimeStats();
   const { currentTime, runtime, currentVisitDuration } = stats;
 
-  const { displayedFateText, isFateTypingActive } = useFateTypingEffect(textVisible);
-  const { displayedEnvParams, isEnvParamsTyping, envData, envDataVersion } = useEnvParamsTypingEffect(textVisible);
+  const hudTypingEnabled = useSyncExternalStore(
+    subscribeHudTypingVisibility,
+    getHudTypingEnabledSnapshot,
+    getHudTypingEnabledSnapshot,
+  );
+
+  const { displayedFateText, isFateTypingActive } = useFateTypingEffect(
+    textVisible && hudTypingEnabled,
+  );
+  const { displayedEnvParams, isEnvParamsTyping, envData, envDataVersion } = useEnvParamsTypingEffect(
+    textVisible && hudTypingEnabled,
+  );
 
   const columnHover = useColumnHover();
   const {
