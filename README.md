@@ -22,7 +22,7 @@ ARSVINE REALM 是一个个人作品集与博客站点，基于后末日科幻 HU
 - **作品/生活详情**：`/<locale>/web/[id]`、`/<locale>/life/[slug]` 支持图文详情与可复制关键词。
 - **博客系统**：`/<locale>/blog/[slug]` 走 SSG + `fallback: 'blocking'` + ISR `revalidate: 300`。文章内容默认从私有 GitHub 仓库 (`GITHUB_OWNER/REPO`) 运行时加载；未配置环境变量时回落到仓库内 `content/blog/init/` 这篇兜底文章。
 - **受保护文章（TOTP）**：文章可标记 `access: { mode: 'totp', group }`。详情页 SSG **不下发任何正文**（`mdxSource: null` + 脱敏 meta），客户端通过 `/api/grant-check` 探测授权，未授权则呈现 6 位验证码门禁；POST `/api/protected-verify` 通过后由 `/api/post-variant` 单独取正文。
-- **推文（Tweets）**：`/<locale>/tweets` 从独立私有仓库分页拉取，按月归档。
+- **推文（Tweets）**：`/<locale>/tweets` 从共享内容仓库 `tweets/*` 分页拉取，按月归档。
 - **多语言文章**：每篇文章可单独提供 `zh-CN | zh-TW | en | ja | ru | fr` 多版本，缺失时回落到 `defaultLocale` 并在页面顶部显示翻译状态横幅。
 - **音乐播放器**：播放列表集中在 `data/music.ts`，音频托管在腾讯云 COS（`cdn.arsvine.com`）。
 - **一言代理**：`/api/hitokoto` 服务端代理 `v1.hitokoto.cn`，进程内 60s 缓存、5s 超时；首页打字机以「1 轮预设 + 1 句一言」交替循环。
@@ -265,13 +265,13 @@ TOTP_GROUPS_JSON={"friends-a":{"current":"JBSWY3DPEHPK3PXP","period":30,"digits"
 
 ### 推文（Tweets）
 
-`/<locale>/tweets` 从独立私有仓库分页拉取，按月归档。环境变量：
+`/<locale>/tweets` 从共享内容仓库的 `tweets/index.json` 与 `tweets/YYYY-MM.json` 分页拉取，环境变量与博客系统共用：
 
 ```env
-TWEETS_GITHUB_OWNER=ArsvineZhu
-TWEETS_GITHUB_REPO=arsvine-tweets
-TWEETS_GITHUB_BRANCH=main
-TWEETS_GITHUB_TOKEN=github_pat_xxx
+GITHUB_OWNER=ArsvineZhu
+GITHUB_REPO=arsvine-content
+GITHUB_BRANCH=main
+GITHUB_READ_TOKEN=github_pat_xxx
 ```
 
 可选的 dev 压测开关（用合成数据填满分页 UI，不读真实仓库）：
@@ -366,19 +366,13 @@ NEXT_PUBLIC_SITE_URL=https://example.com
 # 媒体 CDN（可选）
 # NEXT_PUBLIC_MEDIA_CDN=https://cdn.arsvine.com
 
-# 私有内容仓库（博客文章；服务器侧）
+# 私有内容仓库（博客文章 + 推文；服务器侧）
 # GITHUB_OWNER=ArsvineZhu
 # GITHUB_REPO=arsvine-content
 # GITHUB_BRANCH=main
 # GITHUB_READ_TOKEN=github_pat_xxx
 # ACCESS_GRANT_SECRET=<长随机串>
 # TOTP_GROUPS_JSON={"friends-a":{"current":"JBSWY3DPEHPK3PXP"}}
-
-# 私有推文仓库（服务器侧）
-# TWEETS_GITHUB_OWNER=ArsvineZhu
-# TWEETS_GITHUB_REPO=arsvine-tweets
-# TWEETS_GITHUB_BRANCH=main
-# TWEETS_GITHUB_TOKEN=github_pat_xxx
 
 # ISR 触发密钥
 # REVALIDATE_SECRET=<长随机串>
@@ -391,8 +385,7 @@ NEXT_PUBLIC_SITE_URL=https://example.com
 - `NEXT_PUBLIC_UMAMI_*`：可选 Umami 统计；仅当 `SRC` 存在时才注入 `<script>`。脚本注入位置在 `pages/_document.tsx`，固定附带 `defer` / `data-do-not-track="true"` / `data-exclude-search="true"`。
 - `NEXT_PUBLIC_UMAMI_DOMAINS`：可选，逗号分隔的域名白名单（不带协议）。设置后 Umami tracker 只在这些域名下上报，`localhost` 与 Vercel preview 自动跳过。
 - `NEXT_PUBLIC_MEDIA_CDN`：未设置时音乐播放器从 `/public/music/` 读取本地文件。
-- `GITHUB_*` / `ACCESS_GRANT_SECRET` / `TOTP_GROUPS_JSON`：博客系统三件套，缺任何一个就会回落到仓库内 init 文章。
-- `TWEETS_GITHUB_*`：推文系统；未配置时 `/tweets` 显示 unavailable 文案。
+- `GITHUB_*` / `ACCESS_GRANT_SECRET` / `TOTP_GROUPS_JSON`：共享内容仓库与受保护文章配置；未配置时 blog 回落到仓库内 init 文章，tweets 回落为空列表或 unavailable 文案。
 - `REVALIDATE_SECRET`：未设置时 `/api/revalidate*` 返回 401，等同关闭 ISR 触发。
 
 ### Umami 事件埋点（可选）

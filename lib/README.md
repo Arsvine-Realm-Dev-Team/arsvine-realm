@@ -28,7 +28,7 @@
 
 | 文件 | 职责 |
 |---|---|
-| `tweets/github.ts` | 私有推文仓库分页拉取 + dev 压测合成数据 |
+| `tweets/github.ts` | 共享内容仓库 `tweets/*` 分页拉取 + dev 压测合成数据 |
 | `tweets/types.ts` | 推文相关类型 |
 | `tweets/parse-explain.tsx` | 推文文本中的 `<Explain>` 标记解析（注意是 `.tsx`，会渲染 React） |
 | `tweets/resolve.ts` | 文本翻译/原文展开等的解析逻辑 |

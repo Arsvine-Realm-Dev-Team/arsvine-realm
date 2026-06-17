@@ -1,9 +1,6 @@
 import type { TweetIndexItem, TweetItem, TweetMonthGroup, TweetMonthGroupsPage } from './types';
+import { fetchGitHubJson } from '../content/github';
 
-const OWNER = process.env.TWEETS_GITHUB_OWNER;
-const REPO = process.env.TWEETS_GITHUB_REPO;
-const BRANCH = process.env.TWEETS_GITHUB_BRANCH ?? 'main';
-const TOKEN = process.env.TWEETS_GITHUB_TOKEN;
 const STRESS_TEST_ENABLED = process.env.TWEETS_STRESS_TEST === '1';
 const STRESS_TEST_YEARS = parsePositiveInt(process.env.TWEETS_STRESS_YEARS, 6);
 const STRESS_TEST_MONTHS_PER_YEAR = parsePositiveInt(process.env.TWEETS_STRESS_MONTHS_PER_YEAR, 12);
@@ -13,58 +10,6 @@ function parsePositiveInt(rawValue: string | undefined, fallback: number) {
   const parsed = Number(rawValue);
   if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
   return Math.floor(parsed);
-}
-
-function assertEnv() {
-  if (!OWNER) throw new Error('Missing TWEETS_GITHUB_OWNER');
-  if (!REPO) throw new Error('Missing TWEETS_GITHUB_REPO');
-  if (!TOKEN) throw new Error('Missing TWEETS_GITHUB_TOKEN');
-}
-
-// 与 lib/content/github.ts 相同的 8s 超时策略；Vercel SSR 默认 10s 上限。
-// 推文聚合 SSR (/[locale]/tweets) 会并发拉多个 month 文件，每个都按这个超时独立计时。
-const FETCH_TIMEOUT_MS = 8000;
-
-async function fetchGitHubContent(path: string): Promise<string> {
-  assertEnv();
-
-  const url =
-    `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}` +
-    `?ref=${encodeURIComponent(BRANCH)}`;
-
-  let res: Response;
-  try {
-    res = await fetch(url, {
-      headers: {
-        Accept: 'application/vnd.github.raw',
-        Authorization: `Bearer ${TOKEN}`,
-        'X-GitHub-Api-Version': '2022-11-28',
-        'User-Agent': 'arsvine-realm',
-      },
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    });
-  } catch (error) {
-    if (error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError')) {
-      throw new Error(`Timed out fetching ${path} after ${FETCH_TIMEOUT_MS}ms`);
-    }
-    throw error;
-  }
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch ${path}: ${res.status} ${res.statusText}`);
-  }
-
-  return res.text();
-}
-
-async function fetchGitHubJson<T>(path: string): Promise<T> {
-  const text = await fetchGitHubContent(path);
-
-  try {
-    return JSON.parse(text) as T;
-  } catch {
-    throw new Error(`Invalid JSON in ${path}`);
-  }
 }
 
 function sortTweets(tweets: TweetItem[]): TweetItem[] {
@@ -196,7 +141,7 @@ export async function getTweetMonthGroups(): Promise<TweetMonthGroup[]> {
   try {
     index = await getTweetIndex();
   } catch (error) {
-    // 上游（私有 tweets 仓库）不可达时：build 阶段若无 token / SSR 在 serverless
+    // 上游（共享 content 仓库）不可达时：build 阶段若无 token / SSR 在 serverless
     // 冷启动拉 GitHub 失败 / 限流 —— 都不应让整页 build 失败。降级为空月分组，
     // tweets 页会渲染"暂无推文"。这与 blog index 的 404 / 未配置降级策略一致。
     console.warn('[tweets/github] upstream unreachable, falling back to empty list:', error);

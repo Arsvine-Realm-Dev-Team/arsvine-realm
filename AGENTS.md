@@ -92,7 +92,7 @@ When `GITHUB_OWNER`/`GITHUB_REPO`/`GITHUB_READ_TOKEN` are set, blog posts are lo
 
 - `blog/index.json` — `ContentBlogIndex` with per-post `slug`, `date`, `tags`, `pinned`, `availableLocales`, per-locale `variants`, and an `access: { mode: 'public' | 'totp', group? }` block. 60s in-process cache (`BLOG_INDEX_TTL_MS`).
 - `blog/<slug>/<locale>.mdx` — actual post bodies, fetched on demand by `getPostBySlugAndContentLocale()`.
-- Tweets in a separate repo, read via `lib/tweets/github.ts`.
+- Tweets are read from the shared content repo `tweets/*` via `lib/tweets/github.ts`.
 
 `content/blog/init/` (in-tree) is the only post that ships in the repo as a fallback for fresh clones without the content repo configured.
 
@@ -122,7 +122,7 @@ State machine lives in `lib/blog-post-state.ts` (`blogPostStateReducer` + `BlogP
 | `grant-check.ts` | `GET ?group=...` → `{ granted: boolean }`. Reads access-grant cookie via `hasValidAccessGrant`. |
 | `post-variant.ts` | `GET ?slug=&locale=` → MDX-serialized variant. 403 for protected posts without grant. |
 | `protected-verify.ts` | `POST { group, token, next }` → verifies TOTP via `lib/content/totp.ts` (with previous-secret window for rotation). On success sets the access-grant cookie via `lib/content/access-grant.ts` (HMAC-signed payload, 1h TTL, HttpOnly). Rate-limited per `(client-ip, group)` by `lib/content/rate-limit.ts`. |
-| `tweet-months.ts` | Paginated tweet months from the private tweets repo. Sets `Cache-Control: private, no-store`. |
+| `tweet-months.ts` | Paginated tweet months from the shared content repo `tweets/*`. Sets `Cache-Control: private, no-store`. |
 | `revalidate.ts` / `revalidate-content.ts` | On-demand ISR triggers, gated by `REVALIDATE_SECRET`. |
 
 ### 3D Effects (Desktop Only)
@@ -206,9 +206,9 @@ See `.env.example` for the full set. Key variables:
 - `GITHUB_OWNER` / `GITHUB_REPO` / `GITHUB_BRANCH` / `GITHUB_READ_TOKEN` — private content repo for blog posts. Server-side only, no `NEXT_PUBLIC_` prefix.
 - `ACCESS_GRANT_SECRET` — HMAC secret for the access-grant cookie. Long random string.
 - `TOTP_GROUPS_JSON` — JSON map `{ "<group>": { current, previous?, period?, digits?, window? } }`. Consumed by `lib/content/totp.ts`.
-- `TWEETS_GITHUB_*` — separate private repo for tweets.
+- `GITHUB_*` — shared private content repo for blog variants and tweets.
 - `REVALIDATE_SECRET` — gates `/api/revalidate*` ISR triggers.
-- `TWEETS_STRESS_TEST=1` (+ `TWEETS_STRESS_YEARS` / `_MONTHS_PER_YEAR` / `_TWEETS_PER_MONTH`) — dev-only synthetic tweet generation; bypasses the real repo.
+- `TWEETS_STRESS_TEST=1` (+ `TWEETS_STRESS_YEARS` / `_MONTHS_PER_YEAR` / `_TWEETS_PER_MONTH`) — dev-only synthetic tweet generation; bypasses the shared content repo.
 
 ### Development Scripts
 
