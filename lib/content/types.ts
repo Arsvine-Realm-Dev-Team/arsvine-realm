@@ -8,6 +8,7 @@ export interface ContentPostAccess {
 export interface ContentBlogIndexVariant {
   title: string;
   excerpt: string;
+  tags?: string[];
   originLocale?: string;
   readingMinutes?: number;
 }

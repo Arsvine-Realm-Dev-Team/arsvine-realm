@@ -30,6 +30,7 @@ const LATIN_WORD_RE = /[A-Za-zÀ-ɏЀ-ӿ]+(?:[''-][A-Za-zÀ-ɏЀ-ӿ]+)*/g;
 type BlogIndexVariant = {
   title: string;
   excerpt: string;
+  tags?: string[];
   originLocale?: string;
   readingMinutes?: number;
 };
@@ -73,6 +74,17 @@ function getPreferredVariantLocale(entry: ContentBlogIndexItem, locale: Locale):
   return fallback;
 }
 
+function resolveVariantTags(
+  entry: ContentBlogIndexItem,
+  actualContentLocale: BlogContentLocale,
+): string[] {
+  const variant = getVariantForLocale(entry, actualContentLocale);
+  if (Array.isArray(variant?.tags) && variant.tags.length > 0) {
+    return variant.tags;
+  }
+  return entry.tags;
+}
+
 function getVariantMeta(
   entry: ContentBlogIndexItem,
   actualContentLocale: BlogContentLocale,
@@ -89,7 +101,7 @@ function getVariantMeta(
     date: entry.date,
     updated: entry.updatedAt,
     excerpt,
-    tags: entry.tags,
+    tags: resolveVariantTags(entry, actualContentLocale),
     readingMinutes: estimateReadingMinutes(content, actualContentLocale),
     pinned: entry.pinned,
     ...(originLocale ? { originLocale } : {}),
@@ -112,7 +124,7 @@ function getVariantMetaFromIndex(
     date: entry.date,
     updated: entry.updatedAt,
     excerpt,
-    tags: entry.tags,
+    tags: resolveVariantTags(entry, actualContentLocale),
     readingMinutes: variant?.readingMinutes ?? 1,
     pinned: entry.pinned,
     ...(originLocale ? { originLocale } : {}),

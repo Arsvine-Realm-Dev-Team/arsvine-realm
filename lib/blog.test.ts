@@ -1,6 +1,19 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { normalizeAccess } from './blog';
+const { getContentBlogIndexMock } = vi.hoisted(() => ({
+  getContentBlogIndexMock: vi.fn(),
+}));
+
+vi.mock('./content/github', () => ({
+  fetchGitHubContent: vi.fn(),
+  getContentBlogIndex: getContentBlogIndexMock,
+}));
+
+import { getAllPostsForLocale, normalizeAccess } from './blog';
+
+beforeEach(() => {
+  getContentBlogIndexMock.mockReset();
+});
 
 describe('normalizeAccess', () => {
   it('returns the public shape when mode is not totp', () => {
@@ -25,5 +38,76 @@ describe('normalizeAccess', () => {
   it('omits group key when none provided', () => {
     const result = normalizeAccess({ mode: 'totp' });
     expect(result).toEqual({ mode: 'totp', group: undefined });
+  });
+});
+
+describe('getAllPostsForLocale', () => {
+  it('prefers variant-localized tags for the requested locale', async () => {
+    getContentBlogIndexMock.mockResolvedValue({
+      version: 1,
+      updatedAt: '2026-06-17T00:00:00.000Z',
+      posts: [
+        {
+          slug: 'stop',
+          date: '2026-05-12',
+          updatedAt: '2026-05-12T00:00:00.000Z',
+          tags: ['随笔'],
+          pinned: false,
+          access: { mode: 'public' },
+          availableLocales: ['zh-CN', 'en'],
+          variants: {
+            'zh-CN': {
+              title: '停',
+              excerpt: '中文摘要',
+              tags: ['随笔'],
+            },
+            en: {
+              title: 'Where We Stop',
+              excerpt: 'English excerpt',
+              tags: ['Essay'],
+              originLocale: 'zh-CN',
+            },
+          },
+        },
+      ],
+    });
+
+    const posts = await getAllPostsForLocale('en');
+
+    expect(posts).toHaveLength(1);
+    expect(posts[0]?.tags).toEqual(['Essay']);
+  });
+
+  it('falls back to top-level tags when variant tags are missing', async () => {
+    getContentBlogIndexMock.mockResolvedValue({
+      version: 1,
+      updatedAt: '2026-06-17T00:00:00.000Z',
+      posts: [
+        {
+          slug: 'legacy-post',
+          date: '2026-05-12',
+          updatedAt: '2026-05-12T00:00:00.000Z',
+          tags: ['随笔'],
+          pinned: false,
+          access: { mode: 'public' },
+          availableLocales: ['zh-CN', 'en'],
+          variants: {
+            'zh-CN': {
+              title: '旧文章',
+              excerpt: '中文摘要',
+            },
+            en: {
+              title: 'Legacy Post',
+              excerpt: 'English excerpt',
+            },
+          },
+        },
+      ],
+    });
+
+    const posts = await getAllPostsForLocale('en');
+
+    expect(posts).toHaveLength(1);
+    expect(posts[0]?.tags).toEqual(['随笔']);
   });
 });
