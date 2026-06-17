@@ -59,8 +59,8 @@ export const friendLinksData: FriendLink[] = [
     avatar: 'https://avatars.githubusercontent.com/u/81954768?v=4',
   },
   {
-    id: 'MoeBob0800',
-    name: 'MoeBob0800',
+    id: 'NekoMoe',
+    name: 'NekoMoe',
     description: 'Scratcher • CSSer | Animation, manga, and light novel fan',
     url: 'https://nekomoe.tw/',
     avatar: 'https://avatars.githubusercontent.com/u/82699919?v=4',

@@ -41,8 +41,9 @@ export function AppProvider({ children }: AppProviderProps) {
   const { displayedFateText, isFateTypingActive } = useFateTypingEffect(
     textVisible && hudTypingEnabled,
   );
-  const { displayedEnvParams, isEnvParamsTyping, envData, envDataVersion } = useEnvParamsTypingEffect(
-    textVisible && hudTypingEnabled,
+  const { displayedEnvParams, isEnvParamsTyping, envData, envDataVersion, envArtifactStage } = useEnvParamsTypingEffect(
+    textVisible,
+    hudTypingEnabled,
   );
 
   const columnHover = useColumnHover();
@@ -64,7 +65,7 @@ export function AppProvider({ children }: AppProviderProps) {
     currentTime, runtime, currentVisitDuration,
     // Typing
     displayedFateText, isFateTypingActive,
-    displayedEnvParams, isEnvParamsTyping, envData, envDataVersion,
+    displayedEnvParams, isEnvParamsTyping, envData, envDataVersion, envArtifactStage,
     // Column hover
     randomHudTexts, branchText1, branchText2, branchText3, branchText4,
     handleColumnMouseEnter, handleColumnMouseLeave,
@@ -77,7 +78,7 @@ export function AppProvider({ children }: AppProviderProps) {
     chargeBattery, handleDischargeLeverPull, handleActivateTesseract, deactivateTesseract,
     currentTime, runtime, currentVisitDuration,
     displayedFateText, isFateTypingActive,
-    displayedEnvParams, isEnvParamsTyping, envData, envDataVersion,
+    displayedEnvParams, isEnvParamsTyping, envData, envDataVersion, envArtifactStage,
     randomHudTexts, branchText1, branchText2, branchText3, branchText4,
     handleColumnMouseEnter, handleColumnMouseLeave,
   ]);

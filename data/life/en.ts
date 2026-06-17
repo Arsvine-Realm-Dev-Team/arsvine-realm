@@ -143,6 +143,7 @@ export const alsoPlayGames: string[] = [
   'Stardew Valley',
   'Slay the Spire 2',
   'Mindustry',
+  'And More',
 ];
 
 // ============================================================

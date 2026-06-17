@@ -71,6 +71,7 @@ export default function LeftPanel({
   displayedFateText,
   isEnvParamsTyping,
   displayedEnvParams,
+  envArtifactStage = 0,
   isInverted,
   drawerOpen = false,
   isStandalone = false,
@@ -267,7 +268,10 @@ export default function LeftPanel({
         <span className={styles.fateText}>{displayedFateText}</span>
         <div className={styles.fateLine}></div>
       </div>
-      <div className={`${styles.envParamsContainer} ${isEnvParamsTyping ? styles.typingActive : ''} ${leftPanelAnimated ? styles.animated : ''}`}>
+      <div
+        className={`${styles.envParamsContainer} ${isEnvParamsTyping ? styles.typingActive : ''} ${leftPanelAnimated ? styles.animated : ''}`}
+        data-env-stage={envArtifactStage}
+      >
         <pre className={styles.envParamsText}>
           {displayedEnvParams}
         </pre>

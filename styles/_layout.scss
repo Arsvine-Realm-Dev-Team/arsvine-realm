@@ -431,6 +431,9 @@
   bottom: 19%; // 修改: 适配新的边框底部位置
   left: 16.5%; // 保持 17%，靠近内部左边框
   z-index: 10; // 在 leftPanel 内部的堆叠顺序
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
   text-align: left;
   max-width: 220px;
   opacity: 0; // 初始隐藏
@@ -438,6 +441,10 @@
   // 与 fateTextContainer 使用相同的延迟
   transition-delay: 2.0s;
   pointer-events: none; // 避免遮挡
+  min-height: calc(1.4em * 6);
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 82%, rgba(0, 0, 0, 0.18) 100%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 82%, rgba(0, 0, 0, 0.18) 100%);
 
   // 移除 .animated 选择器，改为依赖 leftPanel.animated
   .leftPanel.animated & {
@@ -454,6 +461,11 @@
     right: -0.2em;
     bottom: -0.1em;
   }
+
+  &[data-env-stage='3'],
+  &[data-env-stage='4'] {
+    opacity: 0.64;
+  }
 }
 
 .envParamsText {
@@ -469,6 +481,8 @@
   box-shadow: none;
   border: none;
   padding: 0;
+  width: 100%;
+  min-height: calc(1.4em * 6);
 
   &::selection {
     // 可以保留或移除，如果保留，颜色可能需要调整

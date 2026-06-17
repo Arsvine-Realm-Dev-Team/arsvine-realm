@@ -271,11 +271,14 @@ export interface EnvData {
   acidRain: string;
 }
 
+export type EnvArtifactStage = 0 | 1 | 2 | 3 | 4;
+
 export interface EnvParamsTypingState {
   displayedEnvParams: string;
   isEnvParamsTyping: boolean;
   envData: EnvData | null;
   envDataVersion: number;
+  envArtifactStage: EnvArtifactStage;
 }
 
 export interface ColumnHoverState {

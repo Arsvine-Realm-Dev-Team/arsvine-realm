@@ -143,6 +143,7 @@ export const alsoPlayGames: string[] = [
   '星露谷物語 | Stardew Valley',
   '殺戮尖塔 2 | Slay the Spire 2',
   '像素工廠 | Mindustry',
+  'And More',
 ];
 
 // ============================================================

@@ -59,7 +59,7 @@ export default function MainLayout({ children }) {
     currentTime, hudVisible, leftPanelAnimated, leversVisible,
     handleActivateTesseract, handleDischargeLeverPull, isDischarging,
     powerLevel, isFateTypingActive, displayedFateText,
-    isEnvParamsTyping, displayedEnvParams, envData, envDataVersion,
+    isEnvParamsTyping, displayedEnvParams, envData, envDataVersion, envArtifactStage,
     deactivateTesseract,
   } = app;
 
@@ -266,6 +266,7 @@ export default function MainLayout({ children }) {
               isEnvParamsTyping={isEnvParamsTyping}
               displayedEnvParams={displayedEnvParams}
               envData={envData}
+              envArtifactStage={envArtifactStage}
               isInverted={isInverted}
                drawerOpen={drawerOpen}
                isStandalone={isStandalone}
