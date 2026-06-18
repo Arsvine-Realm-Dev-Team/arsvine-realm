@@ -160,6 +160,17 @@
       "verifying": "Verifying...",
       "invalidToken": "The code is invalid or expired."
     },
+    "notFound": {
+      "title": "404 // Page Not Found",
+      "signal": "// WAYFINDING FAULT",
+      "status": "ROUTE UNRESOLVED",
+      "heading": "The archive does not recognize this destination.",
+      "description": "No stable route signature was recovered from the current grid. The address may be corrupted, retired, or never registered.",
+      "hint": "Reacquire the trail from Home, or reroute through the content index.",
+      "pathLabel": "Signal Trace",
+      "returnHome": "Return to Hub",
+      "returnContent": "Open Archive"
+    },
     "copyright": {
       "title": "COPYRIGHT",
       "description": "Copyright & License — Source code and content licensing terms",

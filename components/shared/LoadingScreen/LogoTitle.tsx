@@ -60,7 +60,13 @@ const LogoTitle = forwardRef<LogoTitleRef>((_, ref) => {
             </span>
           ))}
         </h1>
-        <div className={styles.logo_subtitle} style={{ opacity: 0, visibility: 'hidden' }}>{tSite('loadingSubtitle')}</div>
+        <div
+          className={styles.logo_subtitle}
+          style={{ opacity: 0, visibility: 'hidden' }}
+          suppressHydrationWarning
+        >
+          {tSite('loadingSubtitle')}
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { startTransition, useState, useCallback, useEffect, useRef } from 'react';
+import { startTransition, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
@@ -15,7 +15,7 @@ import useRouteLoadingKind from '../../hooks/useRouteLoadingKind';
 import useStandalonePanelState from '../../hooks/useStandalonePanelState';
 import { setHudTypingOverlaySuppressed, setHudTypingRouteEnabled } from '../../lib/hud-typing-visibility';
 import { CONTENT_DETAIL_EXIT_DELAY_MS } from '../../lib/ui-timings';
-import { defaultLocale, isLocale, type Locale } from '../../i18n/config';
+import { resolveLocale, type Locale } from '../../i18n/config';
 
 import HomeLoadingScreen from '../shared/HomeLoadingScreen';
 import MusicPlayer from '../interactive/MusicPlayer';
@@ -45,7 +45,12 @@ const CustomCursor = dynamic(
   { ssr: false, loading: () => null }
 );
 
-export default function MainLayout({ children }) {
+interface MainLayoutProps {
+  children: ReactNode;
+  appLocale?: Locale;
+}
+
+export default function MainLayout({ children, appLocale }: MainLayoutProps) {
   const router = useRouter();
   const tNav = useTranslations('mainNav');
   const tCommon = useTranslations('common');
@@ -64,8 +69,7 @@ export default function MainLayout({ children }) {
   } = app;
 
   // 当前 URL 的 locale，所有内部跳转都要带上前缀
-  const queryLocale = router.query.locale;
-  const locale = isLocale(queryLocale) ? queryLocale : defaultLocale;
+  const locale: Locale = appLocale ?? resolveLocale(router.query.locale, router.asPath);
 
   const {
     drawerOpen,
@@ -247,7 +251,12 @@ export default function MainLayout({ children }) {
 
         {mainVisible && (
           <>
-            <GlobalHud currentTime={currentTime} hudVisible={hudVisible || isStandalone} isGamePage={router.pathname === '/[locale]/game'} />
+            <GlobalHud
+              currentTime={currentTime}
+              hudVisible={hudVisible || isStandalone}
+              isGamePage={router.pathname === '/[locale]/game'}
+              locale={locale}
+            />
             <LeftPanel
               leftPanelAnimated={localPanelAnimated}
               mainVisible={mainVisible}

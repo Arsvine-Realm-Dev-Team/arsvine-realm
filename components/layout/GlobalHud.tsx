@@ -3,8 +3,16 @@ import styles from '../../styles/Home.module.scss';
 import { useResponsive } from '../../hooks/useMediaQuery';
 import { siteConfig } from '../../data/site';
 import LanguageSwitcher from '../shared/LanguageSwitcher';
+import type { Locale } from '../../i18n/config';
 
-function GlobalHud({ currentTime, hudVisible, isGamePage = false }) {
+interface GlobalHudProps {
+  currentTime: string;
+  hudVisible: boolean;
+  isGamePage?: boolean;
+  locale: Locale;
+}
+
+function GlobalHud({ currentTime, hudVisible, isGamePage = false, locale }: GlobalHudProps) {
   const { isMobile } = useResponsive();
   const cursorXRef = useRef<HTMLSpanElement>(null);
   const cursorYRef = useRef<HTMLSpanElement>(null);
@@ -28,7 +36,7 @@ function GlobalHud({ currentTime, hudVisible, isGamePage = false }) {
               <div>TIME: {currentTime}</div>
               <div>SYSTEM_ONLINE</div>
             </div>
-            <LanguageSwitcher />
+            <LanguageSwitcher currentLocale={locale} />
           </div>
         </div>
         <div className={`${styles.hudElement} ${styles.topRight} ${hudVisible ? styles.visible : ''}`}>
@@ -50,7 +58,7 @@ function GlobalHud({ currentTime, hudVisible, isGamePage = false }) {
             <div>TIME: {currentTime}</div>
             <div>SYSTEM_ONLINE</div>
           </div>
-          <LanguageSwitcher />
+          <LanguageSwitcher currentLocale={locale} />
         </div>
       </div>
       <div className={`${styles.hudElement} ${styles.topRight} ${hudVisible ? styles.visible : ''}`}>

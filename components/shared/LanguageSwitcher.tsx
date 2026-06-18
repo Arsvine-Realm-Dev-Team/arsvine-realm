@@ -6,17 +6,17 @@
 import { useRouter } from 'next/router';
 import { useCallback } from 'react';
 import styles from './LanguageSwitcher.module.scss';
-import { isLocale, locales, localeShortLabel, type Locale } from '../../i18n/config';
+import { getLocaleFromPath, isLocale, locales, localeShortLabel, type Locale } from '../../i18n/config';
 
-export default function LanguageSwitcher() {
+interface LanguageSwitcherProps {
+  currentLocale?: Locale;
+}
+
+export default function LanguageSwitcher({ currentLocale: currentLocaleProp }: LanguageSwitcherProps) {
   const router = useRouter();
   const pathWithoutQuery = router.asPath.split('?')[0];
-  const localeFromPath = pathWithoutQuery.split('/').filter(Boolean)[0];
-  const currentLocale: Locale | undefined = isLocale(router.query.locale)
-    ? router.query.locale
-    : isLocale(localeFromPath)
-      ? localeFromPath
-      : undefined;
+  const currentLocale: Locale | undefined = currentLocaleProp
+    ?? (isLocale(router.query.locale) ? router.query.locale : getLocaleFromPath(router.asPath));
 
   const setLocale = useCallback((nextLocale: Locale) => {
     if (nextLocale === currentLocale) return;

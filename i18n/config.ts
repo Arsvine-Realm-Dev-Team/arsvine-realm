@@ -50,3 +50,16 @@ export const localeNativeName: Record<Locale, string> = {
 export function isLocale(value: unknown): value is Locale {
   return typeof value === 'string' && (locales as readonly string[]).includes(value);
 }
+
+export function getLocaleFromPath(path: string | null | undefined): Locale | undefined {
+  if (typeof path !== 'string') return undefined;
+
+  const pathWithoutQuery = path.split('?')[0]?.split('#')[0] ?? path;
+  const firstSegment = pathWithoutQuery.split('/').filter(Boolean)[0];
+
+  return isLocale(firstSegment) ? firstSegment : undefined;
+}
+
+export function resolveLocale(rawLocale: unknown, path?: string | null): Locale {
+  return isLocale(rawLocale) ? rawLocale : getLocaleFromPath(path) ?? defaultLocale;
+}

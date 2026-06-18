@@ -1,7 +1,6 @@
 require('dotenv').config({ path: '.env.local' });
 
 const { createServer } = require('http');
-const { parse } = require('url');
 const next = require('next');
 
 const dev = process.env.NODE_ENV !== 'production';
@@ -9,6 +8,30 @@ const app = next({
   dev,
 });
 const handle = app.getRequestHandler();
+const SUPPORTED_LOCALES = new Set(['zh-CN', 'zh-TW', 'en']);
+
+function toParsedUrl(req) {
+  const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+  const query = {};
+
+  for (const key of url.searchParams.keys()) {
+    const values = url.searchParams.getAll(key);
+    query[key] = values.length > 1 ? values : values[0] ?? '';
+  }
+
+  const firstSegment = url.pathname.split('/').filter(Boolean)[0];
+  if (firstSegment && SUPPORTED_LOCALES.has(firstSegment) && query.locale == null) {
+    query.locale = firstSegment;
+  }
+
+  return {
+    hash: url.hash,
+    href: `${url.pathname}${url.search}${url.hash}`,
+    pathname: url.pathname,
+    query,
+    search: url.search,
+  };
+}
 
 // Optional: Analytics proxy (e.g. Umami, Plausible)
 // const ANALYTICS_TARGET = 'http://127.0.0.1:3001';
@@ -18,7 +41,7 @@ async function main() {
   await app.prepare();
 
   const httpServer = createServer(async (req, res) => {
-    const parsedUrl = parse(req.url, true);
+    const parsedUrl = toParsedUrl(req);
 
     // Optional: Analytics proxy route
     // if (parsedUrl.pathname.startsWith('/analytics/')) {

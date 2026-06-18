@@ -160,6 +160,17 @@
       "verifying": "驗證中…",
       "invalidToken": "驗證碼無效或已過期。"
     },
+    "notFound": {
+      "title": "404 // 頁面未找到",
+      "signal": "// 路徑漂移",
+      "status": "ROUTE UNRESOLVED",
+      "heading": "目標座標未被檔案識別。",
+      "description": "目前的位址未在索引網格中完成登錄。它可能已經失效、漂移，或從未存在。",
+      "hint": "請回到主頁重新接入，或從內容索引改道前往。",
+      "pathLabel": "訊號殘跡",
+      "returnHome": "返回主控台",
+      "returnContent": "打開內容索引"
+    },
     "copyright": {
       "title": "COPYRIGHT",
       "description": "Copyright & License — Source code and content licensing terms",

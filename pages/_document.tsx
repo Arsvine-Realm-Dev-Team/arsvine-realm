@@ -6,8 +6,7 @@ import { buildDocumentBootstrapScript } from '../lib/document-bootstrap';
 import {
   htmlLangMap,
   ogLocaleMap,
-  defaultLocale,
-  isLocale,
+  resolveLocale,
   type Locale,
 } from '../i18n/config';
 
@@ -29,8 +28,10 @@ interface DocProps {
 class MyDocument extends Document<DocProps> {
   static async getInitialProps(ctx: DocumentContext) {
     const initialProps = await Document.getInitialProps(ctx);
-    const rawLocale = (ctx.query?.locale as string | undefined);
-    const locale: Locale = isLocale(rawLocale) ? rawLocale : defaultLocale;
+    const locale: Locale = resolveLocale(
+      ctx.query?.locale,
+      typeof ctx.asPath === 'string' ? ctx.asPath : ctx.req?.url,
+    );
     return { ...initialProps, locale };
   }
 

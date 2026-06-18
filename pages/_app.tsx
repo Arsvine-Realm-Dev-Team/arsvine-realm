@@ -8,21 +8,20 @@ import '../styles/globals.scss';
 import { AppProvider } from '../contexts/AppContext';
 import { TransitionProvider } from '../contexts/TransitionContext';
 import MainLayout from '../components/layout/MainLayout';
-import { defaultLocale, isLocale, type Locale } from '../i18n/config';
+import { resolveLocale, type Locale } from '../i18n/config';
 
 function MyApp({ Component, pageProps }) {
   const router = useRouter();
   const pageWrapperRef = useRef<HTMLDivElement>(null);
-  // 取当前 locale：URL params 优先（[locale] 路由），否则 fallback 默认
-  const queryLocale = router.query.locale;
-  const locale: Locale = isLocale(queryLocale) ? queryLocale : defaultLocale;
+  const locale: Locale = resolveLocale(pageProps.locale ?? router.query.locale, router.asPath);
   // 详情页（已 locale 化）的 isStandalone 判定
   const isStandalone =
     router.pathname === `/[locale]/game` ||
     router.pathname.startsWith(`/[locale]/life/`);
 
-  // pageProps.messages 来自页面级 getStaticProps；缺失时给空对象兜底
-  const messages = pageProps.messages ?? {};
+  const messagesByLocale = pageProps.messagesByLocale as Partial<Record<Locale, Record<string, unknown>>> | undefined;
+  // pageProps.messages 来自页面级 getStaticProps；根级错误页可改用 messagesByLocale 兜底。
+  const messages = pageProps.messages ?? messagesByLocale?.[locale] ?? {};
   const shouldRenderVercelTelemetry = process.env.NODE_ENV === 'production';
 
   return (
@@ -38,7 +37,7 @@ function MyApp({ Component, pageProps }) {
           <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         </Head>
         <TransitionProvider pageWrapperRef={pageWrapperRef}>
-          <MainLayout>
+          <MainLayout appLocale={locale}>
             <div
               ref={pageWrapperRef}
               className="pageTransitionLayer"

@@ -160,6 +160,17 @@
       "verifying": "验证中…",
       "invalidToken": "验证码无效或已过期。"
     },
+    "notFound": {
+      "title": "404 // 页面未找到",
+      "signal": "// 路径漂移",
+      "status": "ROUTE UNRESOLVED",
+      "heading": "目标坐标未被档案识别。",
+      "description": "当前地址未在索引网格中完成登记。它可能已经失效、漂移，或从未存在。",
+      "hint": "请回到主页重新接入，或从内容索引改道前往。",
+      "pathLabel": "信号残迹",
+      "returnHome": "返回主控台",
+      "returnContent": "打开内容索引"
+    },
     "copyright": {
       "title": "COPYRIGHT",
       "description": "Copyright & License — Source code and content licensing terms",
