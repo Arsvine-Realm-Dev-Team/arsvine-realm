@@ -14,10 +14,14 @@ function MyApp({ Component, pageProps }) {
   const router = useRouter();
   const pageWrapperRef = useRef<HTMLDivElement>(null);
   const locale: Locale = resolveLocale(pageProps.locale ?? router.query.locale, router.asPath);
-  // 详情页（已 locale 化）的 isStandalone 判定
+  // 与 useLayoutRouteMode / useRouteLoadingKind 保持一致：
+  // standalone 详情页需要让 pageTransitionLayer 高于左侧 HUD，避免点击穿透。
   const isStandalone =
-    router.pathname === `/[locale]/game` ||
-    router.pathname.startsWith(`/[locale]/life/`);
+    router.pathname === '/[locale]/game'
+    || router.pathname.startsWith('/[locale]/game/')
+    || router.pathname.startsWith('/[locale]/web/')
+    || router.pathname.startsWith('/[locale]/life/')
+    || router.pathname.startsWith('/[locale]/blog/');
 
   const messagesByLocale = pageProps.messagesByLocale as Partial<Record<Locale, Record<string, unknown>>> | undefined;
   // pageProps.messages 来自页面级 getStaticProps；根级错误页可改用 messagesByLocale 兜底。
