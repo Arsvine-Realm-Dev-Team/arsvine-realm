@@ -1,21 +1,22 @@
 import React, { startTransition, useCallback, useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
 import { useTranslations } from 'next-intl';
-import { useApp } from '../../contexts/AppContext';
 import { buildBlogPostHref } from '../../lib/blog-client';
 import { getSiteUrl } from '../../data/site';
 import type { ProtectedVerifyResponse } from '../../lib/content/access-api';
 import type { BlogContentLocale } from '../../lib/blog';
 import { type Locale } from '../../i18n/config';
 import type { BlogPostMeta } from '../../types';
+import BlogDetailScaffold from './BlogDetailScaffold';
 import styles from '../../styles/BlogDetailView.module.scss';
 import accessStyles from '../../styles/PostAccessPage.module.scss';
-import hudStyles from '../../styles/Home.module.scss';
 import HreflangLinks from '../shared/HreflangLinks';
 
 interface ProtectedPostGateProps {
   locale: Locale;
   meta: BlogPostMeta;
+  allPosts: BlogPostMeta[];
+  defaultContentLocale: BlogContentLocale;
   group: string;
   nextContentLocale: BlogContentLocale;
   onVerified: () => void | Promise<void>;
@@ -28,11 +29,12 @@ interface ProtectedPostGateProps {
 export default function ProtectedPostGate({
   locale,
   meta,
+  allPosts,
+  defaultContentLocale,
   group,
   nextContentLocale,
   onVerified,
 }: ProtectedPostGateProps) {
-  const { isInverted } = useApp();
   const t = useTranslations('pages.access');
   const inputRef = useRef<HTMLInputElement>(null);
   const lastSubmittedTokenRef = useRef<string | null>(null);
@@ -114,7 +116,7 @@ export default function ProtectedPostGate({
   }, [submitToken, token]);
 
   return (
-    <div className={`${styles.pageWrapper} ${isInverted ? hudStyles.inverted : ''}`}>
+    <>
       <Head>
         <title>{`${meta.title} // Blog`}</title>
         <meta name="description" content={meta.excerpt} />
@@ -128,8 +130,13 @@ export default function ProtectedPostGate({
         <HreflangLinks basePath={`/blog/${meta.slug}`} />
       </Head>
 
-      <div className={styles.mainContent}>
-        <header className={`${styles.headerSection} ${entered ? styles.entered : ''}`}>
+      <BlogDetailScaffold
+        locale={locale}
+        meta={meta}
+        allPosts={allPosts}
+        defaultContentLocale={defaultContentLocale}
+        headerEntered={entered}
+        headerContent={(
           <div className={styles.headerContent}>
             <span className={styles.headerSignal}>{t('heading')}</span>
             <h1 className={styles.headerTitle}>{meta.title}</h1>
@@ -138,9 +145,8 @@ export default function ProtectedPostGate({
               <span className={styles.headerReadingTime}>{t('description')}</span>
             </div>
           </div>
-        </header>
-
-        <section className={styles.contentSection}>
+        )}
+        contentContent={(
           <div className={`${accessStyles.page} ${accessStyles.embedded}`}>
             <form className={accessStyles.card} onSubmit={handleSubmit}>
               <label className={accessStyles.label} htmlFor="totp-token-inline">
@@ -191,8 +197,8 @@ export default function ProtectedPostGate({
               <button className={accessStyles.hiddenSubmit} type="submit" tabIndex={-1} aria-hidden="true" />
             </form>
           </div>
-        </section>
-      </div>
-    </div>
+        )}
+      />
+    </>
   );
 }

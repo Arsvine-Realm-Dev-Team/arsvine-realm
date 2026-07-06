@@ -1,6 +1,5 @@
-import { startTransition, useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { startTransition, useState, useEffect, useRef, useCallback } from 'react';
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import gsap from 'gsap';
 import type { GetStaticPaths, GetStaticProps } from 'next';
@@ -13,7 +12,6 @@ import HreflangLinks from '../../../components/shared/HreflangLinks';
 import { AnimatedTitleChars } from '../../../components/shared/AnimatedTitleChars';
 import useBlogPostState, {
   blogContentLocaleLabels,
-  buildBlogPostHref,
   type BlogVariantPayload,
   type BlogPostViewState,
 } from '../../../hooks/useBlogPostState';
@@ -31,17 +29,14 @@ import {
 import type { ContentPostAccess } from '../../../lib/content/types';
 import { loadMessages } from '../../../lib/i18n-data';
 import type { BlogPostMeta, TranslationStatus } from '../../../types';
+import BlogDetailScaffold from '../../../components/blog/BlogDetailScaffold';
 import styles from '../../../styles/BlogDetailView.module.scss';
-import hudStyles from '../../../styles/Home.module.scss';
 import accessStyles from '../../../styles/PostAccessPage.module.scss';
-import { useApp } from '../../../contexts/AppContext';
-import { useTransition } from '../../../contexts/TransitionContext';
 import ProtectedPostGate from '../../../components/blog/ProtectedPostGate';
 import BlogStateShell from '../../../components/blog/BlogStateShell';
 import { getSiteUrl } from '../../../data/site';
 import { locales, defaultLocale, type Locale } from '../../../i18n/config';
 import { formatReadingTime } from '../../../lib/format-reading-time';
-import type { ProtectedVerifyResponse } from '../../../lib/content/access-api';
 
 interface BlogPostPageProps {
   locale: Locale;
@@ -56,18 +51,6 @@ interface BlogPostPageProps {
   contentVariants: Partial<Record<BlogContentLocale, BlogVariantPayload>>;
   access: ContentPostAccess;
   isProtected: boolean;
-}
-
-interface BlogShellProps {
-  locale: Locale;
-  meta: BlogPostMeta;
-  signalLabel: string;
-  statusText: string;
-  description?: string;
-  entered?: boolean;
-  error?: string;
-  action?: React.ReactNode;
-  isProtected?: boolean;
 }
 
 export default function BlogPostPage({
@@ -129,6 +112,8 @@ export default function BlogPostPage({
       <BlogStateShell
         locale={locale}
         meta={meta}
+        allPosts={allPosts}
+        defaultContentLocale={defaultContentLocale}
         signalLabel={tCommon('signalFragment')}
         statusText={tCommon('decoding')}
         isProtected={isProtected}
@@ -141,6 +126,8 @@ export default function BlogPostPage({
       <ProtectedPostGate
         locale={locale}
         meta={meta}
+        allPosts={allPosts}
+        defaultContentLocale={defaultContentLocale}
         group={access.group}
         nextContentLocale={requestedContentLocale}
         onVerified={markAuthGranted}
@@ -153,6 +140,8 @@ export default function BlogPostPage({
       <BlogStateShell
         locale={locale}
         meta={meta}
+        allPosts={allPosts}
+        defaultContentLocale={defaultContentLocale}
         signalLabel={tCommon('signalFragment')}
         statusText={viewState === 'loadFailed' ? tCommon('loading') : tCommon('decoding')}
         error={loadError}
@@ -184,7 +173,6 @@ export default function BlogPostPage({
       selectedContentLocale={selectedContentLocale}
       availableContentLocales={availableContentLocales}
       loadingLang={loadingLang}
-      actualContentLocale={actualContentLocale}
       defaultContentLocale={defaultContentLocale}
       updateContentLocaleQuery={updateContentLocaleQuery}
       loadError={loadError}
@@ -205,7 +193,6 @@ function BlogDetailContent({
   selectedContentLocale,
   availableContentLocales,
   loadingLang,
-  actualContentLocale,
   defaultContentLocale,
   updateContentLocaleQuery,
   loadError,
@@ -216,23 +203,15 @@ function BlogDetailContent({
   selectedContentLocale: BlogContentLocale;
   originLocale: Locale;
   loadingLang: BlogContentLocale | null;
-  actualContentLocale: BlogContentLocale;
   defaultContentLocale: BlogContentLocale;
   updateContentLocaleQuery: (nextContentLocale: BlogContentLocale) => void;
   loadError: string;
   retryRequestedContentLocale: () => void;
 }) {
-  const { isInverted } = useApp();
-  const { navigateTo } = useTransition();
   const tCommon = useTranslations('common');
-  const tNav = useTranslations('nav');
   const readingLabel = formatReadingTime(meta.readingMinutes, locale);
 
-  const currentIndex = allPosts.findIndex((p) => p.slug === meta.slug);
-  const prevPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
-  const nextPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
-
-  const wrapperRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const contentBodyRef = useRef<HTMLDivElement>(null);
   const [entered, setEntered] = useState(false);
@@ -325,68 +304,6 @@ function BlogDetailContent({
     };
   }, [titleDone, selectedContentLocale]);
 
-  const handleBack = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    navigateTo(`/${locale}/blog`);
-  }, [navigateTo, locale]);
-
-  const [activeNav, setActiveNav] = useState('header');
-  const [isPastHeader, setIsPastHeader] = useState(false);
-  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
-
-  useEffect(() => {
-    const wrapper = wrapperRef.current;
-    if (!wrapper) return;
-
-    const navObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const id = entry.target.getAttribute('data-nav-id');
-            if (id) setActiveNav(id);
-          }
-        });
-      },
-      { threshold: 0.3, root: wrapper }
-    );
-
-    const headerObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.target.getAttribute('data-nav-id') === 'header') {
-            setIsPastHeader(!entry.isIntersecting);
-          }
-        });
-      },
-      { threshold: 0.55, root: wrapper }
-    );
-
-    Object.values(sectionRefs.current).forEach((el) => {
-      if (el) {
-        navObserver.observe(el);
-        if (el.getAttribute('data-nav-id') === 'header') {
-          headerObserver.observe(el);
-        }
-      }
-    });
-
-    return () => {
-      navObserver.disconnect();
-      headerObserver.disconnect();
-    };
-  }, []);
-
-  const scrollToSection = useCallback((id: string) => {
-    const el = sectionRefs.current[id];
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, []);
-
-  const navItems = useMemo(() => [
-    { id: 'header', label: tNav('top') },
-    { id: 'content', label: tNav('content') },
-    { id: 'end', label: tNav('end') },
-  ], [tNav]);
-
   const handleContentLocaleChange = useCallback((nextContentLocale: BlogContentLocale) => {
     if (loadingLang) {
       return;
@@ -403,7 +320,7 @@ function BlogDetailContent({
   ]);
 
   return (
-    <div ref={wrapperRef} className={`${styles.pageWrapper} ${isInverted ? hudStyles.inverted : ''}`}>
+    <>
       <Head>
         <title>{`${meta.title} // Blog`}</title>
         <meta name="description" content={meta.excerpt} />
@@ -421,161 +338,86 @@ function BlogDetailContent({
         <HreflangLinks basePath={`/blog/${meta.slug}`} />
       </Head>
 
-      <div className={styles.mainContent}>
+      <BlogDetailScaffold
+        locale={locale}
+        meta={meta}
+        allPosts={allPosts}
+        defaultContentLocale={defaultContentLocale}
+        headerEntered={entered}
+        scrollRootRef={wrapperRef}
+        headerContent={(
+          <>
+            {translationStatus !== 'source' && (
+              <LocaleFallbackBanner requestedLocale={locale} actualLocale={actualLocale} originLocale={originLocale} status={translationStatus} />
+            )}
 
-        {translationStatus !== 'source' && (
-          <LocaleFallbackBanner requestedLocale={locale} actualLocale={actualLocale} originLocale={originLocale} status={translationStatus} />
-        )}
-
-        <header
-          key={`header:${selectedContentLocale}`}
-          className={`${styles.headerSection} ${entered ? styles.entered : ''}`}
-          ref={(el) => { sectionRefs.current['header'] = el; }}
-          data-nav-id="header"
-        >
-          <div className={styles.headerContent}>
-            <span className={styles.headerSignal}>{tCommon('signalFragment')}</span>
-            <h1 ref={titleRef} className={styles.headerTitle}>
-              <AnimatedTitleChars
-                text={meta.title}
-                wrapperClassName={styles.charWrapper}
-                innerClassName={styles.charInner}
-                wordWrapperClassName={styles.wordWrapper}
-                uppercase={false}
-              />
-            </h1>
-            <div className={styles.headerMeta}>
-              {meta.date && <span className={styles.headerDate}>{meta.date}</span>}
-              {readingLabel && <span className={styles.headerReadingTime}>{readingLabel}</span>}
-            </div>
-            {availableContentLocales.length > 1 && (
-              <div className={styles.articleLocaleSwitcher} aria-label="Article language switcher">
-                {availableContentLocales.map((contentLocale) => (
+            <div className={styles.headerContent}>
+              <span className={styles.headerSignal}>{tCommon('signalFragment')}</span>
+              <h1 ref={titleRef} className={styles.headerTitle}>
+                <AnimatedTitleChars
+                  text={meta.title}
+                  wrapperClassName={styles.charWrapper}
+                  innerClassName={styles.charInner}
+                  wordWrapperClassName={styles.wordWrapper}
+                  uppercase={false}
+                />
+              </h1>
+              <div className={styles.headerMeta}>
+                {meta.date && <span className={styles.headerDate}>{meta.date}</span>}
+                {readingLabel && <span className={styles.headerReadingTime}>{readingLabel}</span>}
+              </div>
+              {availableContentLocales.length > 1 && (
+                <div className={styles.articleLocaleSwitcher} aria-label="Article language switcher">
+                  {availableContentLocales.map((contentLocale) => (
+                    <button
+                      key={contentLocale}
+                      type="button"
+                      className={`${styles.articleLocaleButton} ${selectedContentLocale === contentLocale ? styles.activeArticleLocaleButton : ''}`}
+                      onClick={() => handleContentLocaleChange(contentLocale)}
+                      disabled={Boolean(loadingLang)}
+                    >
+                      {blogContentLocaleLabels[contentLocale]}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {loadError ? (
+                <div className={styles.articleLocaleErrorRow}>
+                  <p className={accessStyles.error}>{loadError}</p>
                   <button
-                    key={contentLocale}
                     type="button"
-                    className={`${styles.articleLocaleButton} ${selectedContentLocale === contentLocale ? styles.activeArticleLocaleButton : ''}`}
-                    onClick={() => handleContentLocaleChange(contentLocale)}
+                    className={styles.articleLocaleRetry}
+                    onClick={retryRequestedContentLocale}
                     disabled={Boolean(loadingLang)}
                   >
-                    {blogContentLocaleLabels[contentLocale]}
+                    {tCommon('retry')}
                   </button>
-                ))}
-              </div>
-            )}
-            {loadError ? (
-              <div className={styles.articleLocaleErrorRow}>
-                <p className={accessStyles.error}>{loadError}</p>
-                <button
-                  type="button"
-                  className={styles.articleLocaleRetry}
-                  onClick={retryRequestedContentLocale}
-                  disabled={Boolean(loadingLang)}
-                >
-                  {tCommon('retry')}
-                </button>
-              </div>
-            ) : null}
-            {meta.tags.length > 0 && (
-              <div className={styles.headerTags}>
-                {meta.tags.map((tag) => (
-                  <span key={tag} className={styles.headerTag}>{tag}</span>
-                ))}
-              </div>
-            )}
-          </div>
-        </header>
-
-        <section
-          key={`section:${selectedContentLocale}`}
-          className={styles.contentSection}
-          ref={(el) => { sectionRefs.current['content'] = el; }}
-          data-nav-id="content"
-        >
-          {(!titleDone || viewState === 'loadingVariant') && (
-            <div className={styles.loadingIndicator}>
-              <span className={styles.loadingText}>{tCommon('decoding')}</span>
+                </div>
+              ) : null}
+              {meta.tags.length > 0 && (
+                <div className={styles.headerTags}>
+                  {meta.tags.map((tag) => (
+                    <span key={tag} className={styles.headerTag}>{tag}</span>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-          <div key={selectedContentLocale} ref={contentBodyRef} className={styles.contentBody}>
-            <MDXRemote {...mdxSource} components={MDXComponents} />
-          </div>
-        </section>
-
-        <footer
-          className={styles.footer}
-          ref={(el) => { sectionRefs.current['end'] = el; }}
-          data-nav-id="end"
-        >
-          <div className={styles.endMarker}>
-            <span className={styles.endSignal}>{tCommon('endTransmission')}</span>
-          </div>
-          <div className={styles.footerNav}>
-            {prevPost ? (
-              <Link
-                href={buildBlogPostHref(locale, prevPost.slug, defaultContentLocale)}
-                prefetch={prevPost.access.mode === 'public'}
-                className={`${styles.footerNavButton} ${styles.footerNavPrev}`}
-                onClick={(e) => { e.preventDefault(); navigateTo(buildBlogPostHref(locale, prevPost.slug, defaultContentLocale)); }}
-                data-cursor-label="PREVIOUS"
-              >
-                <span className={styles.footerNavArrow}>←</span>
-                <span className={styles.footerNavTitle}>{prevPost.title}</span>
-              </Link>
-            ) : (
-              <Link
-                href={`/${locale}/blog`}
-                prefetch={false}
-                className={`${styles.footerNavButton} ${styles.footerNavPrev}`}
-                onClick={handleBack}
-                data-cursor-label="BACK"
-              >
-                <span className={styles.footerNavArrow}>←</span>
-                <span className={styles.footerNavTitle}>{tCommon('returnToIndex')}</span>
-              </Link>
+          </>
+        )}
+        contentContent={(
+          <>
+            {(!titleDone || viewState === 'loadingVariant') && (
+              <div className={styles.loadingIndicator}>
+                <span className={styles.loadingText}>{tCommon('decoding')}</span>
+              </div>
             )}
-            {nextPost ? (
-              <Link
-                href={buildBlogPostHref(locale, nextPost.slug, defaultContentLocale)}
-                prefetch={nextPost.access.mode === 'public'}
-                className={`${styles.footerNavButton} ${styles.footerNavNext}`}
-                onClick={(e) => { e.preventDefault(); navigateTo(buildBlogPostHref(locale, nextPost.slug, defaultContentLocale)); }}
-                data-cursor-label="NEXT"
-              >
-                <span className={styles.footerNavTitle}>{nextPost.title}</span>
-                <span className={styles.footerNavArrow}>→</span>
-              </Link>
-            ) : (
-              <Link
-                href={`/${locale}/blog`}
-                prefetch={false}
-                className={`${styles.footerNavButton} ${styles.footerNavNext}`}
-                onClick={handleBack}
-                data-cursor-label="BACK"
-              >
-                <span className={styles.footerNavTitle}>{tCommon('returnToIndex')}</span>
-                <span className={styles.footerNavArrow}>→</span>
-              </Link>
-            )}
-          </div>
-        </footer>
-      </div>
-
-      <nav className={`${styles.rightNav} ${isPastHeader ? styles.visible : ''}`}>
-        <button className={styles.rightNavBack} onClick={handleBack} data-cursor-label="BACK" aria-label="BACK" />
-        <div className={styles.rightNavDivider} />
-        {navItems.map((nav) => (
-          <button
-            key={nav.id}
-            className={`${styles.rightNavLink} ${activeNav === nav.id ? styles.active : ''}`}
-            onClick={() => scrollToSection(nav.id)}
-          >
-            {nav.label}
-          </button>
-        ))}
-      </nav>
-
-    </div>
+            <div key={selectedContentLocale} ref={contentBodyRef} className={styles.contentBody}>
+              <MDXRemote {...mdxSource} components={MDXComponents} />
+            </div>
+          </>
+        )}
+      />
+    </>
   );
 }
 

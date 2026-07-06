@@ -109,7 +109,11 @@
   position: relative;
   width: fit-content;
   max-width: 100%;
-  cursor: text;
+  cursor: none;
+
+  @media (max-width: 1023px) {
+    cursor: text;
+  }
 }
 
 .hiddenInput {
@@ -123,6 +127,7 @@
   margin: 0;
   z-index: 2;
   caret-color: transparent;
+  cursor: inherit;
 }
 
 .slotGrid {

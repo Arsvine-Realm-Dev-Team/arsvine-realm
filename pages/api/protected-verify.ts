@@ -17,6 +17,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ProtectedVerifyResponse>,
 ) {
+  res.setHeader('Cache-Control', 'private, no-store');
+
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({

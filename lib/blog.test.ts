@@ -9,7 +9,7 @@ vi.mock('./content/github', () => ({
   getContentBlogIndex: getContentBlogIndexMock,
 }));
 
-import { getAllPostsForLocale, normalizeAccess } from './blog';
+import { getAllPostsForLocale, getProtectedPostPublicMeta, normalizeAccess } from './blog';
 
 beforeEach(() => {
   getContentBlogIndexMock.mockReset();
@@ -109,5 +109,65 @@ describe('getAllPostsForLocale', () => {
 
     expect(posts).toHaveLength(1);
     expect(posts[0]?.tags).toEqual(['随笔']);
+  });
+
+  it('sanitizes protected posts in list-facing metadata', async () => {
+    getContentBlogIndexMock.mockResolvedValue({
+      version: 1,
+      updatedAt: '2026-06-17T00:00:00.000Z',
+      posts: [
+        {
+          slug: 'protected-post',
+          date: '2026-05-12',
+          updatedAt: '2026-05-12T00:00:00.000Z',
+          tags: ['private'],
+          pinned: false,
+          access: { mode: 'totp', group: 'family' },
+          availableLocales: ['zh-CN'],
+          variants: {
+            'zh-CN': {
+              title: 'Protected Post',
+              excerpt: 'Secret excerpt',
+              tags: ['private'],
+              readingMinutes: 9,
+            },
+          },
+        },
+      ],
+    });
+
+    const posts = await getAllPostsForLocale('zh-CN');
+
+    expect(posts).toHaveLength(1);
+    expect(posts[0]).toMatchObject({
+      slug: 'protected-post',
+      title: 'Protected Post',
+      excerpt: '',
+      tags: [],
+      readingMinutes: 0,
+      access: { mode: 'totp', group: 'family' },
+    });
+  });
+});
+
+describe('getProtectedPostPublicMeta', () => {
+  it('strips preview fields for protected content', () => {
+    expect(getProtectedPostPublicMeta({
+      slug: 'protected-post',
+      title: 'Protected Post',
+      date: '2026-05-12',
+      excerpt: 'Secret excerpt',
+      tags: ['private'],
+      readingMinutes: 9,
+      access: { mode: 'totp', group: 'family' },
+    })).toMatchObject({
+      slug: 'protected-post',
+      title: 'Protected Post',
+      date: '2026-05-12',
+      excerpt: '',
+      tags: [],
+      readingMinutes: 0,
+      access: { mode: 'totp', group: 'family' },
+    });
   });
 });

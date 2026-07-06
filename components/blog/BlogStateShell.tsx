@@ -1,16 +1,18 @@
 import React, { startTransition, useEffect, useState } from 'react';
 import Head from 'next/head';
-import { useApp } from '../../contexts/AppContext';
 import HreflangLinks from '../shared/HreflangLinks';
+import type { BlogContentLocale } from '../../lib/blog';
 import { type Locale } from '../../i18n/config';
 import type { BlogPostMeta } from '../../types';
+import BlogDetailScaffold from './BlogDetailScaffold';
 import styles from '../../styles/BlogDetailView.module.scss';
 import accessStyles from '../../styles/PostAccessPage.module.scss';
-import hudStyles from '../../styles/Home.module.scss';
 
 export interface BlogStateShellProps {
   locale: Locale;
   meta: BlogPostMeta;
+  allPosts: BlogPostMeta[];
+  defaultContentLocale: BlogContentLocale;
   signalLabel: string;
   statusText: string;
   description?: string;
@@ -30,6 +32,8 @@ export interface BlogStateShellProps {
 export default function BlogStateShell({
   locale,
   meta,
+  allPosts,
+  defaultContentLocale,
   signalLabel,
   statusText,
   description,
@@ -37,7 +41,6 @@ export default function BlogStateShell({
   action,
   isProtected = false,
 }: BlogStateShellProps) {
-  const { isInverted } = useApp();
   const [entered, setEntered] = useState(false);
 
   useEffect(() => {
@@ -50,15 +53,21 @@ export default function BlogStateShell({
   }, []);
 
   return (
-    <div className={`${styles.pageWrapper} ${isInverted ? hudStyles.inverted : ''}`}>
+    <>
       <Head>
         <title>{`${meta.title} // Blog`}</title>
         <meta name="description" content={meta.excerpt} />
         {isProtected ? <meta name="robots" content="noindex,nofollow,noarchive" /> : null}
         <HreflangLinks basePath={`/blog/${meta.slug}`} />
       </Head>
-      <div className={styles.mainContent}>
-        <header className={`${styles.headerSection} ${entered ? styles.entered : ''}`}>
+
+      <BlogDetailScaffold
+        locale={locale}
+        meta={meta}
+        allPosts={allPosts}
+        defaultContentLocale={defaultContentLocale}
+        headerEntered={entered}
+        headerContent={(
           <div className={styles.headerContent}>
             <span className={styles.headerSignal}>{signalLabel}</span>
             <h1 className={styles.headerTitle}>{meta.title}</h1>
@@ -74,13 +83,13 @@ export default function BlogStateShell({
               </div>
             ) : null}
           </div>
-        </header>
-        <section className={styles.contentSection}>
+        )}
+        contentContent={(
           <div className={styles.loadingIndicator}>
             <span className={styles.loadingText}>{statusText}</span>
           </div>
-        </section>
-      </div>
-    </div>
+        )}
+      />
+    </>
   );
 }

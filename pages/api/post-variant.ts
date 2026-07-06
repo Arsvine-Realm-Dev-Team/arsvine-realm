@@ -11,6 +11,7 @@ type ResponseBody =
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<ResponseBody>) {
   res.setHeader('Cache-Control', 'private, no-store');
+  res.setHeader('Vary', 'Cookie');
 
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');

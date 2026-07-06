@@ -3,6 +3,9 @@ import { hasValidAccessGrant } from '../../lib/content/access-grant';
 import type { GrantCheckResponse } from '../../lib/content/access-api';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<GrantCheckResponse>) {
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.setHeader('Vary', 'Cookie');
+
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
     return res.status(405).json({
@@ -20,6 +23,5 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<GrantC
   }
 
   const granted = hasValidAccessGrant(req, group);
-  res.setHeader('Cache-Control', 'no-store');
   return res.status(200).json({ ok: true, granted });
 }
