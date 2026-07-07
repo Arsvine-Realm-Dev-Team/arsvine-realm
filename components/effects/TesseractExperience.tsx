@@ -231,7 +231,7 @@ const TesseractExperience = ({
       }}
     >
       <Canvas
-        shadows
+        shadows="percentage"
         camera={{ position: [-3, -1, 8], fov: 50 }}
         style={{
           background: 'transparent',
