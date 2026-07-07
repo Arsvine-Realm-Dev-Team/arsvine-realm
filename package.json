@@ -58,6 +58,6 @@
     "jsdom": "^29.1.1",
     "simple-icons": "^16.23.0",
     "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.10"
   }
 }
