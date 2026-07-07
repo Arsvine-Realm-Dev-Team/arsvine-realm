@@ -1,8 +1,9 @@
 import React from 'react';
-import type { MDXComponents as MDXComponentsType } from 'mdx/types';
 import styles from '../../styles/MDXContent.module.scss';
 import Term from './Term';
 import Explain from './Explain';
+
+type MDXComponentsType = Record<string, React.ComponentType<any>>;
 
 const MDXComponents: MDXComponentsType = {
   h1: ({ children }) => <h1 className={styles.h1}>{children}</h1>,
