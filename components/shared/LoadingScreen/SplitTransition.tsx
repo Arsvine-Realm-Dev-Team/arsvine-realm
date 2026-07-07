@@ -1,4 +1,4 @@
-import React, { forwardRef, useRef, useImperativeHandle, useCallback } from 'react';
+import React, { useRef, useImperativeHandle, useCallback } from 'react';
 import styles from '../../../styles/HomeLoadingScreen.module.scss';
 import gsap from 'gsap';
 
@@ -11,7 +11,7 @@ interface SplitTransitionProps {
   show: boolean;
 }
 
-const SplitTransition = forwardRef<SplitTransitionRef, SplitTransitionProps>(({ show }, ref) => {
+function SplitTransition({ show, ref }: SplitTransitionProps & { ref?: React.Ref<SplitTransitionRef> }) {
   const splitLinesContainerRef = useRef<(HTMLDivElement | null)[]>([]);
 
   const setSplitRef = useCallback((index: number) => (el: HTMLDivElement | null) => {
@@ -52,7 +52,7 @@ const SplitTransition = forwardRef<SplitTransitionRef, SplitTransitionProps>(({ 
       <div ref={setSplitRef(7)} className={`${styles.transition_glow_line} ${styles.bottom}`} />
     </>
   );
-});
+}
 
 SplitTransition.displayName = 'SplitTransition';
 

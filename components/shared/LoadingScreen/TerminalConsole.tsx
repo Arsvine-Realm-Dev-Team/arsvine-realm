@@ -1,4 +1,4 @@
-import React, { forwardRef, useRef, useImperativeHandle, useEffect } from 'react';
+import React, { useRef, useImperativeHandle, useEffect } from 'react';
 import styles from '../../../styles/HomeLoadingScreen.module.scss';
 
 interface TerminalConsoleProps {
@@ -9,7 +9,7 @@ export interface TerminalConsoleRef {
   container: HTMLDivElement | null;
 }
 
-const TerminalConsole = forwardRef<TerminalConsoleRef, TerminalConsoleProps>(({ logLines }, ref) => {
+function TerminalConsole({ logLines, ref }: TerminalConsoleProps & { ref?: React.Ref<TerminalConsoleRef> }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -44,7 +44,7 @@ const TerminalConsole = forwardRef<TerminalConsoleRef, TerminalConsoleProps>(({ 
       </div>
     </div>
   );
-});
+}
 
 TerminalConsole.displayName = 'TerminalConsole';
 

@@ -1,5 +1,4 @@
 import React, {
-  forwardRef,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -17,7 +16,7 @@ import {
 
 export interface TesseractHandle {
   getPosition: () => THREE.Vector3 | undefined;
-  meshRef: React.MutableRefObject<THREE.Group | null>;
+  meshRef: React.RefObject<THREE.Group | null>;
 }
 
 interface TesseractProps {
@@ -37,14 +36,15 @@ function emitCursorHover(active: boolean) {
   window.dispatchEvent(new CustomEvent('arsvine:tesseract-cursor-hover', { detail: { active } }));
 }
 
-const Tesseract = forwardRef<TesseractHandle, TesseractProps>(({
+function Tesseract({
   position,
   batteryPosition3D,
   onConnectChange,
   chargeBattery,
   onDraggingChange,
   isInverted,
-}, ref) => {
+  ref,
+}: TesseractProps & { ref?: React.Ref<TesseractHandle> }) {
   const groupRef = useRef<THREE.Group | null>(null);
   const coreRef = useRef<THREE.Mesh | null>(null);
   const isConnectingRef = useRef(false);
@@ -252,7 +252,7 @@ const Tesseract = forwardRef<TesseractHandle, TesseractProps>(({
       </mesh>
     </group>
   );
-});
+}
 
 Tesseract.displayName = 'Tesseract';
 

@@ -83,6 +83,10 @@ export default function useAnimationSequence(): AnimationSequenceState {
       }, staggerDelay * 2 + animationDuration);
     }, 2000 + staggerDelay * 2);
     // safeTimers 引用稳定，不放进依赖；只依赖 animationsComplete
+
+    return () => {
+      safeTimers.clearInterval(pulseIntervalId);
+    };
   }, [animationsComplete, safeTimers]);
 
   const retractColumns = useCallback((onComplete: () => void) => {

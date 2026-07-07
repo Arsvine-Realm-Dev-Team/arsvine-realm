@@ -11,7 +11,6 @@ import {
   decayArtifactLoad,
 } from '../lib/env-telemetry-artifact';
 import {
-  TYPING_CONSTANTS,
   formatFateTextForWrap,
   getTypingDelays,
 } from '../lib/typing-effect';

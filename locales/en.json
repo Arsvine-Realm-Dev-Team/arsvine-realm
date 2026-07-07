@@ -21,6 +21,10 @@
     "openMenu": "Open Menu",
     "closeMenu": "Close Menu"
   },
+  "musicPlayer": {
+    "playTitle": "Play",
+    "pauseTitle": "Pause"
+  },
   "nav": {
     "top": "Top",
     "content": "Content",

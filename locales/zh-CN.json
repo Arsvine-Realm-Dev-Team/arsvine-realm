@@ -21,6 +21,10 @@
     "openMenu": "打开菜单",
     "closeMenu": "关闭菜单"
   },
+  "musicPlayer": {
+    "playTitle": "播放",
+    "pauseTitle": "暂停"
+  },
   "nav": {
     "top": "顶部",
     "content": "正文",

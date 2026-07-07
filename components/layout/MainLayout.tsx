@@ -71,7 +71,7 @@ export default function MainLayout({ children, appLocale }: MainLayoutProps) {
     currentTime, hudVisible, leftPanelAnimated, leversVisible,
     handleActivateTesseract, handleDischargeLeverPull, isDischarging,
     powerLevel, isFateTypingActive, displayedFateText,
-    isEnvParamsTyping, displayedEnvParams, envData, envDataVersion, envArtifactStage,
+    isEnvParamsTyping, displayedEnvParams, envData, envArtifactStage,
     deactivateTesseract,
   } = app;
 

@@ -153,7 +153,6 @@ export default function NavigationColumns({
 
         {/* Navigation columns */}
         {sectionNames.map((name, index) => {
-          const columnPercentage = index * 16;
           const hudText = randomHudTexts[index + 1] || `DATA-Ø0${index + 1}`;
 
           const tasks = Array.from({ length: 30 }, (_, i) => {

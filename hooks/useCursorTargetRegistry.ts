@@ -1,4 +1,4 @@
-import { useEffect, useRef, type MutableRefObject } from 'react';
+import { useEffect, useRef, type RefObject } from 'react';
 
 import {
   collectInteractiveElements,
@@ -6,7 +6,7 @@ import {
 } from '../components/interactive/customCursorShared';
 
 interface UseCursorTargetRegistryOptions {
-  hoverElRef: MutableRefObject<HTMLElement | null>;
+  hoverElRef: RefObject<HTMLElement | null>;
   onEnter: (element: HTMLElement) => void;
   onLeave: (event: MouseEvent, currentTarget: HTMLElement) => void;
   onHoverTargetRemoved: () => void;
