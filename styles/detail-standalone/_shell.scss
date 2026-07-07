@@ -1,0 +1,46 @@
+/* Life detail standalone showcase page */
+
+.pageWrapper {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  background-color: transparent;
+  color: var(--ark-text);
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+
+  @media (max-width: 767px) {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+.mainContent {
+  position: relative;
+  z-index: 2;
+}
+
+
+.sectionHeader {
+  font-family: var(--font-hud);
+  font-size: var(--fs-caption);
+  color: var(--ark-primary);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  margin-bottom: clamp(20px, 3vw, 40px);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--ark-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: var(--ark-primary);
+  }
+}
+

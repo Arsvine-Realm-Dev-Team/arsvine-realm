@@ -41,6 +41,7 @@ export default function BlogDetailScaffold({
   const currentIndex = allPosts.findIndex((post) => post.slug === meta.slug);
   const prevPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
   const nextPost = currentIndex >= 0 && currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
+  const contentIndexHref = `/${locale}/content#blog`;
 
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const sectionRefs = useRef<Record<BlogDetailSectionId, HTMLElement | null>>({
@@ -116,8 +117,8 @@ export default function BlogDetailScaffold({
 
   const handleBack = useCallback((event?: React.MouseEvent) => {
     event?.preventDefault();
-    navigateTo(`/${locale}/blog`);
-  }, [navigateTo, locale]);
+    navigateTo(contentIndexHref);
+  }, [contentIndexHref, navigateTo]);
 
   const scrollToSection = useCallback((id: BlogDetailSectionId) => {
     const target = sectionRefs.current[id];
@@ -170,7 +171,7 @@ export default function BlogDetailScaffold({
               </Link>
             ) : (
               <Link
-                href={`/${locale}/blog`}
+                href={contentIndexHref}
                 prefetch={false}
                 className={`${styles.footerNavButton} ${styles.footerNavPrev}`}
                 onClick={handleBack}
@@ -197,7 +198,7 @@ export default function BlogDetailScaffold({
               </Link>
             ) : (
               <Link
-                href={`/${locale}/blog`}
+                href={contentIndexHref}
                 prefetch={false}
                 className={`${styles.footerNavButton} ${styles.footerNavNext}`}
                 onClick={handleBack}

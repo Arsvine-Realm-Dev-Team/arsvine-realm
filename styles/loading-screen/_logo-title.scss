@@ -1,0 +1,362 @@
+// ===== Logo area =====
+.logo_area {
+  position: absolute;
+  top: 45%;
+  /* Moved up slightly to balance console */
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(320px, 70vw, 1000px);
+  /* Increased width further to ensure single line for large text */
+  height: clamp(160px, 20vw, 300px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.frame_container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.title_container {
+  display: flex;
+  flex-direction: row;
+  /* Ensure row direction for single line text */
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  width: 100%;
+  /* Take full width */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding-bottom: 0.1em;
+  /* add some general padding */
+}
+
+.main_title {
+  font-family: var(--font-display);
+  font-size: clamp(3.5rem, 9vw, 6.5rem);
+  /* Increased size towards original */
+  font-weight: normal;
+  line-height: 1.25;
+  margin: 0;
+  padding: 0;
+  letter-spacing: clamp(2px, 1vw, 8px);
+  /* reduced letter spacing slightly */
+  color: var(--hud-element-color);
+  /* Match HUD element initial faint brightness */
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0;
+  /* Removed gap */
+  position: absolute;
+  /* Added position absolute */
+  top: 50%;
+  /* Center vertically */
+  left: 50%;
+  /* Center horizontally */
+  transform: translate(-50%, -50%);
+  /* Adjust for absolute positioning */
+  width: 100%;
+}
+
+.logo_subtitle {
+  position: absolute;
+  top: calc(50% + clamp(2.5rem, 6vw, 4.5rem));
+  /* Adjust positioning to sit nicely below */
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-primary), sans-serif;
+  font-size: clamp(0.7rem, 1.2vw, 1rem);
+  letter-spacing: 0.5em;
+  /* Ensure tracking does not cause misalignment */
+  padding-left: 0.5em;
+  /* Offset for tracking center alignment */
+  color: var(--hud-element-color);
+  /* Match HUD element initial faint brightness */
+  white-space: nowrap;
+  text-transform: uppercase;
+  z-index: 3;
+  opacity: 0;
+  visibility: hidden;
+  /* Start hidden to prevent flash */
+}
+
+.char_wrapper {
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+  height: 1.25em;
+  /* Increase slightly to give padding room */
+  line-height: 1.25em;
+  padding: 0 2px;
+  /* slight padding to prevent clipping of letters like 'R' or 'M' */
+}
+
+.char_inner {
+  display: inline-block;
+  transform: translateY(110%);
+  /* Initial state for animation - slightly more to ensure fully hidden */
+  padding-bottom: 0.15em;
+  /* Add slight padding to prevent clipping of bottom curves */
+}
+
+.sub_title {
+  display: none;
+  /* Removed entirely per user request */
+}
+
+.shiny_text {
+  text-shadow: none;
+  animation: none;
+}
+
+// ===== Logo decorations =====
+.decorative_frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  z-index: 1;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent 0%, var(--border-color) 15%, var(--border-color) 85%, transparent 100%);
+    opacity: 0.5;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent 0%, var(--border-color) 15%, var(--border-color) 85%, transparent 100%);
+    opacity: 0.5;
+  }
+}
+
+.industrial_decorations {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 15px;
+    width: calc(100% - 30px);
+    height: 2px;
+    background: repeating-linear-gradient(to right, var(--border-color), var(--border-color) 10px, transparent 10px, transparent 20px);
+    opacity: 0.3;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    border: 1px solid var(--border-color);
+    opacity: 0.5;
+  }
+}
+
+.side_lines {
+  position: absolute;
+  top: 50%;
+  left: -4px;
+  width: 4px;
+  height: 70%;
+  transform: translateY(-50%);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 100%;
+    background-color: var(--border-color);
+    opacity: 0.4;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 3px;
+    width: 1px;
+    height: 100%;
+    background-color: var(--border-color);
+    opacity: 0.2;
+  }
+}
+
+.side_lines_right {
+  left: auto;
+  right: -4px;
+}
+
+// ===== Decorative dots and dimensions =====
+.decoration_dots {
+  position: absolute;
+  top: 15px;
+  /* Adjust slightly relative to new height */
+  right: 25px;
+  /* moved inwards to compensate for wider logo area */
+  display: flex;
+  gap: 5px;
+
+  .dot {
+    width: 4px;
+    height: 4px;
+    background-color: var(--border-color);
+    opacity: 0.6;
+
+    &:nth-child(2) {
+      background-color: var(--accent-green);
+      animation: dotPulse 3s infinite;
+    }
+  }
+}
+
+@keyframes dotPulse {
+
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.dimension_marker {
+  position: absolute;
+  bottom: 10px;
+  /* Adjust slightly */
+  left: 25px;
+  /* moved inwards to compensate for wider logo area */
+  width: 40px;
+  height: 10px;
+  opacity: 0.4;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background-color: var(--border-color);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 1px;
+    height: 100%;
+    background-color: var(--border-color);
+  }
+}
+
+.status_icon {
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  width: 15px;
+  height: 15px;
+  z-index: 3;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--accent-green);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+}
+
+.icon_pulse {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: transparent;
+  border: 1px solid var(--accent-green);
+  animation: iconPulse 2s infinite ease-out;
+  opacity: 0;
+}
+
+@keyframes iconPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+@keyframes rotateSquare {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.rotating_square {
+  position: absolute;
+  bottom: 17px;
+  right: 17px;
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--border-color);
+  opacity: 0.6;
+  animation: rotateSquare 4s linear infinite;
+  z-index: 3;
+}
+

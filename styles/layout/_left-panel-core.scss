@@ -1,0 +1,286 @@
+// 左侧面板
+.leftPanel {
+  width: var(--left-panel-width);
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: -2vw;
+  background-color: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  pointer-events: none;
+  overflow: hidden;
+
+  &>* {
+    pointer-events: auto;
+  }
+
+  // 独立页（game/life detail）→ 整个面板统一淡出
+  transition: opacity 0.35s ease-out;
+
+  &.standaloneHide {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  // 动画状态
+  &.animated {
+    &::after {
+      animation: expandBorder 1.2s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+    }
+
+    &::before {
+      animation: fadeInCorner 0.8s ease-out 0.6s forwards;
+    }
+
+    .logoContainer {
+      animation: revealLogo 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      animation-delay: 0.1s;
+    }
+  }
+
+  // 边框装饰
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border: 0px solid var(--ark-border);
+    z-index: 1;
+    pointer-events: none;
+    background-color: transparent;
+    transform: translate(-50%, -50%);
+  }
+
+  // 角标装饰
+  &::before {
+    content: '';
+    position: absolute;
+    top: 17.5%;
+    left: 15%;
+    width: 25px;
+    height: 25px;
+    border-top: 2px solid var(--ark-primary);
+    border-left: 2px solid var(--ark-primary);
+    z-index: 2;
+    background-color: transparent;
+    opacity: 0;
+  }
+}
+
+
+// LOGO容器
+.logoContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background-image: url('/avatar_transparent.webp'); // Replace with your own avatar/logo image
+  background-position: 47% 48%;
+  background-repeat: no-repeat;
+  background-size: 57%;
+  // CSS 变量由 LeftPanel.tsx 的 rAF 循环写入；移动端不挂监听，保持初值即原始静态外观。
+  // 注意：transform 由 JS 以 !important 写入 inline style，以反超 revealLogo
+  //   keyframe（forwards）锁住的 transform: scale(1)。
+  --avatar-dx: 0px;
+  --avatar-dy: 0px;
+  --avatar-split: 0;
+  filter:
+    grayscale(100%) brightness(0.8) drop-shadow(0 0 5px rgba(0, 0, 0, 0.1)) drop-shadow(calc(var(--avatar-split) * 3px) 0 0 rgba(0, 220, 255, calc(var(--avatar-split) * 0.55))) drop-shadow(calc(var(--avatar-split) * -3px) 0 0 rgba(255, 50, 180, calc(var(--avatar-split) * 0.55)));
+  transition: transform 120ms ease-out;
+  pointer-events: none;
+  position: relative;
+  z-index: 3;
+  clip-path: inset(45% 45% 45% 45%);
+  opacity: 0;
+
+  // 触摸/无 hover 设备兜底：禁用视差与色散，回退到原始 filter 链。
+  // 与 LeftPanel.tsx 中的 isDesktop 早返回构成双重保险。
+  @media (hover: none),
+  (pointer: coarse) {
+    --avatar-dx: 0px;
+    --avatar-dy: 0px;
+    --avatar-split: 0;
+    transform: none;
+    filter: grayscale(100%) brightness(0.8) drop-shadow(0 0 5px rgba(0, 0, 0, 0.1));
+  }
+}
+
+
+
+// --- 新增: Power Display 容器样式 --- (尺寸调整)
+.powerDisplay {
+  position: absolute;
+  top: 19%;
+  left: 17%;
+  display: flex;
+  align-items: center;
+  gap: 10px; // 增大图标和文字间距
+  color: var(--ark-primary);
+  font-family: var(--font-hud);
+  font-size: var(--fs-base); // 稍微增大字体
+  z-index: 10;
+  opacity: 0;
+  // 定义 opacity 和 color 的基础过渡
+  transition-property: opacity, color;
+  transition-duration: 0.8s, 0.5s;
+  transition-timing-function: ease, ease-in-out;
+  transition-delay: 0s, 0s; // 明确指定 color 的 delay 为 0
+
+  .leftPanel.animated & {
+    opacity: 0.8;
+    // 这里的 transition-delay 只会影响 opacity，因为它会覆盖上面 opacity 的 delay
+    // 但为了更明确，我们还是指定 property
+    transition-property: opacity; // 只让这里的设置影响 opacity
+    transition-duration: 0.8s; // opacity 动画时长
+    transition-timing-function: ease; // opacity 动画缓动
+    transition-delay: 2.0s; // opacity 动画延迟
+  }
+}
+
+// --- 新增: 电池图标样式 --- 
+.batteryIcon {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 1px 2px;
+  height: 14px;
+  border: 1px solid var(--ark-primary);
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -4px;
+    width: 2px;
+    height: 6px;
+    background-color: var(--ark-primary);
+    transform: translateY(-50%);
+    border-radius: 0 1px 1px 0;
+  }
+}
+
+.batteryLevelSegment {
+  display: block;
+  width: 4px;
+  height: 8px;
+  flex-shrink: 0;
+  background-color: rgba(var(--ark-text-secondary-rgb, 200, 200, 200), 0.2);
+  transition: background-color 0.3s ease;
+}
+
+// --- 新增: 恢复默认的填充状态样式 ---
+.batteryLevelSegment.filled {
+  background-color: var(--ark-highlight-green);
+  // ADD transition here as well, to ensure it covers changes from inverted state too
+  transition: background-color 0.3s ease;
+}
+
+// --- 拖动 Tesseract 时电池"被吸引"的视觉反馈 ---
+// 桌面端用户拖动 3D 物体靠近电池，电池亮度↑、正极发光脉冲，提示"靠近可充电"
+// 颜色统一走 --ark-highlight-green，所以 inverted (满电粉) 状态下自动跟随变粉
+.powerDisplay.attracting {
+  opacity: 1;
+  color: var(--ark-highlight-green);
+  transition: opacity 0.3s ease, color 0.3s ease;
+
+  .batteryIcon {
+    border-color: var(--ark-highlight-green);
+    box-shadow: 0 0 6px rgba(178, 242, 187, 0.45), inset 0 0 4px rgba(178, 242, 187, 0.2);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+
+    &::after {
+      background-color: var(--ark-highlight-green);
+      animation: batteryAttractPulse 1.1s ease-in-out infinite;
+    }
+  }
+
+  .batteryLevelSegment {
+    // 未填充段也微微亮起来，暗示充电通路就绪
+    background-color: rgba(178, 242, 187, 0.25);
+  }
+}
+
+@keyframes batteryAttractPulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(178, 242, 187, 0.7);
+    transform: translateY(-50%) scaleX(1);
+  }
+
+  50% {
+    box-shadow: 0 0 6px 2px rgba(178, 242, 187, 0);
+    transform: translateY(-50%) scaleX(1.4);
+  }
+}
+
+// --- 新增: Power Text 样式 (可选) ---
+.powerText {
+  // 可以添加特定样式，例如字体粗细
+  font-weight: bold;
+}
+
+
+
+
+
+// --- 新增: 拉杆容器样式 ---
+.leverGroup {
+  position: absolute;
+  top: 17.5%; // 保持垂直位置
+  right: 21%; // 修改: 从 10% 增加到 25%，将组向左移动
+  display: flex;
+  flex-direction: row; // 水平排列
+  gap: 15px; // 拉杆之间的间距 (可调整)
+  z-index: 11; // 保持层级
+  pointer-events: auto; // 允许容器内的元素响应事件
+}
+
+
+
+
+
+// --- 新增: 左侧面板右上角装饰 ---
+.topRightDecoration {
+  position: absolute;
+  top: 17.5%;
+  right: 20%;
+  width: 20px;
+  height: 20px;
+  // 修改: 使用边框颜色作为背景
+  background-color: var(--ark-border);
+  border-radius: 50%;
+  transform: translate(50%, -50%);
+  // 修改: 提高 z-index
+  z-index: 12;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  pointer-events: none;
+
+  // 斜线使用 ::after 伪元素
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 110%;
+    height: 1.5px;
+    // 修改: 使用主高亮色作为斜线颜色
+    background-color: var(--ark-primary);
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+
+  // 动画：与电量显示等元素同步出现
+  .leftPanel.animated & {
+    transition-delay: 2.0s;
+    opacity: 0.7; // 修改: 稍微提高最终透明度
+  }
+}
+

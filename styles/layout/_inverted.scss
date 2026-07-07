@@ -1,0 +1,89 @@
+// --- 新增: 倒置状态下的心电图波形为粉色 --- 
+.inverted {
+
+  .logoContainer {
+    // 反转模式下的基础灰阶变深，但保留视差/色散：扩展 filter 链而不是覆盖它。
+    filter:
+      grayscale(100%) brightness(0.3) drop-shadow(0 0 5px rgba(0, 0, 0, 0.15)) drop-shadow(calc(var(--avatar-split) * 3px) 0 0 rgba(0, 220, 255, calc(var(--avatar-split) * 0.55))) drop-shadow(calc(var(--avatar-split) * -3px) 0 0 rgba(255, 50, 180, calc(var(--avatar-split) * 0.55)));
+
+    @media (hover: none),
+    (pointer: coarse) {
+      filter: grayscale(100%) brightness(0.3) drop-shadow(0 0 5px rgba(0, 0, 0, 0.15));
+    }
+  }
+
+  .backButton {
+    background: #ffffff;
+    border-color: #cccccc;
+    color: #333333;
+
+    &:hover {
+      background: #aaaaaa;
+      border-color: #888888;
+      color: #ffffff;
+    }
+  }
+
+}
+
+
+// 倒置模式下的底部功能栏
+.inverted {
+  .bottomBar {
+    background: rgba(240, 240, 240, 0.95);
+
+    &::after {
+      background: linear-gradient(90deg,
+          transparent 0%,
+          rgba(var(--ark-highlight-green-rgb), 0.02) 15%,
+          rgba(var(--ark-highlight-green-rgb), 0.06) 35%,
+          rgba(var(--ark-highlight-green-rgb), 0.15) 55%,
+          rgba(var(--ark-highlight-green-rgb), 0.4) 78%,
+          var(--ark-highlight-green) 95%,
+          rgba(var(--ark-highlight-green-rgb), 0.6) 100%);
+      filter: drop-shadow(0 0 3px var(--ark-highlight-green));
+    }
+  }
+
+  .bottomBarBtn {
+    &:active {
+      background: rgba(var(--ark-highlight-green-rgb), 0.08);
+    }
+
+    &.bottomBarDisabled {
+      color: rgba(50, 50, 50, 0.15);
+    }
+  }
+
+  .bottomBarBtn.bottomBarActive,
+  .bottomBarBtn.bottomBarCurrent {
+    color: var(--ark-primary);
+    text-shadow: 0 0 8px rgba(var(--ark-primary-rgb, 200, 200, 200), 0.3);
+  }
+
+  .hamburgerButton {
+    background: rgba(240, 240, 240, 0.85);
+    border-color: var(--ark-border);
+
+    &:hover,
+    &:active {
+      background: rgba(220, 220, 220, 0.95);
+      border-color: var(--ark-primary);
+    }
+
+    span {
+      background-color: var(--ark-primary);
+    }
+  }
+
+  .drawerBackdrop.backdropVisible {
+    background-color: rgba(255, 255, 255, 0.4);
+  }
+
+  @media (max-width: 1023px) {
+    .leftPanel {
+      background-color: rgba(240, 240, 240, 0.97);
+    }
+  }
+}
+

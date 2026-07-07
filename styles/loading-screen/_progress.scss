@@ -1,0 +1,61 @@
+// ===== Progress area =====
+.progress_area {
+  position: absolute;
+  bottom: 8%;
+  left: 10%;
+  /* Move further left */
+  right: 10%;
+  /* Same margin as left */
+  width: auto;
+  z-index: 10;
+  overflow: hidden;
+  /* Ensure it doesn't overflow container if text is too long */
+}
+
+.text_progress_container {
+  position: relative;
+  font-family: var(--terminal-mono-font);
+  font-size: 1.1rem;
+  /* Match log_text exactly */
+  letter-spacing: normal;
+  /* Match log_text normal tracking */
+  line-height: 1.6;
+  /* Match log_text */
+  width: 100%;
+}
+
+.text_progress_base,
+.text_progress_fill {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.text_progress_base {
+  color: rgba(200, 220, 200, 0.2);
+  /* Dark/faint version of log_text color */
+}
+
+.text_progress_fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: rgba(200, 220, 200, 0.7);
+  /* Exact match with log_text color */
+  overflow: hidden;
+  transition: clip-path 0.1s linear;
+}
+
+.progress_prefix,
+.progress_suffix {
+  flex-shrink: 0;
+  white-space: pre;
+}
+
+.progress_bar_chars {
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+

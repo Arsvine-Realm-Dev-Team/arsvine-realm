@@ -1,0 +1,228 @@
+// ===== 响应式: 移动端抽屉进一步精简 (<768px) =====
+@media (max-width: 767px) {
+  .leftPanel {
+    padding: 56px 16px calc(56px + env(safe-area-inset-bottom, 0) + 16px) 16px;
+  }
+
+  // 移动端隐藏纯装饰元素，只保留导航+拉杆+电源
+  .fateTextContainer,
+  .envParamsContainer,
+  .brailleText,
+  .gradientLine,
+  .logoContainer {
+    display: none !important;
+  }
+
+  .leftNavLink {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    font-size: var(--fs-md);
+  }
+
+  .travellingLink {
+    width: 100%;
+    max-width: 240px;
+    min-width: 0;
+  }
+
+  .travelStatusRow {
+    margin-top: 4px;
+    margin-bottom: 0;
+  }
+
+  .newsLink {
+    min-height: 52px;
+    font-size: var(--fs-sm);
+    gap: 12px;
+    padding: 0 14px;
+  }
+
+  .newsStatusDot {
+    width: 10px;
+    height: 10px;
+    flex-basis: 10px;
+  }
+
+  .newsExternalIcon {
+    width: 14px;
+    height: 14px;
+    flex-basis: 14px;
+  }
+}
+
+// ===== 底部功能栏 (移动端 <768px) =====
+.bottomBar {
+  display: none;
+
+  @media (max-width: 767px) {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: rgba(20, 20, 20, 0.95);
+    border-top: 1px solid var(--ark-border);
+    z-index: 1002;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg,
+          transparent 10%,
+          var(--ark-highlight-green) 40%,
+          var(--ark-highlight-green) 60%,
+          transparent 90%);
+      opacity: 0.1;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: -1px;
+      width: 35%;
+      height: 2px;
+      background: linear-gradient(90deg,
+          transparent 0%,
+          rgba(178, 242, 187, 0.02) 15%,
+          rgba(178, 242, 187, 0.06) 35%,
+          rgba(178, 242, 187, 0.15) 55%,
+          rgba(178, 242, 187, 0.4) 78%,
+          var(--ark-highlight-green) 95%,
+          rgba(178, 242, 187, 0.6) 100%);
+      filter: drop-shadow(0 0 3px var(--ark-highlight-green));
+      animation: scanBottomBar 4s cubic-bezier(0.25, 0.8, 0.25, 1) infinite;
+      pointer-events: none;
+    }
+  }
+}
+
+.bottomBarBtn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: transparent;
+  border: none;
+  color: var(--ark-text-secondary, rgba(200, 200, 200, 0.5));
+  font-family: var(--font-hud);
+  cursor: none;
+  transition: color 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+    background-color 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+    transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+    text-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  padding: 0;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+
+  &:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 18%;
+    height: 64%;
+    width: 1px;
+    background: var(--ark-border);
+    opacity: 0.25;
+  }
+
+  &:active {
+    transform: scale(0.92);
+    background: rgba(178, 242, 187, 0.08);
+    color: var(--ark-highlight-green);
+    text-shadow: 0 0 8px var(--ark-highlight-green);
+  }
+
+  &.bottomBarActive {
+    color: var(--ark-primary);
+    text-shadow: 0 0 8px var(--ark-primary-glow, rgba(150, 150, 150, 0.3));
+  }
+
+  &.bottomBarCurrent {
+    color: var(--ark-primary);
+    animation: bottomBarBreath 3s ease-in-out infinite;
+  }
+
+  &.bottomBarDisabled {
+    color: rgba(200, 200, 200, 0.15);
+    cursor: default;
+    pointer-events: none;
+  }
+}
+
+.bottomBarIcon {
+  font-size: var(--fs-xl);
+  line-height: 1;
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+    filter 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+  .bottomBarActive & {
+    transform: rotate(180deg);
+    filter: drop-shadow(0 0 4px var(--ark-highlight-green));
+  }
+}
+
+// 当前页指示器小横线
+.bottomBarIndicator {
+  display: none;
+
+  @media (max-width: 767px) {
+    display: block;
+    width: 12px;
+    height: 1.5px;
+    background: var(--ark-primary);
+    border-radius: 1px;
+    opacity: 0;
+    transform: scaleX(0);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 0 4px var(--ark-primary-glow, rgba(150, 150, 150, 0.3));
+
+    .bottomBarCurrent & {
+      opacity: 0.7;
+      transform: scaleX(1);
+    }
+  }
+}
+
+@keyframes bottomBarBreath {
+
+  0%,
+  100% {
+    opacity: 0.55;
+    text-shadow: 0 0 4px transparent;
+  }
+
+  50% {
+    opacity: 0.9;
+    text-shadow: 0 0 6px var(--ark-highlight-green);
+  }
+}
+
+
+.hudTopLeftContent {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.hudStatusBlock {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 767px) {
+  .hudTopLeftContent {
+    align-items: center;
+    gap: 10px;
+  }
+}

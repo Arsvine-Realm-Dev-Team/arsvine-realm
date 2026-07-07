@@ -9,10 +9,13 @@ styles/
 ├── globals.scss                   # 全局变量、@import 顺序、HTML/body 基线、字体声明
 ├── _animations.scss               # 共享 keyframe（revealLogo、loadingPulse 等）
 ├── _columns.scss                  # 五列导航的样式（首页 + 移动端 panel）
-├── _layout.scss                   # 全站级 layout（leftPanel、logoContainer、rightPanel）
+├── _layout.scss                   # 首页 layout 聚合入口（拆到 styles/layout/）
 ├── _sections.scss                 # /content 聚合页分区与 mobile scroll-margin
-├── sections/                      # 拆分给各 SectionXxx 的样式
-└── *.module.scss                  # 单组件样式（与组件同名同目录引用）
+├── layout/                        # 首页 left panel / drawer / bottom bar partials
+├── loading-screen/                # 首屏 Loading 各子组件 partials
+├── detail-standalone/             # web/life 详情页共享骨架 partials
+├── sections/                      # /content 分区样式（about/friends/life/work/...）
+└── *.module.scss                  # 单组件样式或 module 聚合入口
 ```
 
 ## 字体变量（`globals.scss`）
@@ -52,6 +55,10 @@ styles/
 - 跨组件共享 → 进 `_animations.scss`，注释说明被谁引用。
 
 `_layout.scss` / `_columns.scss` / `_sections.scss` 用同一思路，不要往里堆单组件样式。
+
+- `styles/_layout.scss` 现在只做聚合入口，具体规则放到 `styles/layout/`。
+- `styles/HomeLoadingScreen.module.scss` 保留为 CSS Module 入口，内部通过 `styles/loading-screen/` partials 组织。
+- `styles/StandaloneDetailView.module.scss` 是 web/life 详情页共用 module 入口，旧的 `Minecraft.module.scss` 已废弃。
 
 ## 反模式
 

@@ -1,0 +1,100 @@
+// ===== Transition / split effects =====
+.horizontal_slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+  background-size: 200% 100%;
+  z-index: 24;
+  transform-origin: left center;
+  pointer-events: none;
+}
+
+.horizontal_slide_second {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(200, 220, 255, 0.25), rgba(200, 220, 255, 0.15), rgba(200, 220, 255, 0.03));
+  background-size: 200% 100%;
+  z-index: 23;
+  transform-origin: left center;
+  pointer-events: none;
+}
+
+.horizontal_slide_third {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(180, 255, 220, 0.2), rgba(180, 255, 220, 0.1), rgba(180, 255, 220, 0.02));
+  background-size: 200% 100%;
+  z-index: 22;
+  transform-origin: left center;
+  pointer-events: none;
+}
+
+.split_diamond {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 30px;
+  height: 30px;
+  background-color: rgba(255, 255, 255, 0.9);
+  z-index: 26;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.7);
+}
+
+.transition_line_horizontal {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 8px 1px rgba(255, 255, 255, 0.5);
+  transform: translateY(-50%);
+  transform-origin: center center;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.transition_line_vertical {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 8px 1px rgba(255, 255, 255, 0.5);
+  transform: translateX(-50%);
+  transform-origin: center center;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.transition_glow_line {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 12px 3px rgba(255, 255, 255, 0.5);
+  transform-origin: left center;
+  z-index: 25;
+  pointer-events: none;
+
+  &.top {
+    top: 0;
+  }
+
+  &.bottom {
+    bottom: 0;
+  }
+}
+

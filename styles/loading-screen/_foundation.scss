@@ -1,0 +1,96 @@
+// Dosis 已通过 cdn.arsvine.com/fonts/google-fonts.css 提供（含 300/400/500 variable font），
+// 这里不再重复声明，否则浏览器会额外下载 /fonts/Dosis/Dosis-Light.ttf 浪费 60KB。
+// ZeldaFont 是自定义字体，CDN 没有，必须本地声明。
+@font-face {
+  font-family: 'ZeldaFont';
+  src: url('/fonts/ZELDA Free.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+// ===== Variables =====
+.variables {
+  --main-dark: #1a1a1a;
+  --medium-gray: #444444;
+  --light-gray: #888888;
+  --off-white: rgba(220, 220, 220, 0.9);
+  --accent-green: rgba(100, 180, 80, 0.8);
+  --accent-glow: rgba(100, 180, 80, 0.2);
+  --border-color: rgba(160, 160, 160, 0.3);
+  --hud-element-color: rgba(180, 180, 180, 0.5);
+  --terminal-mono-font: 'Consolas', 'Noto Sans SC', 'Menlo', 'Courier New', monospace;
+}
+
+// ===== Core containers =====
+.loading_screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: var(--main-dark);
+  background-image:
+    linear-gradient(to bottom,
+      rgba(20, 20, 20, 0.98) 0%,
+      rgba(26, 26, 26, 0.95) 70%,
+      rgba(30, 30, 30, 0.92) 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  overflow: hidden;
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8);
+  @extend .variables;
+}
+
+.wasteland_background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 999;
+  background-color: var(--main-dark);
+  background-image:
+    linear-gradient(rgba(20, 20, 20, 0.9), rgba(15, 15, 15, 0.95)),
+    url('/images/texture-noise.jpg');
+  background-blend-mode: overlay;
+  opacity: 0.9;
+  overflow: hidden;
+  @extend .variables;
+}
+
+.grid_overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0) 95%, rgba(60, 60, 60, 0.1) 100%),
+    linear-gradient(90deg, rgba(0, 0, 0, 0) 95%, rgba(60, 60, 60, 0.1) 100%);
+  background-size: 20px 20px;
+  opacity: 0.12;
+  pointer-events: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, rgba(50, 50, 50, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
+  }
+}
+
+.loading_content {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+}
+

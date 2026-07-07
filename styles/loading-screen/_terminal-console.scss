@@ -1,0 +1,135 @@
+// ===== Console output =====
+.console_output {
+  position: absolute;
+  top: 8%;
+  /* Expanded upwards */
+  bottom: calc(8% + 1.1rem * 1.6);
+  /* Exactly aligned so the gap matches the 4px margin inside */
+  left: 10%;
+  /* Moved left */
+  width: 50%;
+  /* Widened slightly */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: 5;
+}
+
+.console_header {
+  width: 100%;
+  padding: 5px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.header_title {
+  color: rgba(220, 220, 220, 0.7);
+  font-size: 0.9rem;
+  /* Increased 10% from 0.8rem */
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+}
+
+.console_content {
+  flex-grow: 1;
+  padding: 0 5px 0 0;
+  overflow-y: hidden;
+  font-family: var(--terminal-mono-font);
+  font-size: 1.1rem;
+  /* Increased 10% from 1.0rem */
+  position: relative;
+  color: rgba(200, 220, 200, 0.7);
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(80, 80, 80, 0.1);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(150, 150, 150, 0.3);
+    border-radius: 2px;
+  }
+
+  &::-webkit-scrollbar-button {
+    display: none;
+  }
+}
+
+.log_line {
+  margin-bottom: 4px;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  animation: fade-in 0.2s ease-out forwards;
+  opacity: 0;
+  position: relative;
+  z-index: 4;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.log_prefix {
+  color: rgba(180, 200, 180, 0.6);
+  font-weight: normal;
+  flex-shrink: 0;
+  font-size: 1.1rem;
+  /* Increased 10% from 1.0rem */
+}
+
+.log_text {
+  color: rgba(200, 220, 200, 0.7);
+  line-height: 1.6;
+  overflow: hidden;
+  white-space: nowrap;
+  animation: typing 0.3s steps(30, end);
+  user-select: none;
+  font-size: 1.1rem;
+  /* Increased 10% from 1.0rem */
+
+  &::after {
+    content: '_';
+    display: inline-block;
+    opacity: 1;
+    animation: blink 0.7s steps(2, start) infinite;
+    margin-left: 1px;
+    color: rgba(200, 220, 200, 0.5);
+  }
+}
+
+@keyframes typing {
+  from {
+    width: 0;
+  }
+
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}
+

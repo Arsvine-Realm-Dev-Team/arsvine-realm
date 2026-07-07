@@ -1,0 +1,263 @@
+/* ==================== TIMELINE SECTION ==================== */
+
+.timelineSection {
+  position: relative;
+  padding: clamp(30px, 5vw, 60px) clamp(20px, 3vw, 40px);
+  padding-left: calc(7.5vw + clamp(16px, 2vw, 30px));
+  max-width: 1400px;
+
+  @media (max-width: 1023px) {
+    padding-left: clamp(20px, 5vw, 40px);
+  }
+}
+
+
+.timelineText {
+  font-family: var(--font-hud);
+  font-size: clamp(0.85rem, 1.2vw, 1.05rem);
+  line-height: 1.9;
+  color: var(--ark-text);
+  opacity: 0.85;
+}
+
+.timelineTextOnly {
+  position: relative;
+  max-width: 800px;
+  margin-bottom: clamp(16px, 2.5vw, 32px);
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+
+  &.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== GALLERY SECTION ==================== */
+
+.gallerySection {
+  position: relative;
+  padding: clamp(30px, 5vw, 60px) clamp(20px, 3vw, 40px);
+  padding-left: calc(7.5vw + clamp(16px, 2vw, 30px));
+  max-width: 1400px;
+
+  @media (max-width: 1023px) {
+    padding-left: clamp(20px, 5vw, 40px);
+  }
+}
+
+.galleryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  align-items: start;
+  gap: clamp(12px, 2vw, 24px);
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.galleryItem {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--ark-border);
+  background: rgba(255, 255, 255, 0.02);
+  cursor: none;
+  transition: border-color 0.4s ease;
+
+  @media (max-width: 1023px) {
+    cursor: pointer;
+  }
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+
+    .galleryOverlay {
+      opacity: 1;
+    }
+
+    .galleryCornerTL,
+    .galleryCornerBR {
+      opacity: 1;
+    }
+
+    .galleryCaption {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @media (max-width: 767px) {
+    border-color: rgba(255, 255, 255, 0.12);
+
+    .galleryCornerTL,
+    .galleryCornerBR {
+      opacity: 0.5;
+    }
+
+    .galleryCaption {
+      transform: translateY(0);
+      opacity: 0.8;
+    }
+  }
+}
+
+.galleryOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.galleryCornerTL,
+.galleryCornerBR {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: rgba(255, 255, 255, 0.4);
+  border-style: solid;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.galleryCornerTL {
+  top: 6px;
+  left: 6px;
+  border-width: 1px 0 0 1px;
+}
+
+.galleryCornerBR {
+  bottom: 6px;
+  right: 6px;
+  border-width: 0 1px 1px 0;
+}
+
+.galleryCaption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px 14px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+  font-family: var(--font-hud);
+  font-size: var(--fs-2xs);
+  color: var(--ark-text);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  transform: translateY(100%);
+  opacity: 0;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+  z-index: 2;
+  pointer-events: none;
+}
+
+
+/* ==================== WEB GALLERY SECTION (VVD STYLE) ==================== */
+
+.webGallerySection {
+  position: relative;
+  padding: clamp(20px, 3vw, 40px) clamp(20px, 3vw, 40px);
+  padding-left: calc(7.5vw + clamp(16px, 2vw, 30px));
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: 1023px) {
+    padding-left: clamp(20px, 5vw, 40px);
+  }
+}
+
+.webGalleryStack {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 2vw, 30px);
+  width: 100%;
+}
+
+.webGalleryItem {
+  position: relative;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0;
+  border: 1px solid var(--ark-border);
+  background: rgba(255, 255, 255, 0.02);
+  transition: border-color 0.4s ease;
+  overflow: hidden;
+  
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  /* Make LazyImage container fit content */
+  :global(.lazyImageContainer) {
+    height: auto !important;
+  }
+  
+  img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+  }
+}
+
+/* ==================== MOBILE PAIR (WEB GALLERY) ==================== */
+
+.mobilePairRow {
+  display: flex;
+  gap: clamp(10px, 2vw, 30px);
+  width: 100%;
+  max-width: 1400px;
+}
+
+.mobileGalleryItem {
+  flex: 1 1 0;
+  min-width: 0;
+  position: relative;
+  border: 1px solid var(--ark-border);
+  background: rgba(255, 255, 255, 0.02);
+  transition: border-color 0.4s ease;
+  overflow: hidden;
+  cursor: none;
+
+  @media (max-width: 1023px) {
+    cursor: pointer;
+  }
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  :global(.lazyImageContainer) {
+    height: auto !important;
+  }
+
+  img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+  }
+}
+
+/* ==================== MOBILE IN GAME GALLERY GRID ==================== */
+
+.galleryItemMobile {
+  aspect-ratio: unset;
+}
+

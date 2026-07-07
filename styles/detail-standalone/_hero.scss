@@ -1,0 +1,157 @@
+/* ==================== HERO SECTION ==================== */
+
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.heroBg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 120%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  will-change: transform, scale;
+  scale: 1.15;
+  animation: heroKenBurns 3s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+@keyframes heroKenBurns {
+  0%   { scale: 1.15; }
+  100% { scale: 1.0; }
+}
+
+.heroScanlines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.06) 2px,
+    rgba(0, 0, 0, 0.06) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.heroOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 0 var(--spacing-section-pad);
+}
+
+.heroTitle {
+  font-family: var(--font-display);
+  font-size: clamp(3.5rem, 9vw, 7rem);
+  // 400 比 300 略实，浅色背景下不至于飘；但仍是 regular 而非 bold，保留克制感。
+  font-weight: 400;
+  // 接近白色 + 高不透明度，配合下方 text-shadow，可读性在深/浅背景下都稳定。
+  color: rgba(235, 235, 235, 0.95);
+  // 黑色描边阴影：浅色封面图（雪地、纸张、浅墙）下显效；深色背景上几乎不可见，无副作用。
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55), 0 0 18px rgba(0, 0, 0, 0.35);
+  letter-spacing: clamp(2px, 0.5vw, 6px); // 稍微减小间距，防止中文字符散架
+  text-transform: uppercase;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.charWrapper {
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+  height: 1.25em;
+  line-height: 1.25em;
+  padding: 0 2px;
+}
+
+.charInner {
+  display: inline-block;
+  transform: translateY(110%);
+  opacity: 0;
+  padding-bottom: 0.15em;
+}
+
+// 拉丁单词外套，防止 charWrapper 在词中断行（white-space: nowrap）。
+// CJK 段不被这层包裹，按字断行行为不受影响。
+.wordWrapper {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.heroSubtitle {
+  font-family: var(--font-hud);
+  font-size: clamp(0.9rem, 1.5vw, 1.2rem);
+  // 副标题原本灰色透明度 0.7，浅背景下偏弱。提到 0.9 + 加阴影。
+  color: rgba(220, 220, 220, 0.9);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.15em;
+  min-height: 1.8em;
+  margin-top: 1rem;
+
+  @media (max-width: 767px) {
+    letter-spacing: 0.08em;
+  }
+}
+
+.heroCursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  background-color: rgba(180, 180, 180, 0.6);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: cursorBlink 1s step-end infinite;
+}
+
+/* ==================== COMPACT HEADER (no hero) ==================== */
+
+.compactHeader {
+  position: relative;
+  padding: clamp(100px, 15vh, 160px) clamp(20px, 3vw, 40px) clamp(40px, 6vh, 80px);
+  padding-left: calc(7.5vw + clamp(16px, 2vw, 30px));
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border-bottom: 1px solid var(--ark-border);
+
+  @media (max-width: 1023px) {
+    padding-left: clamp(20px, 5vw, 40px);
+    padding-top: clamp(80px, 12vh, 120px);
+  }
+}
+
+.compactTitle {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 300;
+  color: var(--ark-text);
+  letter-spacing: clamp(2px, 0.5vw, 6px);
+  text-transform: uppercase;
+  margin: 0 0 0.5rem;
+  line-height: 1.25;
+}
+

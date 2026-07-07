@@ -1,0 +1,32 @@
+/* ==================== RESPONSIVE: MOBILE ==================== */
+
+@media (max-width: 767px) {
+  .timelineText {
+    font-size: var(--fs-xl);
+  }
+
+  .metaValue {
+    font-size: var(--fs-lg);
+  }
+
+  .highlightItem {
+    font-size: var(--fs-lg);
+  }
+
+  .linkTitle {
+    font-size: var(--fs-md);
+  }
+
+  .linkSub {
+    font-size: var(--fs-caption);
+  }
+
+  .galleryCaption {
+    font-size: var(--fs-caption);
+  }
+
+  .sectionHeader {
+    font-size: var(--fs-body);
+  }
+}
+

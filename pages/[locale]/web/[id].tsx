@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import Head from 'next/head';
 import type { GetStaticPaths, GetStaticProps } from 'next';
 import { useTranslations } from 'next-intl';
-import styles from '../../../styles/Minecraft.module.scss';
+import styles from '../../../styles/StandaloneDetailView.module.scss';
 import hudStyles from '../../../styles/Home.module.scss';
 import { useApp } from '../../../contexts/AppContext';
 import { useTransition } from '../../../contexts/TransitionContext';

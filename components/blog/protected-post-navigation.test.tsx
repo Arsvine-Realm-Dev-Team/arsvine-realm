@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import ProtectedPostGate from './ProtectedPostGate';
 import BlogStateShell from './BlogStateShell';
@@ -177,5 +177,38 @@ describe('protected blog detail navigation scaffold', () => {
     expect(screen.getByText('Body Slot')).toBeTruthy();
     expect(screen.getByText('Prev Post')).toBeTruthy();
     expect(screen.getByText('Next Post')).toBeTruthy();
+  });
+
+  it('routes standalone back controls to the canonical blog content hash', () => {
+    const currentPost = {
+      slug: 'protected-post',
+      title: 'Protected Post',
+      date: '2026-06-08',
+      excerpt: '',
+      tags: [],
+      readingMinutes: 0,
+      access: { mode: 'totp' as const },
+    };
+
+    render(
+      <BlogDetailScaffold
+        locale="zh-CN"
+        meta={currentPost}
+        allPosts={[currentPost]}
+        defaultContentLocale="zh-CN"
+        headerEntered
+        headerContent={<div>Header Slot</div>}
+        contentContent={<div>Body Slot</div>}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'BACK' }));
+    expect(navigateTo).toHaveBeenCalledWith('/zh-CN/content#blog');
+
+    const footerBackLinks = screen.getAllByRole('link', { name: /返回索引/i });
+    expect(footerBackLinks).toHaveLength(2);
+    footerBackLinks.forEach((link) => {
+      expect(link.getAttribute('href')).toBe('/zh-CN/content#blog');
+    });
   });
 });

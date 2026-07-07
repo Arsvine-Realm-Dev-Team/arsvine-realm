@@ -1,0 +1,255 @@
+// ===== Responsive: Tablet (<1024px) =====
+@media (max-width: 1023px) {
+  .logo_area {
+    width: min(700px, 95vw);
+    /* Increased */
+    height: auto;
+    min-height: 200px;
+    /* Increased */
+    left: 50%;
+    top: 45%;
+    /* Moved up slightly */
+  }
+
+  .main_title {
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    /* Ensure it can shrink more if needed */
+    letter-spacing: clamp(2px, 2vw, 6px);
+    /* Adjust letter spacing for tablet */
+  }
+
+  .console_output {
+    left: 8%;
+    width: 55%;
+    top: 15%;
+    /* Keep similar top offset as desktop */
+    height: 70%;
+  }
+
+  .progress_area {
+    max-width: min(500px, 90vw);
+    /* Increased to match logo area */
+    padding: 0 16px;
+  }
+
+  .hud_element {
+    font-size: var(--fs-caption);
+    letter-spacing: 1px;
+
+    &.top_left {
+      top: 20px;
+      left: 20px;
+    }
+
+    &.top_right {
+      top: 20px;
+      right: 20px;
+    }
+
+    &.bottom_left {
+      bottom: 20px;
+      left: 20px;
+    }
+
+    &.bottom_right {
+      bottom: 20px;
+      right: 20px;
+    }
+  }
+
+  .hud_scale_left,
+  .hud_scale_right,
+  .right_stripe_gradient {
+    display: none;
+  }
+}
+
+// ===== Responsive: Mobile (<768px) =====
+@media (max-width: 767px) {
+  .logo_area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    left: 0;
+    transform: translateY(-50%);
+    height: 120px;
+    top: 45%;
+  }
+
+  .title_container {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .main_title {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    font-size: clamp(1.2rem, 7vw, 2.2rem);
+    letter-spacing: clamp(1px, 1.5vw, 3px);
+    width: auto;
+  }
+
+  .logo_subtitle {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    margin-top: 8px;
+    text-align: center;
+  }
+
+  .console_output {
+    top: 50px;
+    /* adjusted slightly for visibility on mobile */
+    bottom: 90px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    height: auto;
+  }
+
+  .console_header {
+    margin-bottom: 10px;
+  }
+
+  .header_title {
+    font-size: var(--fs-base);
+  }
+
+  .console_content {
+    font-size: var(--fs-md);
+  }
+
+  .log_prefix {
+    font-size: var(--fs-sub);
+  }
+
+  .log_text {
+    font-size: var(--fs-sub);
+  }
+
+  .progress_area {
+    max-width: none;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .info_label {
+    font-size: var(--fs-caption);
+  }
+
+  .info_value {
+    font-size: var(--fs-base);
+  }
+
+  .hud_element {
+    font-size: var(--fs-xs);
+    letter-spacing: 0.5px;
+
+    &.top_left {
+      top: 12px;
+      left: 12px;
+    }
+
+    &.top_right {
+      top: 12px;
+      right: 12px;
+    }
+
+    &.bottom_left {
+      display: none;
+    }
+
+    &.bottom_right {
+      bottom: 12px;
+      right: 12px;
+    }
+  }
+
+  .hud_line {
+    width: 12px;
+  }
+
+  .hud_scale_left,
+  .hud_scale_right,
+  .right_stripe_gradient,
+  .scatter_dot,
+  .bio_signal_text {
+    display: none;
+  }
+
+  .decorative_frame,
+  .industrial_decorations,
+  .side_lines,
+  .decoration_dots,
+  .dimension_marker,
+  .rotating_square,
+  .status_icon {
+    display: none;
+  }
+}
+
+// ===== Reduced motion =====
+@media (prefers-reduced-motion: reduce) {
+
+  .drawable_circle,
+  .outer_circle_tick,
+  .center_solid_dot,
+  .inner_hollow_circle,
+  .rotating_sector,
+  .rotating_inner_group,
+  .icon_pulse,
+  .rotating_square {
+    animation: none;
+    opacity: 0.5;
+  }
+
+  .decoration_dots .dot:nth-child(2) {
+    animation: none;
+  }
+
+  .log_line {
+    animation: none;
+    opacity: 1;
+  }
+
+  .log_text {
+    animation: none;
+
+    &::after {
+      animation: none;
+    }
+  }
+
+  .progress_fill {
+    transition: none;
+  }
+
+  .split_diamond,
+  .horizontal_slide,
+  .horizontal_slide_second,
+  .horizontal_slide_third,
+  .transition_line_horizontal,
+  .transition_line_vertical,
+  .transition_glow_line {
+    display: none;
+  }
+
+  .main_title,
+  .sub_title {
+    transition: none;
+  }
+}
