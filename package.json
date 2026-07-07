@@ -39,7 +39,7 @@
     "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^18.2.0",
     "sass": "^1.72.0",
-    "three": "^0.176.0"
+    "three": "^0.185.1"
   },
   "overrides": {
     "three-mesh-bvh": "^0.8.3"
@@ -51,7 +51,7 @@
     "@types/node": "^25.2.3",
     "@types/react": "^18.2.79",
     "@types/react-dom": "^18.2.25",
-    "@types/three": "^0.175.0",
+    "@types/three": "^0.185.0",
     "cross-env": "^10.1.0",
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.2.7",
