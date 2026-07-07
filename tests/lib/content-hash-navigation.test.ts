@@ -5,7 +5,7 @@ import {
   createContentHashNavigationRequest,
   getContentSectionHashFromUrl,
   resolveContentHashTransitionMode,
-} from './content-hash-navigation';
+} from '../../lib/content-hash-navigation';
 
 describe('getContentSectionHashFromUrl', () => {
   it('extracts section hash from content URLs', () => {

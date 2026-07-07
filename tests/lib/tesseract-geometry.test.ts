@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   computeBatteryAttractionOffset,
   resolveBatteryAnchorPosition,
-} from './tesseract-geometry';
+} from '../../lib/tesseract-geometry';
 
 describe('tesseract geometry helpers', () => {
   it('resolves battery anchor from canvas and icon rects', () => {

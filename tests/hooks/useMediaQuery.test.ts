@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import useMediaQuery, { useReducedMotion, useResponsive } from './useMediaQuery';
+import useMediaQuery, { useReducedMotion, useResponsive } from '../../hooks/useMediaQuery';
 
 const matchesByQuery: Map<string, boolean> = new Map();
 const listenersByQuery: Map<string, Set<(event: MediaQueryListEvent) => void>> = new Map();

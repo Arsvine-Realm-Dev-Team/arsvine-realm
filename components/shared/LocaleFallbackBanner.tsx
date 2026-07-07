@@ -41,6 +41,28 @@ const CLOSE_LABEL: Record<Locale, string> = {
   en: 'Dismiss notice',
 };
 
+export function resolveLocaleFallbackBannerText(
+  requestedLocale: Locale,
+  actualLocale: Locale,
+  originLocale: Locale,
+  status: Exclude<TranslationStatus, 'source'>,
+) {
+  switch (requestedLocale) {
+    case 'zh-CN':
+      return status === 'fallback'
+        ? FALLBACK_TEXT['zh-CN'](localeNativeName['zh-CN'], localeNativeName[actualLocale])
+        : TRANSLATED_TEXT['zh-CN'](localeNativeName[originLocale]);
+    case 'zh-TW':
+      return status === 'fallback'
+        ? FALLBACK_TEXT['zh-TW'](localeNativeName['zh-TW'], localeNativeName[actualLocale])
+        : TRANSLATED_TEXT['zh-TW'](localeNativeName[originLocale]);
+    case 'en':
+      return status === 'fallback'
+        ? FALLBACK_TEXT.en(localeNativeName.en, localeNativeName[actualLocale])
+        : TRANSLATED_TEXT.en(localeNativeName[originLocale]);
+  }
+}
+
 export default function LocaleFallbackBanner({ requestedLocale, actualLocale, originLocale, status }: Props) {
   // 显式 status 优先；缺省时按旧逻辑兼容（防止旧调用方一次性全断）。
   // 兼容路径里不区分 translated，只表达 fallback。
@@ -90,12 +112,7 @@ function LocaleFallbackBannerContent({ requestedLocale, actualLocale, originLoca
 
   if (!isVisible) return null;
 
-  const text = status === 'fallback'
-    ? FALLBACK_TEXT[requestedLocale](
-        localeNativeName[requestedLocale],
-        localeNativeName[actualLocale],
-      )
-    : TRANSLATED_TEXT[requestedLocale](localeNativeName[originLocale]);
+  const text = resolveLocaleFallbackBannerText(requestedLocale, actualLocale, originLocale, status);
 
   const variantClass = status === 'fallback' ? styles.fallback : styles.translated;
   const icon = status === 'fallback' ? '⚠' : 'ℹ';

@@ -49,9 +49,9 @@ function WorksSection({
       return;
     }
 
-    setTabTransitionStage('fadeOut');
     let fadeInTimeoutId: number | undefined;
     const fadeOutTimeoutId = safeTimers.setTimeout(() => {
+      setTabTransitionStage('fadeOut');
       setDisplayedWorkTab(activeWorkTab);
       setTabTransitionStage('fadeIn');
       fadeInTimeoutId = safeTimers.setTimeout(() => {

@@ -8,6 +8,9 @@ const READ_TOKEN = process.env.GITHUB_READ_TOKEN?.trim();
 // 上游请求超时 8s。Vercel SSR 默认 10s 上限，留 2s 余量给 MDX 编译/序列化等下游操作；
 // 不设超时 + GitHub 5xx/限流会直接拉满整页 → 504。
 const FETCH_TIMEOUT_MS = 8000;
+const GITHUB_CONTENTS_API_BASE_URL = new URL('https://api.github.com');
+const CONTROL_CHAR_RE = /[\u0000-\u001F\u007F]/;
+const PROTOCOL_PREFIX_RE = /^[A-Za-z][A-Za-z\d+.-]*:/;
 
 let blogIndexCache: { data: ContentBlogIndex; ts: number } | null = null;
 const BLOG_INDEX_TTL_MS = 60_000;
@@ -22,12 +25,67 @@ function assertEnv() {
   if (!READ_TOKEN) throw new Error('Missing GITHUB_READ_TOKEN');
 }
 
+export function normalizeContentPath(path: string) {
+  const trimmed = path.trim();
+  if (!trimmed) {
+    throw new Error('Invalid content path.');
+  }
+
+  if (CONTROL_CHAR_RE.test(trimmed)) {
+    throw new Error('Invalid content path.');
+  }
+
+  if (
+    trimmed.startsWith('/')
+    || trimmed.startsWith('\\')
+    || trimmed.startsWith('//')
+    || trimmed.includes('\\')
+    || trimmed.includes('?')
+    || trimmed.includes('#')
+    || PROTOCOL_PREFIX_RE.test(trimmed)
+  ) {
+    throw new Error('Invalid content path.');
+  }
+
+  const normalizedSegments = trimmed.split('/').map((segment) => {
+    if (!segment) {
+      throw new Error('Invalid content path.');
+    }
+
+    let decodedSegment: string;
+    try {
+      decodedSegment = decodeURIComponent(segment);
+    } catch {
+      throw new Error('Invalid content path.');
+    }
+
+    if (
+      decodedSegment === '.'
+      || decodedSegment === '..'
+      || decodedSegment.includes('/')
+      || decodedSegment.includes('\\')
+      || decodedSegment.includes('?')
+      || decodedSegment.includes('#')
+      || CONTROL_CHAR_RE.test(decodedSegment)
+    ) {
+      throw new Error('Invalid content path.');
+    }
+
+    return encodeURIComponent(decodedSegment);
+  });
+
+  return normalizedSegments.join('/');
+}
+
 function buildContentsUrl(path: string) {
   assertEnv();
-  return (
-    `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}` +
-    `?ref=${encodeURIComponent(BRANCH)}`
+  const normalizedPath = normalizeContentPath(path);
+  const url = new URL(
+    `/repos/${encodeURIComponent(OWNER)}/${encodeURIComponent(REPO)}/contents/${normalizedPath}`,
+    GITHUB_CONTENTS_API_BASE_URL,
   );
+  url.searchParams.set('ref', BRANCH);
+  return url.toString();
 }
 
 export async function fetchGitHubContent(path: string): Promise<string> {

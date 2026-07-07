@@ -4,7 +4,7 @@ import {
   buildLocaleRedirectPath,
   localeAwareRedirect,
   makeLocaleRedirectGSSP,
-} from './redirect-helpers';
+} from '../../lib/redirect-helpers';
 
 describe('localeAwareRedirect', () => {
   it('uses the locale from params when it is supported', () => {

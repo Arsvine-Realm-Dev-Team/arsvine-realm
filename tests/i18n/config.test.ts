@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defaultLocale, getLocaleFromPath, resolveLocale } from './config';
+import { defaultLocale, getLocaleFromPath, resolveLocale } from '../../i18n/config';
 
 describe('getLocaleFromPath', () => {
   it('extracts a supported locale from the first path segment', () => {

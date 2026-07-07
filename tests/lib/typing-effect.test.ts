@@ -4,7 +4,7 @@ import {
   TYPING_CONSTANTS,
   formatFateTextForWrap,
   getTypingDelays,
-} from './typing-effect';
+} from '../../lib/typing-effect';
 
 describe('getTypingDelays', () => {
   it('returns the alphabetic profile for pure Latin text', () => {
@@ -24,6 +24,16 @@ describe('getTypingDelays', () => {
   it('returns the CJK profile when text mixes CJK and Latin', () => {
     const d = getTypingDelays('你好world');
     expect(d.typeDelay).toBe(TYPING_CONSTANTS.CJK_TYPING_DELAY);
+  });
+
+  it('keeps accented Latin text on the alphabetic profile', () => {
+    const d = getTypingDelays('Élan vital');
+    expect(d.typeDelay).toBe(TYPING_CONSTANTS.ALPHABETIC_TYPING_DELAY);
+  });
+
+  it('returns the CJK profile for Japanese kana and Korean hangul', () => {
+    expect(getTypingDelays('かな').typeDelay).toBe(TYPING_CONSTANTS.CJK_TYPING_DELAY);
+    expect(getTypingDelays('한글').typeDelay).toBe(TYPING_CONSTANTS.CJK_TYPING_DELAY);
   });
 
   it('returns the CJK profile for empty text (no alphabetic to satisfy the `hasAlphabetic` branch)', () => {

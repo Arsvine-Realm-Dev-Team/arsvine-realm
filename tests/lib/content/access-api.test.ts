@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { type AccessApiErrorCode, normalizeNextPath } from './access-api';
+import { type AccessApiErrorCode, normalizeNextPath } from '../../../lib/content/access-api';
 
 describe('normalizeNextPath', () => {
   it('keeps safe internal paths', () => {

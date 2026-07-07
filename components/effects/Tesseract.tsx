@@ -185,11 +185,8 @@ function Tesseract({
       raycaster.setFromCamera(mouseNdc, camera);
 
       if (raycaster.ray.intersectPlane(targetPlane.current, targetPosition)) {
-        if (targetPosition.y < dragMinY) {
-          targetPosition.y = dragMinY;
-        }
-
-        api.position.set(targetPosition.x, targetPosition.y, targetPosition.z);
+        const clampedY = Math.max(targetPosition.y, dragMinY);
+        api.position.set(targetPosition.x, clampedY, targetPosition.z);
         api.velocity.set(0, 0, 0);
         api.angularVelocity.set(0, 0, 0);
 

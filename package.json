@@ -41,9 +41,6 @@
     "sass": "^1.72.0",
     "three": "^0.185.1"
   },
-  "overrides": {
-    "three-mesh-bvh": "^0.8.3"
-  },
   "devDependencies": {
     "@next/bundle-analyzer": "^16.2.7",
     "@testing-library/react": "^16.3.2",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseWebDetailParagraph } from './webDetailParagraphs';
+import { parseWebDetailParagraph } from '../../../../components/detail/standalone/webDetailParagraphs';
 
 describe('parseWebDetailParagraph', () => {
   it('keeps plain text when there are no tokens or links', () => {
@@ -16,11 +16,27 @@ describe('parseWebDetailParagraph', () => {
 
     expect(segments).toEqual([
       { type: 'text', text: 'See ' },
-      { type: 'link', text: 'site', href: 'https://example.com', variant: 'default' },
+      { type: 'link', text: 'site', href: 'https://example.com/', variant: 'default' },
       { type: 'text', text: ' ' },
       { type: 'link', text: 'repo', href: 'https://github.com/test/repo', variant: 'github' },
       { type: 'text', text: ' ' },
       { type: 'link', text: 'video', href: 'https://www.bilibili.com/video/BV1xx', variant: 'bilibili' },
+    ]);
+  });
+
+  it('downgrades unsafe urls to plain text and avoids fake hostname icon matches', () => {
+    const segments = parseWebDetailParagraph(
+      'Bad [js](javascript:alert) [data](data:text/html,boom) [fake](https://github.com.evil.test/repo)',
+      [],
+    );
+
+    expect(segments).toEqual([
+      { type: 'text', text: 'Bad ' },
+      { type: 'text', text: 'js' },
+      { type: 'text', text: ' ' },
+      { type: 'text', text: 'data' },
+      { type: 'text', text: ' ' },
+      { type: 'link', text: 'fake', href: 'https://github.com.evil.test/repo', variant: 'default' },
     ]);
   });
 

@@ -5,7 +5,7 @@ import {
   getTotpGroups,
   verifyTotp,
   verifyTotpGroupToken,
-} from './totp';
+} from '../../../lib/content/totp';
 
 // RFC 4648 base32 编码的标准测试 secret，bit.ly/google-authenticator-wiki 推荐用"JBSWY3DPEHPK3PXP"。
 // 整个 suite 不会因后续 rotate 而失效（与 env 完全独立）。

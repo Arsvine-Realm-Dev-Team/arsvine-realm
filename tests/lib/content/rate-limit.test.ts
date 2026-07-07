@@ -66,7 +66,7 @@ afterEach(() => {
 
 describe('enforceRateLimit — local Map path (Upstash 未配置)', () => {
   it('allows up to limit then blocks subsequent requests', async () => {
-    const { enforceRateLimit, isRateLimitPersistent } = await import('./rate-limit');
+    const { enforceRateLimit, isRateLimitPersistent } = await import('../../../lib/content/rate-limit');
     expect(isRateLimitPersistent()).toBe(false);
 
     const key = `totp:1.2.3.4:test-a-${Math.random()}`;
@@ -81,12 +81,12 @@ describe('enforceRateLimit — local Map path (Upstash 未配置)', () => {
   });
 
   it('reports isRateLimitPersistent correctly', async () => {
-    const { isRateLimitPersistent } = await import('./rate-limit');
+    const { isRateLimitPersistent } = await import('../../../lib/content/rate-limit');
     expect(isRateLimitPersistent()).toBe(false);
   });
 
   it('resets the window after windowMs', async () => {
-    const { enforceRateLimit } = await import('./rate-limit');
+    const { enforceRateLimit } = await import('../../../lib/content/rate-limit');
     const key = `totp:reset:${Math.random()}`;
     for (let i = 0; i < 5; i += 1) {
       await enforceRateLimit(key, 5, 50);
@@ -99,7 +99,7 @@ describe('enforceRateLimit — local Map path (Upstash 未配置)', () => {
   });
 
   it('uses independent buckets per key', async () => {
-    const { enforceRateLimit } = await import('./rate-limit');
+    const { enforceRateLimit } = await import('../../../lib/content/rate-limit');
     const a = `totp:1.1.1.1:a-${Math.random()}`;
     const b = `totp:1.1.1.1:b-${Math.random()}`;
     for (let i = 0; i < 5; i += 1) {
@@ -113,7 +113,7 @@ describe('enforceRateLimit — local Map path (Upstash 未配置)', () => {
 describe('enforceRateLimit — Upstash path (Upstash 已配置)', () => {
   it('allows up to limit then blocks', async () => {
     setUpstashEnv();
-    const { enforceRateLimit, isRateLimitPersistent } = await import('./rate-limit');
+    const { enforceRateLimit, isRateLimitPersistent } = await import('../../../lib/content/rate-limit');
     expect(isRateLimitPersistent()).toBe(true);
 
     const key = `totp:1.2.3.4:upstash-a-${Math.random()}`;
@@ -127,7 +127,7 @@ describe('enforceRateLimit — Upstash path (Upstash 已配置)', () => {
 
   it('sets TTL only on the first INCR', async () => {
     setUpstashEnv();
-    const { enforceRateLimit } = await import('./rate-limit');
+    const { enforceRateLimit } = await import('../../../lib/content/rate-limit');
     const key = `totp:ttl:${Math.random()}`;
     await enforceRateLimit(key, 5, 60_000);
     expect(redisState.store.get(key)?.pttl).toBe(60_000);
@@ -154,7 +154,7 @@ describe('enforceRateLimit — fail-open on Redis error', () => {
       }),
     }));
 
-    const { enforceRateLimit } = await import('./rate-limit');
+    const { enforceRateLimit } = await import('../../../lib/content/rate-limit');
     const key = `totp:failopen:${Math.random()}`;
     const result = await enforceRateLimit(key, 5, 60_000);
     // fail-open：依旧能通过限流（而非 500 / 拒所有）

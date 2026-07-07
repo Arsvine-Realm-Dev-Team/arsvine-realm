@@ -1,5 +1,6 @@
 import React from 'react';
 import type { CopyableToken } from '../../../types';
+import { getSafeExternalLinkVariant, getSafeExternalUrl } from '../../../lib/safe-external-href';
 
 export interface WebDetailParagraphTextSegment {
   type: 'text';
@@ -51,16 +52,18 @@ export function parseWebDetailParagraph(
     }
 
     if (match[1]) {
-      const href = match[3];
+      const safeUrl = getSafeExternalUrl(match[3]);
+      if (!safeUrl) {
+        segments.push({ type: 'text', text: match[2] });
+        lastIndex = match.index + match[0].length;
+        continue;
+      }
+
       segments.push({
         type: 'link',
         text: match[2],
-        href,
-        variant: href.includes('bilibili.com')
-          ? 'bilibili'
-          : href.includes('github.com')
-            ? 'github'
-            : 'default',
+        href: safeUrl.href,
+        variant: getSafeExternalLinkVariant(safeUrl),
       });
     } else {
       for (let tokenIndex = 0; tokenIndex < copyableTokens.length; tokenIndex += 1) {

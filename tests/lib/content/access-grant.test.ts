@@ -7,7 +7,7 @@ import {
   setAccessGrantCookie,
   clearAccessGrantCookie,
   verifyAccessGrant,
-} from './access-grant';
+} from '../../../lib/content/access-grant';
 
 const ORIGINAL_SECRET = process.env.ACCESS_GRANT_SECRET;
 const TEST_SECRET = 'test-access-grant-secret-do-not-use-in-prod';

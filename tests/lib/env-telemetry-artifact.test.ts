@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import type { EnvData } from '../types';
+import type { EnvData } from '../../types';
 import {
   advanceArtifactLoad,
   buildTelemetryArtifactText,
   computeArtifactStage,
   createTelemetrySnapshot,
   decayArtifactLoad,
-} from './env-telemetry-artifact';
+} from '../../lib/env-telemetry-artifact';
 
 const envData: EnvData = {
   temp: 53.7,

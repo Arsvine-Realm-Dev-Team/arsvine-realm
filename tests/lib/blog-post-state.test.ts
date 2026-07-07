@@ -4,7 +4,7 @@ import {
   blogPostStateReducer,
   createInitialBlogPostState,
   shouldSuppressFallbackBanner,
-} from './blog-post-state';
+} from '../../lib/blog-post-state';
 
 const variantPayload = {
   meta: {

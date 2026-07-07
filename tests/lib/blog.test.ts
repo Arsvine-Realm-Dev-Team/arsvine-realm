@@ -4,12 +4,12 @@ const { getContentBlogIndexMock } = vi.hoisted(() => ({
   getContentBlogIndexMock: vi.fn(),
 }));
 
-vi.mock('./content/github', () => ({
+vi.mock('../../lib/content/github', () => ({
   fetchGitHubContent: vi.fn(),
   getContentBlogIndex: getContentBlogIndexMock,
 }));
 
-import { getAllPostsForLocale, getProtectedPostPublicMeta, normalizeAccess } from './blog';
+import { getAllPostsForLocale, getProtectedPostPublicMeta, normalizeAccess } from '../../lib/blog';
 
 beforeEach(() => {
   getContentBlogIndexMock.mockReset();

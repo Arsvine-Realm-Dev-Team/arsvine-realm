@@ -1,10 +1,10 @@
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import ProtectedPostGate from './ProtectedPostGate';
-import BlogStateShell from './BlogStateShell';
-import BlogDetailScaffold from './BlogDetailScaffold';
-import type { BlogPostMeta } from '../../types';
+import ProtectedPostGate from '../../../components/blog/ProtectedPostGate';
+import BlogStateShell from '../../../components/blog/BlogStateShell';
+import BlogDetailScaffold from '../../../components/blog/BlogDetailScaffold';
+import type { BlogPostMeta } from '../../../types';
 
 vi.mock('next/head', () => ({
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -54,17 +54,17 @@ vi.mock('next-intl', () => ({
   },
 }));
 
-vi.mock('../../contexts/AppContext', () => ({
+vi.mock('../../../contexts/AppContext', () => ({
   useApp: () => ({ isInverted: false }),
 }));
 
 const navigateTo = vi.fn();
 
-vi.mock('../../contexts/TransitionContext', () => ({
+vi.mock('../../../contexts/TransitionContext', () => ({
   useTransition: () => ({ navigateTo }),
 }));
 
-vi.mock('../shared/HreflangLinks', () => ({
+vi.mock('../../../components/shared/HreflangLinks', () => ({
   default: () => null,
 }));
 
@@ -210,5 +210,45 @@ describe('protected blog detail navigation scaffold', () => {
     footerBackLinks.forEach((link) => {
       expect(link.getAttribute('href')).toBe('/zh-CN/content#blog');
     });
+  });
+
+  it('falls back to the canonical blog index when adjacent slugs are unsafe', () => {
+    const unsafePosts: BlogPostMeta[] = [
+      {
+        ...allPosts[0],
+        slug: 'https://evil.test/prev',
+        title: 'Unsafe Prev',
+      },
+      allPosts[1],
+      {
+        ...allPosts[2],
+        slug: '../escape',
+        title: 'Unsafe Next',
+      },
+    ];
+
+    render(
+      <BlogDetailScaffold
+        locale="zh-CN"
+        meta={unsafePosts[1]}
+        allPosts={unsafePosts}
+        defaultContentLocale="zh-CN"
+        headerEntered
+        headerContent={<div>Header Slot</div>}
+        contentContent={<div>Body Slot</div>}
+      />,
+    );
+
+    const unsafePrevLink = screen.getByRole('link', { name: /Unsafe Prev/i });
+    const unsafeNextLink = screen.getByRole('link', { name: /Unsafe Next/i });
+
+    expect(unsafePrevLink.getAttribute('href')).toBe('/zh-CN/content#blog');
+    expect(unsafeNextLink.getAttribute('href')).toBe('/zh-CN/content#blog');
+
+    fireEvent.click(unsafePrevLink);
+    fireEvent.click(unsafeNextLink);
+
+    expect(navigateTo).toHaveBeenNthCalledWith(1, '/zh-CN/content#blog');
+    expect(navigateTo).toHaveBeenNthCalledWith(2, '/zh-CN/content#blog');
   });
 });

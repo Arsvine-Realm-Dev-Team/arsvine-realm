@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parsePersistedPlayerState, readPersistedPlayerStateFromStorage } from './persistence';
+import { parsePersistedPlayerState, readPersistedPlayerStateFromStorage } from '../../../../components/interactive/music-player/persistence';
 
 describe('music player persistence', () => {
   it('returns null for invalid json', () => {

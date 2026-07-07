@@ -2,7 +2,7 @@ import React from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useSafeTimeouts } from './use-safe-timeouts';
+import { useSafeTimeouts } from '../../lib/use-safe-timeouts';
 
 afterEach(() => {
   vi.useRealTimers();

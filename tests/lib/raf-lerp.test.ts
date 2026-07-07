@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { clamp, isAtRest, lerp, lowPass } from './raf-lerp';
+import { clamp, isAtRest, lerp, lowPass } from '../../lib/raf-lerp';
 
 describe('lerp', () => {
   it('returns a when t = 0', () => {

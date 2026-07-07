@@ -20,8 +20,8 @@
  */
 
 const FATE_BREAK_PUNCTUATION = /[,.!?;:，。！？；：、]/;
-const ALPHABETIC_CHAR_RE = /[A-Za-zÀ-ÖØ-öø-ɏ]/;
-const CJK_CHAR_RE = /[㐀-鿿豈-﫿]/;
+const ALPHABETIC_CHAR_RE = /\p{Script=Latin}/u;
+const CJK_CHAR_RE = /(?:\p{Script=Han}|\p{Script=Hiragana}|\p{Script=Katakana}|\p{Script=Hangul})/u;
 
 const ALPHABETIC_TYPING_DELAY = 48;
 const ALPHABETIC_DELETE_DELAY = 32;

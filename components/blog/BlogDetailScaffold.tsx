@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useApp } from '../../contexts/AppContext';
 import { useTransition } from '../../contexts/TransitionContext';
-import { buildBlogPostHref } from '../../lib/blog-client';
+import { buildBlogIndexHref, buildBlogPostHref } from '../../lib/blog-client';
 import type { BlogContentLocale } from '../../lib/blog';
 import { type Locale } from '../../i18n/config';
 import type { BlogPostMeta } from '../../types';
@@ -41,7 +41,13 @@ export default function BlogDetailScaffold({
   const currentIndex = allPosts.findIndex((post) => post.slug === meta.slug);
   const prevPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
   const nextPost = currentIndex >= 0 && currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
-  const contentIndexHref = `/${locale}/content#blog`;
+  const contentIndexHref = buildBlogIndexHref(locale);
+  const prevPostHref = prevPost
+    ? buildBlogPostHref(locale, prevPost.slug, defaultContentLocale)
+    : contentIndexHref;
+  const nextPostHref = nextPost
+    ? buildBlogPostHref(locale, nextPost.slug, defaultContentLocale)
+    : contentIndexHref;
 
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const sectionRefs = useRef<Record<BlogDetailSectionId, HTMLElement | null>>({
@@ -157,12 +163,12 @@ export default function BlogDetailScaffold({
           <div className={styles.footerNav}>
             {prevPost ? (
               <Link
-                href={buildBlogPostHref(locale, prevPost.slug, defaultContentLocale)}
+                href={prevPostHref}
                 prefetch={prevPost.access.mode === 'public'}
                 className={`${styles.footerNavButton} ${styles.footerNavPrev}`}
                 onClick={(event) => {
                   event.preventDefault();
-                  navigateTo(buildBlogPostHref(locale, prevPost.slug, defaultContentLocale));
+                  navigateTo(prevPostHref);
                 }}
                 data-cursor-label="PREVIOUS"
               >
@@ -184,12 +190,12 @@ export default function BlogDetailScaffold({
 
             {nextPost ? (
               <Link
-                href={buildBlogPostHref(locale, nextPost.slug, defaultContentLocale)}
+                href={nextPostHref}
                 prefetch={nextPost.access.mode === 'public'}
                 className={`${styles.footerNavButton} ${styles.footerNavNext}`}
                 onClick={(event) => {
                   event.preventDefault();
-                  navigateTo(buildBlogPostHref(locale, nextPost.slug, defaultContentLocale));
+                  navigateTo(nextPostHref);
                 }}
                 data-cursor-label="NEXT"
               >

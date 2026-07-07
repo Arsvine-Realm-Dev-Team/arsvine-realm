@@ -29,14 +29,14 @@ describe('hasContentRepoConfig', () => {
     process.env.GITHUB_OWNER = 'acme';
     process.env.GITHUB_REPO = 'content';
     delete process.env.GITHUB_READ_TOKEN;
-    const { hasContentRepoConfig } = await import('./github');
+    const { hasContentRepoConfig } = await import('../../../lib/content/github');
     expect(hasContentRepoConfig()).toBe(false);
   });
 
   it('returns true when all three are set', async () => {
     vi.resetModules();
     setContentEnv();
-    const { hasContentRepoConfig } = await import('./github');
+    const { hasContentRepoConfig } = await import('../../../lib/content/github');
     expect(hasContentRepoConfig()).toBe(true);
   });
 });
@@ -50,34 +50,44 @@ describe('fetchGitHubContent', () => {
   it('throws with a clear error when content repo is not configured', async () => {
     clearContentEnv();
     vi.resetModules();
-    const { fetchGitHubContent } = await import('./github');
+    const { fetchGitHubContent } = await import('../../../lib/content/github');
     await expect(fetchGitHubContent('blog/init.mdx')).rejects.toThrow(/not configured/);
   });
 
   it('returns the raw text on 200', async () => {
     const fetchMock = vi.fn(async () => new Response('# hello', { status: 200 }));
     vi.stubGlobal('fetch', fetchMock);
-    const { fetchGitHubContent } = await import('./github');
+    const { fetchGitHubContent } = await import('../../../lib/content/github');
     const text = await fetchGitHubContent('blog/init.mdx');
     expect(text).toBe('# hello');
     const call = fetchMock.mock.calls[0];
     expect(call).toBeDefined();
     const [url, init] = call as unknown as [unknown, RequestInit];
-    expect(String(url)).toContain('api.github.com/repos/acme/content/contents/blog/init.mdx');
-    expect(String(url)).toContain('ref=main');
+    const parsedUrl = new URL(String(url));
+    expect(parsedUrl.origin).toBe('https://api.github.com');
+    expect(parsedUrl.pathname).toBe('/repos/acme/content/contents/blog/init.mdx');
+    expect(parsedUrl.searchParams.get('ref')).toBe('main');
     expect((init.headers as Record<string, string>).Accept).toBe('application/vnd.github.raw');
     expect((init.headers as Record<string, string>).Authorization).toBe('Bearer test-token');
   });
 
+  it('rejects dangerous paths before issuing fetch', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const { fetchGitHubContent } = await import('../../../lib/content/github');
+    await expect(fetchGitHubContent('https://evil.test/owned')).rejects.toThrow(/Invalid content path/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('throws on 404 with status info in the message', async () => {
     vi.stubGlobal('fetch', async () => new Response('nope', { status: 404, statusText: 'Not Found' }));
-    const { fetchGitHubContent } = await import('./github');
+    const { fetchGitHubContent } = await import('../../../lib/content/github');
     await expect(fetchGitHubContent('blog/init.mdx')).rejects.toThrow(/404/);
   });
 
   it('throws on 500', async () => {
     vi.stubGlobal('fetch', async () => new Response('boom', { status: 500, statusText: 'Server Error' }));
-    const { fetchGitHubContent } = await import('./github');
+    const { fetchGitHubContent } = await import('../../../lib/content/github');
     await expect(fetchGitHubContent('blog/init.mdx')).rejects.toThrow(/500/);
   });
 
@@ -90,7 +100,7 @@ describe('fetchGitHubContent', () => {
         throw err;
       }),
     );
-    const { fetchGitHubContent } = await import('./github');
+    const { fetchGitHubContent } = await import('../../../lib/content/github');
     await expect(fetchGitHubContent('blog/init.mdx')).rejects.toThrow(/Timed out/);
   });
 
@@ -98,7 +108,7 @@ describe('fetchGitHubContent', () => {
     vi.stubGlobal('fetch', vi.fn(async () => {
       throw new TypeError('network gone');
     }));
-    const { fetchGitHubContent } = await import('./github');
+    const { fetchGitHubContent } = await import('../../../lib/content/github');
     await expect(fetchGitHubContent('blog/init.mdx')).rejects.toThrow(/network gone/);
   });
 });
@@ -112,7 +122,7 @@ describe('getContentBlogIndex', () => {
   it('returns an empty index when content repo is not configured', async () => {
     clearContentEnv();
     vi.resetModules();
-    const { getContentBlogIndex } = await import('./github');
+    const { getContentBlogIndex } = await import('../../../lib/content/github');
     const index = await getContentBlogIndex();
     expect(index.posts).toEqual([]);
     expect(index.version).toBe(1);
@@ -120,7 +130,7 @@ describe('getContentBlogIndex', () => {
 
   it('returns an empty index on 404 (fresh private repos)', async () => {
     vi.stubGlobal('fetch', async () => new Response('missing', { status: 404, statusText: 'Not Found' }));
-    const { getContentBlogIndex } = await import('./github');
+    const { getContentBlogIndex } = await import('../../../lib/content/github');
     const index = await getContentBlogIndex();
     expect(index.posts).toEqual([]);
   });
@@ -133,7 +143,7 @@ describe('getContentBlogIndex', () => {
       }),
     );
     vi.stubGlobal('fetch', fetchMock);
-    const { getContentBlogIndex } = await import('./github');
+    const { getContentBlogIndex } = await import('../../../lib/content/github');
     await getContentBlogIndex();
     await getContentBlogIndex();
     await getContentBlogIndex();
@@ -152,7 +162,7 @@ describe('getContentBlogIndex', () => {
       return new Response('boom', { status: 500, statusText: 'Server Error' });
     });
     vi.stubGlobal('fetch', fetchMock);
-    const { getContentBlogIndex } = await import('./github');
+    const { getContentBlogIndex } = await import('../../../lib/content/github');
     const first = await getContentBlogIndex();
     expect(first.posts[0]?.slug).toBe('init');
     // 强制让缓存过期
@@ -162,5 +172,35 @@ describe('getContentBlogIndex', () => {
     const second = await getContentBlogIndex();
     expect(second.posts[0]?.slug).toBe('init');
     expect(console.warn).toHaveBeenCalled();
+  });
+});
+
+describe('normalizeContentPath', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  it('keeps repo-relative paths and encodes each segment', async () => {
+    const { normalizeContentPath } = await import('../../../lib/content/github');
+    expect(normalizeContentPath('blog/世界 notes.mdx')).toBe('blog/%E4%B8%96%E7%95%8C%20notes.mdx');
+  });
+
+  it.each([
+    '../secrets.txt',
+    './draft.mdx',
+    '/etc/passwd',
+    '\\\\server\\share',
+    'https://evil.test/payload',
+    '//evil.test/payload',
+    'blog\\draft.mdx',
+    'blog/draft.mdx?lang=en',
+    'blog/draft.mdx#frag',
+    'blog/%2e%2e/draft.mdx',
+    'blog/%2E/draft.mdx',
+    'blog/%2Fescape.mdx',
+    'blog/%5Cescape.mdx',
+  ])('rejects dangerous path %s', async (input) => {
+    const { normalizeContentPath } = await import('../../../lib/content/github');
+    expect(() => normalizeContentPath(input)).toThrow(/Invalid content path/);
   });
 });
