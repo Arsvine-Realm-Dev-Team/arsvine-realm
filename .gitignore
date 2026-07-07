@@ -41,9 +41,10 @@ next-env.d.ts
 .vscode/
 *.sublime-project
 *.sublime-workspace
-docs/*
+docs/dev/*
 !docs/preview.png
 .codex*/
+.claude/
 
 # OS generated files
 Thumbs.db

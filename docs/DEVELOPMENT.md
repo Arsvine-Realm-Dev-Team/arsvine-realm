@@ -1,0 +1,277 @@
+# Development Guide
+
+This document is the day-to-day development guide for **ARSVINE REALM**. Keep this file focused on local setup, commands, assets, and maintenance workflows. Architecture-level details belong in [`ARCHITECTURE.md`](./ARCHITECTURE.md); deployment and external services belong in [`OPERATIONS.md`](./OPERATIONS.md); fragile historical fixes belong in [`GOTCHAS.md`](./GOTCHAS.md).
+
+## Runtime baseline
+
+- Node.js: `24.x` in production and Vercel project settings.
+- Local compatibility: Node `20.9+` may work, but `24.x` is the documented target.
+- Package manager: npm is assumed by the committed scripts.
+- Framework mode: Next.js Pages Router, not App Router.
+- Server entry: `server.js` is used in both development and production.
+
+Do not replace the project scripts with `next dev` or `next start`. The custom server loads `.env.local`, prepares Next.js, respects `PORT`, and includes graceful shutdown handling.
+
+## Quick start
+
+```bash
+npm install
+cp .env.example .env.local
+npm run dev
+```
+
+Open `http://localhost:3000`. The locale middleware redirects `/` to the preferred locale path, usually `/zh-CN`.
+
+## Common commands
+
+```bash
+npm run dev        # node server.js
+npm run build      # next build
+npm start          # cross-env NODE_ENV=production node server.js
+npm run lint       # eslint .
+npm run typecheck  # tsc --noEmit
+npm run test       # vitest run
+```
+
+Run a single test file:
+
+```bash
+npx vitest run lib/blog-client.test.ts
+```
+
+Run tests by name:
+
+```bash
+npx vitest run -t "reading time"
+```
+
+Vitest uses `jsdom` and matches `**/*.test.ts`. Test files currently live near their source files under `lib/`.
+
+## Local environment
+
+Start from `.env.example`. The most common local values are:
+
+```env
+PORT=3000
+NEXT_PUBLIC_SITE_URL=https://arsvine.com
+# NEXT_PUBLIC_MEDIA_CDN=https://cdn.arsvine.com
+# GITHUB_OWNER=ArsvineZhu
+# GITHUB_REPO=arsvine-content
+# GITHUB_BRANCH=main
+# GITHUB_READ_TOKEN=github_pat_xxx
+```
+
+Important rules:
+
+- `NEXT_PUBLIC_*` variables are exposed to the browser. Do not put secrets there.
+- `GITHUB_READ_TOKEN`, `ACCESS_GRANT_SECRET`, `TOTP_GROUPS_JSON`, `REVALIDATE_SECRET`, and Upstash tokens are server-side only.
+- Without the external content repo variables, the blog falls back to `content/blog/init/` and the tweets page falls back to its empty state.
+- To exercise the tweet archive UI without a live content repo, set `TWEETS_STRESS_TEST=1`. Optional knobs are `TWEETS_STRESS_YEARS`, `TWEETS_STRESS_MONTHS_PER_YEAR`, and `TWEETS_STRESS_TWEETS_PER_MONTH`. Keep stress mode out of production.
+
+## Local COS Referer workflow
+
+The media bucket behind `cdn.arsvine.com` only allows Referer values matching `arsvine.com` / `*.arsvine.com`. Localhost and empty Referer are rejected.
+
+For local media playback or image loading through the real COS domain, use the Windows helper:
+
+```powershell
+scripts\dev-host-setup.cmd
+```
+
+The script:
+
+1. self-elevates through UAC;
+2. adds `127.0.0.1 dev.arsvine.com` to the Windows hosts file;
+3. temporarily adds `dev.arsvine.com` to the current user's proxy bypass list when a system proxy is enabled;
+4. starts the same dev server on port `80`;
+5. cleans up hosts/proxy changes on normal exit.
+
+Useful subcommands:
+
+```powershell
+scripts\dev-host-setup.cmd -HostsOnly
+scripts\dev-host-setup.cmd -Remove
+```
+
+If using `-HostsOnly`, start the dev server manually on port 80:
+
+```powershell
+$env:PORT=80; npm run dev
+```
+
+Then open `http://dev.arsvine.com`.
+
+## Data and content editing
+
+For routine content changes, prefer these locations before editing component logic:
+
+```text
+data/                 # site config, projects, experience, life, skills, friend links, music
+content/blog/init/    # bundled fallback blog post
+locales/              # next-intl UI strings
+public/               # static images, icons, local music test files
+config/               # small runtime config fragments, e.g. image hosts
+```
+
+Trilingual bundled data is split by topic:
+
+```text
+data/
+  projects/{index.ts,en.ts,zh-TW.ts}
+  experience/{index.ts,en.ts,zh-TW.ts}
+  life/{index.ts,en.ts,zh-TW.ts}
+  skills/{index.ts,en.ts,zh-TW.ts}
+  friendLinks/{index.ts,en.ts,zh-TW.ts}
+  site.ts
+  music.ts
+```
+
+`index.ts` is Simplified Chinese (`zh-CN`) and acts as the fallback. When adding a locale, update all of these together:
+
+- `i18n/config.ts`
+- `locales/<locale>.json`
+- every relevant `data/<topic>/<locale>.ts`
+- `lib/i18n-data.ts` static registry
+- locale matching logic in `proxy.ts` if needed
+
+Do not replace the explicit registry with dynamic `require`; it causes Critical dependency warnings and makes bundling less predictable.
+
+## Image host configuration
+
+Next.js `<Image>` remote host rules are centralized in:
+
+```text
+config/image-hosts.js
+```
+
+Add CDN/object-storage/image-service domains there, then restart dev or rebuild. Do not duplicate the remote host list inside `next.config.js`.
+
+Current documented defaults:
+
+- `cdn.arsvine.com` — Tencent COS bucket for media, post images, covers, galleries, and assets.
+- `placehold.co` — placeholder images used by data files.
+- `images.unsplash.com` / `source.unsplash.com` — legacy/template sample images.
+
+For large post/content images, prefer direct `cdn.arsvine.com` URLs with `next/image` and `unoptimized={true}` where appropriate, to avoid burning Vercel Hobby Image Optimization quota and to avoid unnecessary `/_next/image` proxy traffic.
+
+## Image conversion scripts
+
+Drop source images under `scripts/images/`, then run:
+
+```bash
+node scripts/convert-images.mjs
+node scripts/convert-images.mjs jpg
+node scripts/convert-images.mjs avif --quality 50
+node scripts/convert-images.mjs --help
+```
+
+Outputs go to `scripts/images/out/` and preserve subdirectory structure. Source files are never modified. Re-runs skip existing outputs unless `--overwrite` is passed.
+
+## Favicon regeneration
+
+Favicon files are split between the public root and `public/icons/`:
+
+```text
+public/favicon.ico
+public/apple-touch-icon.png
+public/icons/favicon-16x16.png
+public/icons/favicon-32x32.png
+public/icons/android-chrome-192x192.png
+public/icons/android-chrome-512x512.png
+public/icons/site.webmanifest
+```
+
+Regenerate from the transparent avatar source:
+
+```bash
+node scripts/regen-favicons.mjs
+```
+
+If the source is a white-background JPG, first alpha-unmix it:
+
+```bash
+node scripts/jpg-to-transparent-png.mjs path/to/source.jpg public/favicon-source-transparent.png
+```
+
+Then update `scripts/regen-favicons.mjs` to point at the generated transparent PNG and rerun the favicon script.
+
+## Self-hosted Google Fonts
+
+The site serves Google Fonts from Tencent COS, not directly from `fonts.googleapis.com`, because Google Fonts is unreliable/unavailable for many mainland users.
+
+Source of truth:
+
+- `data/site.ts` → `siteConfig.fonts.googleStylesheet`
+- `data/site.ts` → `siteConfig.fonts.cdnStylesheet`
+
+Refresh staging files:
+
+```bash
+node scripts/fetch-google-fonts.mjs
+```
+
+The script:
+
+1. fetches Google CSS with a modern Chrome User-Agent;
+2. downloads `.woff2` font files;
+3. rewrites all `url()` references to `cdn.arsvine.com/fonts/...`;
+4. writes the staging tree to `public/_fonts-staging/`.
+
+Upload is manual through the Tencent COS web console. This project intentionally does **not** use `coscli`.
+
+Required COS metadata:
+
+| Object | Content-Type | Cache-Control |
+|---|---|---|
+| `google-fonts.css` | `text/css; charset=utf-8` | `public, max-age=86400, must-revalidate` |
+| `*.woff2` | `font/woff2` | `public, max-age=31536000, immutable` |
+
+The COS custom-header UI has separate **Key** and **Value** fields. Put only the value in the Value field. Do not paste `Cache-Control: public, ...` as the value.
+
+Verify after upload:
+
+```bash
+curl -I -H "Referer: https://arsvine.com/" https://cdn.arsvine.com/fonts/google-fonts.css
+```
+
+`Content-Type` and `Cache-Control` should each appear once.
+
+## Music files
+
+Production audio is hosted on Tencent COS and usually served from:
+
+```text
+https://cdn.arsvine.com/music/...
+```
+
+Set:
+
+```env
+NEXT_PUBLIC_MEDIA_CDN=https://cdn.arsvine.com
+```
+
+When `NEXT_PUBLIC_MEDIA_CDN` is unset, `data/music.ts` falls back to `/music/<file>` and reads from `public/music/`. Drop same-named local files there for offline testing.
+
+`next.config.js` also honors `NEXT_BUILD_DIR` for a custom Next.js build output directory. Leave it unset unless a deployment wrapper explicitly expects a different dist dir.
+
+Do not commit private or large audio files. The directory is gitignored for audio payloads. COS outbound traffic is billable, so avoid accidental autoplay loops or large repeated downloads.
+
+## Before committing
+
+At minimum run:
+
+```bash
+npm run lint
+npm run typecheck
+npm run test
+```
+
+For UI-heavy changes, also manually verify:
+
+- desktop and mobile layout;
+- home → content → detail transitions;
+- blog detail pages with public and protected posts;
+- hash navigation to content sections on mobile;
+- music player open/close/track switching;
+- custom cursor hover labels and BACK state;
+- font rendering for CJK and accented Latin characters.

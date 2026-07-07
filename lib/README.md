@@ -8,7 +8,7 @@
 
 | 文件 | 职责 |
 |---|---|
-| `blog.ts` | 服务端：从外置内容仓库读 `blog/index.json` 与 `<slug>/<locale>.mdx`，解析 frontmatter，估算阅读时长 |
+| `blog.ts` | 服务端：从外置内容仓库读 `blog-index.json` 与 `blog/<slug>/<locale>.mdx`，解析 frontmatter，估算阅读时长 |
 | `blog-client.ts` | 客户端 + 服务端共用类型与 URL 构造（`buildBlogPostHref`、`buildPostVariantApiPath`、`getRequestedContentLocaleFromPath` 等） |
 | `blog-post-state.ts` | 客户端状态机 reducer + `BlogPostViewState` 联合类型。**所有变体都被 `useBlogPostState` 消费**，不要在组件里直接 `dispatch` |
 | `format-reading-time.ts` | 把 `readingMinutes: number` 渲染为 locale-aware UI 字符串（`约 N 分钟` / `約 N 分鐘` / `N min read`） |

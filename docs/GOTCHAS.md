@@ -1,0 +1,203 @@
+# Gotchas and Regression Notes
+
+This file records real project-specific pitfalls. Read it before editing route transitions, protected posts, typography, COS assets, MDX rendering, the music player, or cursor behavior.
+
+## 1. Do not use `reading-time`
+
+The project uses an in-house reading-time estimator in `lib/blog.ts`.
+
+Reason: common packages such as `reading-time` are whitespace-oriented. CJK text has few spaces, so long Chinese posts collapse to extremely low estimates and often display as `1 min` after flooring.
+
+Expected behavior:
+
+- count CJK and Latin text differently;
+- strip code blocks, inline code, HTML/JSX tags, and MDX import/export lines;
+- expose only `readingMinutes: number` in blog metadata.
+
+## 2. `--font-display` is Latin-only
+
+`--font-display` maps to `ZELDA Free`, which is decorative and incomplete.
+
+Do not use it for:
+
+- CJK text;
+- accented Latin text such as French;
+- blog titles;
+- translated strings;
+- user-supplied content;
+- any string that may contain arbitrary Unicode.
+
+Use `--font-hud` for HUD-safe headings and `--font-reading` for long-form content.
+
+## 3. COS custom-header Value fields are value-only
+
+Tencent COS metadata UI has separate fields for header name and value.
+
+Correct:
+
+```text
+Key:   Cache-Control
+Value: public, max-age=31536000, immutable
+```
+
+Wrong:
+
+```text
+Key:   Cache-Control
+Value: Cache-Control: public, max-age=31536000, immutable
+```
+
+The wrong form can produce malformed headers such as `Cache-Control: Cache-Control: ...`, causing Firefox to reject fonts and fall back to system fonts. The visible symptom can be rare Traditional Chinese characters rendering as tofu.
+
+## 4. Google Fonts variable-font deduplication is intentional
+
+Google Fonts can return multiple `@font-face` blocks with different `font-weight` values pointing to the same `.woff2` file.
+
+This is normal for Variable Fonts. The file may cover a continuous `wght` axis even if its local filename contains one representative weight.
+
+Do not rewrite `scripts/fetch-google-fonts.mjs` to force one file per weight.
+
+## 5. Do not shell out to `coscli`
+
+The current project workflow is manual upload through the Tencent COS web console.
+
+Any old documentation or script comment that says to run `coscli sync` / `coscli cp` is stale. The font script should print web-console upload steps, not invoke COS CLI.
+
+## 6. Internal navigation must use `navigateTo()`
+
+Internal route changes should go through:
+
+```ts
+useTransition().navigateTo(url)
+```
+
+Direct `router.push()` skips transition animation and can break home/content/detail motion choreography.
+
+## 7. Route loading overlay placement is source-driven
+
+`useRouteLoadingKind(router)` reads the route being left, not the target route.
+
+Why:
+
+- home/content → blog detail needs the default/right-side overlay because the left panel is still visible;
+- blog detail → blog detail needs the standalone overlay because the left panel is already hidden.
+
+Target-based overlay selection breaks one of these flows.
+
+## 8. Protected-post auth probe must depend on auth state
+
+The auth-probe effect in `useBlogPostState.ts` must:
+
+- short-circuit unless `state.authState === 'checking'`;
+- include `state.authState` in the dependency list.
+
+Without this, navigating between protected posts in the same `access.group` can leave dependencies referentially unchanged and the page stuck in auth checking.
+
+## 9. Protected-post `authResolved` must clear request state in both branches
+
+The reducer action in `lib/blog-post-state.ts` must clear `activeRequestKey` and `loadingLocale` whether auth resolves to granted or required.
+
+If only the required branch clears request state, public → protected navigation can leave stale request keys behind. The next legitimate fetch may be deduped incorrectly and the page can hang.
+
+## 10. Protected body content must never be in static props
+
+For protected posts:
+
+- `mdxSource` should be `null` from SSG;
+- metadata should be sanitized where appropriate;
+- body should be fetched only after runtime grant;
+- direct `/api/post-variant` calls without a grant should return `403`.
+
+Do not place ciphertext or hidden MDX payloads in `_next/data` JSON as an alternative. The invariant is no protected body in static data.
+
+## 11. Avatar parallax transform needs `!important`
+
+The avatar entry animation uses a keyframe with `forwards`, leaving a final `transform` value cached on the element.
+
+The mousemove rAF must write transform through:
+
+```ts
+style.setProperty('transform', value, 'important')
+```
+
+Using `style.transform = value` may silently lose to the keyframe fill state.
+
+## 12. CustomCursor hover state must be reset through the helper
+
+The cursor can show contextual labels such as BACK. State residue can happen after route changes, scrolling, blur, visibility changes, or DOM unmounts.
+
+Use the existing reset helper instead of directly mutating internal refs when adding new hover-label semantics.
+
+## 13. MusicPlayer track click implies play
+
+Clicking a track in the playlist should immediately express play intent.
+
+Do not add a guard like “only autoplay if already playing.” Track switches use an explicit play-intent flag consumed by the `audio.load()` → `audio.play()` chain.
+
+## 14. MusicPlayer must not auto-open on mobile
+
+The player may auto-open after a delay on desktop only. Keep the mobile guard.
+
+Reason: a draggable panel covering much of a phone screen on first paint is a poor mobile entry experience.
+
+## 15. ActivationLever is a button
+
+`ActivationLever` should preserve button semantics, `aria-label`, and cursor label behavior.
+
+Do not restyle it into a non-semantic `div`.
+
+## 16. Blog reveal animation must clear transform with `none`
+
+Blog paragraphs reveal with an initial transform such as `translateY(20px)`. After transition end, the code should set:
+
+```ts
+transform: 'none'
+```
+
+not an empty string.
+
+Reason: any non-`none` transform creates a stacking context. That can trap `<Explain>` tooltips under following paragraphs regardless of `z-index`.
+
+## 17. `<AnimatedTitleChars>` defaults to uppercase
+
+The shared component defaults to uppercase because web/life detail heroes want that style.
+
+Blog titles should pass:
+
+```tsx
+uppercase={false}
+```
+
+For Latin words, pass the word wrapper class and define it as inline-block + nowrap to avoid bad narrow-width breaks.
+
+## 18. Mobile section anchors need CSS scroll margin
+
+Any section that receives hash navigation or `scrollIntoView()` on mobile must have:
+
+```scss
+scroll-margin-top: var(--mobile-section-scroll-offset);
+```
+
+Do not replace this with a JavaScript scroll-offset helper. CSS scroll margin is the intended mechanism.
+
+## 19. Locale resolution is not geo-based
+
+Root-path language selection is:
+
+```text
+NEXT_LOCALE cookie > Accept-Language > zh-CN
+```
+
+Do not infer language from IP country. Geo data may be used for other purposes, but not as the primary language selector.
+
+## 20. WebGL effects should not churn GPU contexts
+
+Desktop-only Three.js effects are dynamically imported with SSR disabled and should not repeatedly unmount once ready.
+
+Repeated unmount/remount cycles can destroy and recreate GPU contexts during transitions, causing jank and instability.
+
+## 21. Do not assume `/[locale]/game` exists as a page
+
+Several route-mode and prefetch matchers still include `/[locale]/game` as a standalone-pattern branch, but the current tree does not contain a corresponding `pages/[locale]/game` file.
+
+Treat that path as a legacy/internal matcher until the page exists for real. Do not add docs or links that imply it is already shippable without checking the route tree first.

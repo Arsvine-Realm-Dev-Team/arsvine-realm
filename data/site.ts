@@ -101,8 +101,7 @@ export const siteConfig: SiteConfig = {
     //
     // 改完这一行后必须运行：
     //   node scripts/fetch-google-fonts.mjs       # 抓取并改写 CSS
-    //   coscli sync ./public/_fonts-staging/ ...  # 上传到 COS
-    // 详见脚本输出的命令样例。
+    //   然后按脚本输出的 web 控制台步骤手动上传到 COS
     //
     // 注意：本字段不再直接被 <link rel="stylesheet"> 使用，仅作为脚本的输入。
     // 浏览器实际加载的是 cdnStylesheet。

@@ -15,7 +15,7 @@ import {
  * locale 通过 ctx.params 或者 ctx.pathname 解析：[locale] 段在 URL 中。
  *
  * country 不再由 SSR 注入：
- *   原方案是 proxy.ts 注入 x-geo-country 请求头 → SSR 写 <html data-country/data-x-blocked/...>，
+ *   旧方案尝试把 country 放进 SSR 响应头，再由服务器侧渲染 data-*；
  *   但 SSG/ISR 页面会被 Vercel CDN 共享缓存，第一访客的 country 会污染后续访客。
  *   现方案：SSR 只渲染中性 HTML；客户端 hydration 前由 buildDocumentBootstrapScript() 内联脚本
  *   读 GEO_COUNTRY cookie 写到 <html dataset>。脚本是 HTML 解析期同步执行，CSS 应用前即完成，
