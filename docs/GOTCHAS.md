@@ -201,3 +201,79 @@ Repeated unmount/remount cycles can destroy and recreate GPU contexts during tra
 Several route-mode and prefetch matchers still include `/[locale]/game` as a standalone-pattern branch, but the current tree does not contain a corresponding `pages/[locale]/game` file.
 
 Treat that path as a legacy/internal matcher until the page exists for real. Do not add docs or links that imply it is already shippable without checking the route tree first.
+
+## 22. GitHub content paths must be repo-relative only
+
+`lib/content/github.ts` now normalizes content paths before calling the GitHub Contents API.
+
+Do not pass user-controlled strings directly into the API path builder.
+
+Required behavior:
+
+- reject absolute URLs and protocol-relative URLs;
+- reject leading `/`, backslashes, query strings, hash fragments, traversal, and encoded traversal;
+- split the path into segments and encode each segment explicitly;
+- build the final URL from a fixed trusted GitHub API base.
+
+## 23. External links must be parsed, not substring-matched
+
+`WorkDetailView.tsx` and `components/detail/standalone/webDetailParagraphs.tsx` now use a shared helper that calls `new URL(...)`.
+
+Do not classify links with `includes('github.com')` / `includes('bilibili.com')` or similar substring checks.
+
+Required behavior:
+
+- accept only the intended protocols for rendered links;
+- treat unsafe input as plain text instead of a clickable `href`;
+- derive link variants from the parsed hostname.
+
+## 24. Internal blog redirects must use validated helpers
+
+`components/blog/BlogDetailScaffold.tsx` now routes through helpers in `lib/blog-client.ts`.
+
+Do not pass arbitrary slug strings directly into `navigateTo()` or `Link href`.
+
+Required behavior:
+
+- validate locale and slug values before building blog URLs;
+- accept only a single slug segment for blog post routes;
+- fall back to `/${locale}/content#blog` when the target is unsafe.
+
+## 25. Locale fallback banners must use explicit dispatch
+
+`components/shared/LocaleFallbackBanner.tsx` now resolves copy with explicit locale branches.
+
+Do not call locale-keyed text maps with dynamic method selection.
+
+Required behavior:
+
+- use an allowlist branch per locale;
+- keep fallback and translated copy semantics stable;
+- keep the banner logic free of user-controlled method names.
+
+## 26. Typing-effect language detection must stay script-specific
+
+`lib/typing-effect.ts` now uses explicit Unicode script checks for Latin and CJK families.
+
+Do not broaden the classification regex back to a loose range.
+
+Required behavior:
+
+- treat Latin text as the alphabetic profile only when it is not mixed with CJK;
+- keep Han / Hiragana / Katakana / Hangul on the CJK path;
+- preserve the existing typing cadence semantics.
+
+## 27. All new tests live under `tests/`
+
+The repo now keeps test files in `tests/` and groups them by feature area.
+
+Do not add new `.test.ts` or `.test.tsx` files next to source files.
+
+Required layout:
+
+- `tests/lib/...`
+- `tests/components/...`
+- `tests/hooks/...`
+- `tests/i18n/...`
+- `tests/pages/...`
+- `tests/repo/...`
