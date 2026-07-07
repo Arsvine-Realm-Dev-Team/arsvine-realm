@@ -14,7 +14,7 @@ const redisState: {
 };
 
 const fakeRedis = {
-  async incr(key: string) {
+  incr: vi.fn(function incr(key: string) {
     const existing = redisState.store.get(key);
     if (existing) {
       existing.value += 1;
@@ -22,22 +22,24 @@ const fakeRedis = {
     }
     redisState.store.set(key, { value: 1, pttl: 60_000 });
     return 1;
-  },
-  async expire(key: string, seconds: number) {
+  }),
+  expire: vi.fn(function expire(key: string, seconds: number) {
     const existing = redisState.store.get(key);
     if (existing) {
       existing.pttl = seconds * 1000;
       return 1;
     }
     return 0;
-  },
-  async pttl(key: string) {
+  }),
+  pttl: vi.fn(function pttl(key: string) {
     return redisState.store.get(key)?.pttl ?? -1;
-  },
+  }),
 };
 
 vi.mock('@upstash/redis', () => ({
-  Redis: vi.fn(() => fakeRedis),
+  Redis: vi.fn(function RedisMock() {
+    return fakeRedis;
+  }),
 }));
 
 function setUpstashEnv() {
@@ -140,14 +142,16 @@ describe('enforceRateLimit — fail-open on Redis error', () => {
     setUpstashEnv();
     // 替换 mock 让它报错
     const errRedis = {
-      incr: vi.fn(async () => {
-        throw new Error('redis unreachable');
+      incr: vi.fn(function incr() {
+        return Promise.reject(new Error('redis unreachable'));
       }),
       expire: vi.fn(),
       pttl: vi.fn(),
     };
     vi.doMock('@upstash/redis', () => ({
-      Redis: vi.fn(() => errRedis),
+      Redis: vi.fn(function RedisErrorMock() {
+        return errRedis;
+      }),
     }));
 
     const { enforceRateLimit } = await import('./rate-limit');

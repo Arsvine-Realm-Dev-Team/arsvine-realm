@@ -3,6 +3,11 @@ import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 const eslintConfig = [
   ...nextCoreWebVitals,
   {
+    settings: {
+      react: {
+        version: "19.0",
+      },
+    },
     rules: {
       "react-hooks/immutability": "warn",
       "react-hooks/purity": "warn",

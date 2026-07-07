@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useState, type Ref, type RefObject } from 'react';
+import { useEffect, useState, type RefObject } from 'react';
 import { useTranslations } from 'next-intl';
 import styles from '../../styles/Home.module.scss';
 import { useSafeTimeouts } from '../../lib/use-safe-timeouts';
@@ -22,7 +22,7 @@ interface WorksSectionProps {
   skillCategories: SkillCategory[];
 }
 
-const WorksSection = forwardRef(function WorksSection({
+function WorksSection({
   worksSectionRef,
   activeWorkTab,
   handleWorkTabClick,
@@ -34,7 +34,7 @@ const WorksSection = forwardRef(function WorksSection({
   earlyProjects,
   handleWorkItemClick,
   skillCategories,
-}: WorksSectionProps, ref: Ref<HTMLDivElement>) {
+}: WorksSectionProps) {
   const [earlyExpanded, setEarlyExpanded] = useState(false);
   const [skillsExpanded, setSkillsExpanded] = useState(false);
   const [displayedWorkTab, setDisplayedWorkTab] = useState(activeWorkTab);
@@ -147,6 +147,6 @@ const WorksSection = forwardRef(function WorksSection({
       </div>
     </div>
   );
-});
+}
 
 export default WorksSection;

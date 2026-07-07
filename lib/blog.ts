@@ -25,7 +25,7 @@ const CJK_CHARS_PER_MINUTE: Record<BlogContentLocale, number> = {
 };
 
 const CJK_CHAR_RE = /[㐀-䶿一-鿿぀-ゟ゠-ヿ가-힯]/g;
-const LATIN_WORD_RE = /[A-Za-zÀ-ɏЀ-ӿ]+(?:[''-][A-Za-zÀ-ɏЀ-ӿ]+)*/g;
+const LATIN_WORD_RE = /[A-Za-zÀ-ɏЀ-ӿ]+(?:['-][A-Za-zÀ-ɏЀ-ӿ]+)*/g;
 
 type BlogIndexVariant = {
   title: string;

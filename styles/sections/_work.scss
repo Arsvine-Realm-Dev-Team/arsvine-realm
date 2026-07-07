@@ -361,6 +361,8 @@
 
   .filledSegment {
     color: var(--ark-primary);
+    background-color: var(--ark-primary);
+    opacity: 0.6;
 
     .skillCard:hover & {
       color: var(--ark-highlight-pink);
@@ -380,11 +382,6 @@
 
   .skillName {
     color: var(--ark-text);
-  }
-
-  .filledSegment {
-    background-color: var(--ark-primary);
-    opacity: 0.6;
   }
 
   .emptySegment {

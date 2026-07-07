@@ -1,8 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- gallery and lightbox assets use raw img elements for arbitrary URLs and animation interop */
-import React, { useState } from 'react';
+import React from 'react';
 import styles from '../../styles/WorkDetailView.module.scss';
 import Lightbox from '../interactive/Lightbox';
-import { CopyToClipboard } from 'react-copy-to-clipboard';
 import useGalleryLightbox from '../../hooks/useGalleryLightbox';
 
 // Reusing ProjectCard might be complex due to layout differences in detail view.
@@ -11,7 +10,6 @@ import useGalleryLightbox from '../../hooks/useGalleryLightbox';
 const WorkDetailView = ({ item }) => {
   const { title, description, tech, imageUrl, link, galleryImages, articleContent } = item || {};
   const imageStyle = imageUrl ? { backgroundImage: `url(${imageUrl})` } : {};
-  const [copiedTextId, setCopiedTextId] = useState(null);
 
   const imagesForGallery = galleryImages || [];
   const {
@@ -27,16 +25,7 @@ const WorkDetailView = ({ item }) => {
   } = useGalleryLightbox(imagesForGallery.length);
 
   if (!item) return null;
-  // --- End State and Functions --- 
 
-  // --- ADD Copy Text Handler --- 
-  const handleCopy = (text, id) => {
-    setCopiedTextId(id);
-    setTimeout(() => setCopiedTextId(null), 1500);
-  };
-  // --- END ADD ---
-
-  // --- ADD Paragraph splitting --- 
   const paragraphs = articleContent ? articleContent.split('\n\n') : [];
 
   return (

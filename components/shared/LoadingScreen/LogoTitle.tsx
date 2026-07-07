@@ -1,4 +1,4 @@
-import React, { forwardRef, useRef, useImperativeHandle } from 'react';
+import React, { useRef, useImperativeHandle } from 'react';
 import { useTranslations } from 'next-intl';
 import styles from '../../../styles/HomeLoadingScreen.module.scss';
 import gsap from 'gsap';
@@ -10,7 +10,7 @@ export interface LogoTitleRef {
   animateIn: (delay?: number) => void;
 }
 
-const LogoTitle = forwardRef<LogoTitleRef>((_, ref) => {
+function LogoTitle({ ref }: { ref?: React.Ref<LogoTitleRef> }) {
   const tSite = useTranslations('pages.site');
   const logoAreaRef = useRef<HTMLDivElement>(null);
   const mainTitleRef = useRef<HTMLHeadingElement>(null);
@@ -70,7 +70,7 @@ const LogoTitle = forwardRef<LogoTitleRef>((_, ref) => {
       </div>
     </div>
   );
-});
+}
 
 LogoTitle.displayName = 'LogoTitle';
 

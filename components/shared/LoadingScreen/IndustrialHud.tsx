@@ -1,4 +1,4 @@
-import React, { forwardRef, useRef, useImperativeHandle, useEffect, useMemo } from 'react';
+import React, { useRef, useImperativeHandle, useEffect } from 'react';
 import styles from '../../../styles/HomeLoadingScreen.module.scss';
 import gsap from 'gsap';
 import { useResponsive } from '../../../hooks/useMediaQuery';
@@ -9,7 +9,7 @@ export interface IndustrialHudRef {
   initAnimations: () => void;
 }
 
-const IndustrialHud = forwardRef<IndustrialHudRef>((_, ref) => {
+function IndustrialHud({ ref }: { ref?: React.Ref<IndustrialHudRef> }) {
   const bgHudLayerRef = useRef<HTMLDivElement>(null);
   const hudElementsRef = useRef<HTMLDivElement>(null);
   const clockTextRef = useRef<HTMLDivElement>(null);
@@ -106,7 +106,7 @@ const IndustrialHud = forwardRef<IndustrialHudRef>((_, ref) => {
       </div>
     </>
   );
-});
+}
 
 IndustrialHud.displayName = 'IndustrialHud';
 

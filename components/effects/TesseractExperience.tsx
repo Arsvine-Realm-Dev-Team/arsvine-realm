@@ -1,6 +1,5 @@
 import React, { Suspense, startTransition, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Line } from '@react-three/drei';
 import { Physics, usePlane } from '@react-three/cannon';
 import * as THREE from 'three';
 

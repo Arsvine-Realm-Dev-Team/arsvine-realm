@@ -119,7 +119,7 @@ async function pool(items, limit, worker) {
     while (true) {
       const i = cursor++;
       if (i >= items.length) return;
-      results[i] = await worker(items[i], i);
+      results[i] = await worker(items[i]);
     }
   });
   await Promise.all(runners);

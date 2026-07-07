@@ -20,7 +20,7 @@ interface BlogDetailScaffoldProps {
   headerContent: React.ReactNode;
   contentContent: React.ReactNode;
   headerEntered?: boolean;
-  scrollRootRef?: React.MutableRefObject<HTMLDivElement | null>;
+  scrollRootRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export default function BlogDetailScaffold({

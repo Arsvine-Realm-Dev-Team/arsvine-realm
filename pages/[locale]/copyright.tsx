@@ -31,7 +31,7 @@ export default function CopyrightPage({ locale }: CopyrightProps) {
   // 我们要自己渲染成 <a>，所以用 t.raw() 拿原始模板字符串绕开 next-intl
   // 的 ICU 解析（直接 t() 会因为没传变量而 fallback 到 key 名）。
   const renderWithLinks = (template: string, links: Record<string, { url: string; text: string }>) => {
-    const parts: (string | JSX.Element)[] = [];
+    const parts: (string | React.ReactNode)[] = [];
     let remaining = template;
     let key = 0;
     Object.entries(links).forEach(([placeholder, { url, text }]) => {

@@ -35,6 +35,7 @@ const HANDLE_BAR_COUNT = 7;
 const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
   const router = useRouter();
   const tCommon = useTranslations('common');
+  const tMusicPlayer = useTranslations('musicPlayer');
   const { isMobile } = useResponsive();
   const safeTimers = useSafeTimeouts();
   const queryLocale = router.query.locale;
@@ -196,8 +197,10 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
         isDragging={isDragging}
         isFullPower={isFullPower}
         isPlaying={isPlaying}
+        pauseTitle={tMusicPlayer('pauseTitle')}
         onTogglePlay={() => syncPlayState(!isPlaying)}
         onStartDrag={startDrag}
+        playTitle={tMusicPlayer('playTitle')}
         setContainerRef={setVinylContainer}
       />
 

@@ -6,9 +6,11 @@ interface VinylDeckProps {
   isDragging: boolean;
   isFullPower: boolean;
   isPlaying: boolean;
+  pauseTitle: string;
   onTogglePlay: () => void;
   onStartDrag: (clientX: number) => void;
   incomingTrackVisible: boolean;
+  playTitle: string;
   setContainerRef: (element: HTMLDivElement | null) => void;
 }
 
@@ -18,9 +20,11 @@ export default function VinylDeck({
   isDragging,
   isFullPower,
   isPlaying,
+  pauseTitle,
   onTogglePlay,
   onStartDrag,
   incomingTrackVisible,
+  playTitle,
   setContainerRef,
 }: VinylDeckProps) {
   return (
@@ -74,7 +78,7 @@ export default function VinylDeck({
             event.stopPropagation();
             onTogglePlay();
           }}
-          title={isPlaying ? '暂停' : '播放'}
+          title={isPlaying ? pauseTitle : playTitle}
         />
         <div
           className={`${styles.tonearm} ${!isFullPower ? styles.tonearmLowPower : ''}`}
