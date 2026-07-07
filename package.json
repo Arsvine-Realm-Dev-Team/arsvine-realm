@@ -1,6 +1,7 @@
 {
   "name": "portfolio-site",
   "version": "1.1.0",
+  "packageManager": "pnpm@11.7.0",
   "main": "index.js",
   "scripts": {
     "dev": "node server.js",
@@ -8,7 +9,8 @@
     "start": "cross-env NODE_ENV=production node server.js",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
   "keywords": [],
   "author": "Arsvine Zhu",

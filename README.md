@@ -28,9 +28,9 @@ This README is only the entry point. Detailed maintenance information is split b
 ## Quick start
 
 ```bash
-npm install
+pnpm install
 cp .env.example .env.local
-npm run dev
+pnpm dev
 ```
 
 Open `http://localhost:3000`. The middleware redirects the root path to a locale-prefixed route such as `/zh-CN`.
@@ -38,19 +38,20 @@ Open `http://localhost:3000`. The middleware redirects the root path to a locale
 ## Common commands
 
 ```bash
-npm run dev        # node server.js
-npm run build      # next build
-npm start          # cross-env NODE_ENV=production node server.js
-npm run lint       # eslint .
-npm run typecheck  # tsc --noEmit
-npm run test       # vitest run
+pnpm dev           # node server.js
+pnpm build         # next build
+pnpm start         # cross-env NODE_ENV=production node server.js
+pnpm lint          # eslint .
+pnpm typecheck     # tsc --noEmit
+pnpm test          # vitest run
+pnpm check         # lint + typecheck + test + build
 ```
 
 Run a single Vitest file or filter by case name:
 
 ```bash
-npx vitest run lib/blog-client.test.ts
-npx vitest run -t "reading time"
+pnpm vitest run lib/blog-client.test.ts
+pnpm vitest run -t "reading time"
 ```
 
 ## Core features
@@ -102,8 +103,8 @@ Routine maintenance should start from data/config files rather than component lo
 ## Deployment
 
 ```bash
-npm run build
-npm start
+pnpm build
+pnpm start
 ```
 
 Or with a process manager:

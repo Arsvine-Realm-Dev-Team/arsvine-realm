@@ -5,11 +5,11 @@ This document covers deployment, external services, environment variables, CDN/C
 ## Build and run
 
 ```bash
-npm run build
-npm start
+pnpm build
+pnpm start
 ```
 
-`npm start` runs:
+`pnpm start` runs:
 
 ```bash
 cross-env NODE_ENV=production node server.js
@@ -262,4 +262,4 @@ After each production deployment, verify:
 - music player does not auto-download excessive media;
 - mobile layout has no HUD overlap on hash navigation;
 - analytics are absent on localhost/preview when domain whitelist is set;
-- `npm run lint`, `npm run typecheck`, and `npm run test` pass before release.
+- `pnpm check` passes before release.

@@ -1,6 +1,6 @@
 # scripts/
 
-构建/资源/开发辅助脚本。**全部用 `node scripts/<name>.mjs` 直接跑**（除两个 Windows `.cmd`/`.ps1`），无 npm scripts wrapper —— 故意保持脚本"一次性、无依赖、自解释"，方便临时改写。
+构建/资源/开发辅助脚本。**全部用 `node scripts/<name>.mjs` 直接跑**（除两个 Windows `.cmd`/`.ps1`），无 package manager scripts wrapper —— 故意保持脚本"一次性、无依赖、自解释"，方便临时改写。
 
 ## 清单
 
@@ -33,7 +33,7 @@
 如果用了 `-HostsOnly`，请手动执行：
 
 ```powershell
-$env:PORT=80; npm run dev
+$env:PORT=80; pnpm dev
 ```
 
 > 被 X 强关、Ctrl+C 没生效导致 hosts 残留时，跑 `-Remove` 清理。重新跑 `dev-host-setup.cmd` 不会重复写入（脚本检测重复行）。
@@ -62,4 +62,4 @@ node scripts/convert-images.mjs --help
 - **脚本不入构建链**：不被 `next build` 调用，不会出现在生产产物里。
 - **不要把脚本逻辑搬到 `lib/`**：脚本是 Node CLI 上下文，`lib/` 是 Next.js 运行时上下文。两者依赖、模块解析、路径解析都不同。
 - **不要 `chmod +x`**：项目主要在 Windows 开发，`.mjs` 直接 `node scripts/foo.mjs` 跑，不依赖 shebang。
-- **新增脚本** → 评估是不是真的"一次性、辅助性、不入运行时"。如果要在 dev/prod 都跑，那它属于 `lib/` 或 npm script，不是这里。
+- **新增脚本** → 评估是不是真的"一次性、辅助性、不入运行时"。如果要在 dev/prod 都跑，那它属于 `lib/` 或 pnpm script，不是这里。

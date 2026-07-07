@@ -6,7 +6,7 @@ This document is the day-to-day development guide for **ARSVINE REALM**. Keep th
 
 - Node.js: `24.x` in production and Vercel project settings.
 - Local compatibility: Node `20.9+` may work, but `24.x` is the documented target.
-- Package manager: npm is assumed by the committed scripts.
+- Package manager: pnpm is the documented package manager.
 - Framework mode: Next.js Pages Router, not App Router.
 - Server entry: `server.js` is used in both development and production.
 
@@ -15,9 +15,9 @@ Do not replace the project scripts with `next dev` or `next start`. The custom s
 ## Quick start
 
 ```bash
-npm install
+pnpm install
 cp .env.example .env.local
-npm run dev
+pnpm dev
 ```
 
 Open `http://localhost:3000`. The locale middleware redirects `/` to the preferred locale path, usually `/zh-CN`.
@@ -25,24 +25,25 @@ Open `http://localhost:3000`. The locale middleware redirects `/` to the preferr
 ## Common commands
 
 ```bash
-npm run dev        # node server.js
-npm run build      # next build
-npm start          # cross-env NODE_ENV=production node server.js
-npm run lint       # eslint .
-npm run typecheck  # tsc --noEmit
-npm run test       # vitest run
+pnpm dev           # node server.js
+pnpm build         # next build
+pnpm start         # cross-env NODE_ENV=production node server.js
+pnpm lint          # eslint .
+pnpm typecheck     # tsc --noEmit
+pnpm test          # vitest run
+pnpm check         # lint + typecheck + test + build
 ```
 
 Run a single test file:
 
 ```bash
-npx vitest run lib/blog-client.test.ts
+pnpm vitest run lib/blog-client.test.ts
 ```
 
 Run tests by name:
 
 ```bash
-npx vitest run -t "reading time"
+pnpm vitest run -t "reading time"
 ```
 
 Vitest uses `jsdom` and matches `**/*.test.ts`. Test files currently live near their source files under `lib/`.
@@ -96,7 +97,7 @@ scripts\dev-host-setup.cmd -Remove
 If using `-HostsOnly`, start the dev server manually on port 80:
 
 ```powershell
-$env:PORT=80; npm run dev
+$env:PORT=80; pnpm dev
 ```
 
 Then open `http://dev.arsvine.com`.
@@ -261,9 +262,7 @@ Do not commit private or large audio files. The directory is gitignored for audi
 At minimum run:
 
 ```bash
-npm run lint
-npm run typecheck
-npm run test
+pnpm check
 ```
 
 For UI-heavy changes, also manually verify:

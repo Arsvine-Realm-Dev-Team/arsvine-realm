@@ -296,7 +296,7 @@ $weAddedProxyBypass = Add-ProxyBypassEntry
 
 if ($HostsOnly) {
     Write-Host ""
-    Write-Host ('Hosts entry active. Open another shell and run "$env:PORT={0}; npm run dev" yourself.' -f $DevPort) -ForegroundColor Cyan
+    Write-Host ('Hosts entry active. Open another shell and run "$env:PORT={0}; pnpm dev" yourself.' -f $DevPort) -ForegroundColor Cyan
     Write-Host "Press Enter here to remove the hosts entry and exit." -ForegroundColor Yellow
     Read-Host
     if ($weAdded) {
@@ -368,9 +368,9 @@ Write-Host ""
 
 try {
     Push-Location $ProjectRoot
-    # IMPORTANT: invoke node.exe directly (not npm.cmd). This keeps live stdout
-    # visible in the current console while still avoiding npm.cmd's extra cmd.exe
-    # wrapper that used to orphan node.exe on Ctrl+C.
+    # IMPORTANT: invoke node.exe directly. This keeps live stdout visible in
+    # the current console while still avoiding the extra cmd.exe wrapper that
+    # can orphan node.exe on Ctrl+C.
     $previousPort = $env:PORT
     $env:PORT = [string]$DevPort
     & node.exe server.js
