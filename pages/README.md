@@ -20,9 +20,9 @@ Next.js Pages Router。**不要换 App Router**。所有用户路由都在 `[loc
 ├── content.tsx                    # 聚合页（hash 分区）
 ├── about.tsx, contact.tsx, ...    # 单页
 ├── friends.tsx, tweets.tsx, copyright.tsx
-├── license.tsx                    # 301 → /copyright
+├── license.tsx                    # 永久重定向 → /copyright
 ├── posts.tsx, posts/[slug].tsx    # 旧 URL 别名，redirect 到 /content#blog 或 /blog/[slug]
-├── blog.tsx                       # 307-replace → /content#blog
+├── blog.tsx                       # 临时重定向 → /content#blog
 ├── blog/[slug].tsx                # MDX 博客详情（SSG + ISR + TOTP）
 ├── web/[id].tsx                   # 作品详情
 ├── life/[slug].tsx                # 生活详情
