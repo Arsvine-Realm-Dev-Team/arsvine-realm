@@ -3,22 +3,35 @@ import styles from '../../styles/HomeLoadingScreen.module.scss';
 import gsap from 'gsap';
 import { useLoadingSystem } from '../../hooks/useLoadingSystem';
 import { useReducedMotion, useResponsive } from '../../hooks/useMediaQuery';
+import { useApp } from '../../contexts/AppContext';
 import TerminalConsole, { TerminalConsoleRef } from './LoadingScreen/TerminalConsole';
 import IndustrialHud, { IndustrialHudRef } from './LoadingScreen/IndustrialHud';
 import LogoTitle, { LogoTitleRef } from './LoadingScreen/LogoTitle';
 import SplitTransition, { SplitTransitionRef } from './LoadingScreen/SplitTransition';
 
+export function collectGsapTargets<T>(targets: Array<T | null | undefined>): T[] {
+  return targets.filter((target): target is T => target !== null && target !== undefined);
+}
+
 const HomeLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   const [visible, setVisible] = useState(true);
+  const [bootReducedMode, setBootReducedMode] = useState(false);
   const [loadingUiReady, setLoadingUiReady] = useState(false);
-  const { progress, logLines, showSplitLines, loading } = useLoadingSystem(loadingUiReady);
+  const { progress, logLines, showSplitLines, loading } = useLoadingSystem(loadingUiReady && !bootReducedMode);
   const { isMobile } = useResponsive();
   const reducedMotion = useReducedMotion();
+  const { allowDecorativeMotion } = useApp();
+  const reducedVisualMode = reducedMotion || !allowDecorativeMotion || bootReducedMode;
   
   const onCompleteRef = useRef(onComplete);
   useEffect(() => {
     onCompleteRef.current = onComplete;
   }, [onComplete]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the bootstrap script resolves performance tier before hydration; this effect copies that external DOM snapshot into React after mount
+    setBootReducedMode(document.documentElement.getAttribute('data-performance-tier') === 'reduced');
+  }, []);
 
   // DOM refs
   const wastelandBgRef = useRef<HTMLDivElement>(null);
@@ -35,19 +48,32 @@ const HomeLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   useEffect(() => {
     if (!visible) return;
 
+    if (bootReducedMode) {
+      const settleTimer = window.setTimeout(() => {
+        onCompleteRef.current?.();
+        setVisible(false);
+      }, 0);
+      return () => window.clearTimeout(settleTimer);
+    }
+
     const timelines: gsap.core.Timeline[] = [];
 
     const logoTransform = isMobile
       ? { yPercent: -50 }
       : { xPercent: -50, yPercent: -50 };
+    const loadingTargets = collectGsapTargets([wastelandBgRef.current, loadingScreenRef.current]);
 
     // --- Reduced motion: show everything immediately ---
-    if (reducedMotion) {
-      gsap.set([wastelandBgRef.current, loadingScreenRef.current], { opacity: 1 });
+    if (reducedVisualMode) {
+      if (loadingTargets.length > 0) {
+        gsap.set(loadingTargets, { opacity: 1 });
+      }
       if (hudRef.current?.container) gsap.set(hudRef.current.container, { opacity: 1 });
       if (logoRef.current?.container) gsap.set(logoRef.current.container, { opacity: 1, scaleY: 1, ...logoTransform });
       if (consoleRef.current?.container) gsap.set(consoleRef.current.container, { opacity: 1 });
-      gsap.set(progressAreaRef.current, { opacity: 1, y: 0 });
+      if (progressAreaRef.current) {
+        gsap.set(progressAreaRef.current, { opacity: 1, y: 0 });
+      }
       logoRef.current?.animateIn(0);
       const readyTimer = setTimeout(() => setLoadingUiReady(true), 0);
       return () => clearTimeout(readyTimer);
@@ -57,11 +83,15 @@ const HomeLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
     const entranceTl = gsap.timeline();
     timelines.push(entranceTl);
 
-    gsap.set([wastelandBgRef.current, loadingScreenRef.current], { opacity: 0 });
+    if (loadingTargets.length > 0) {
+      gsap.set(loadingTargets, { opacity: 0 });
+    }
     if (hudRef.current?.container) gsap.set(hudRef.current.container, { opacity: 0 });
     if (logoRef.current?.container) gsap.set(logoRef.current.container, { opacity: 1, scaleY: 0, transformOrigin: 'center center', ...logoTransform });
     if (consoleRef.current?.container) gsap.set(consoleRef.current.container, { opacity: 0 });
-    gsap.set(progressAreaRef.current, { opacity: 0, y: 15 });
+    if (progressAreaRef.current) {
+      gsap.set(progressAreaRef.current, { opacity: 0, y: 15 });
+    }
 
     entranceTl
       .to([wastelandBgRef.current, loadingScreenRef.current], { opacity: 1, duration: 0.5, ease: 'power1.out' }, 0)
@@ -81,7 +111,7 @@ const HomeLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
     return () => {
       timelines.forEach(tl => tl.kill());
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [bootReducedMode, isMobile, reducedVisualMode, visible]);
 
   // ===================== Split lines animation =====================
   useEffect(() => {
@@ -96,20 +126,25 @@ const HomeLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
 
     if (onCompleteRef.current) onCompleteRef.current();
 
-    const wipeDur = reducedMotion ? 0.6 : 1.2;
-    const subDur = reducedMotion ? 0.3 : 0.5;
+    const wipeDur = reducedVisualMode ? 0.6 : 1.2;
+    const subDur = reducedVisualMode ? 0.3 : 0.5;
+    const loadingTargets = collectGsapTargets([wastelandBgRef.current, loadingScreenRef.current]);
+    if (loadingTargets.length === 0) {
+      setVisible(false);
+      return;
+    }
 
     const exitTl = gsap.timeline({
       onComplete: () => setVisible(false),
     });
 
-    exitTl.fromTo([wastelandBgRef.current, loadingScreenRef.current],
+    exitTl.fromTo(loadingTargets,
       { clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)' },
       { clipPath: 'polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%)', duration: wipeDur, ease: 'power2.inOut' },
       0,
     );
 
-    exitTl.to([wastelandBgRef.current, loadingScreenRef.current], {
+    exitTl.to(loadingTargets, {
       opacity: 0, duration: wipeDur + 0.3, ease: 'power2.inOut',
     }, 0);
 
@@ -124,7 +159,7 @@ const HomeLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
     if (extraElements.length > 0) exitTl.to(extraElements, { opacity: 0, duration: subDur * 0.7 }, 0);
 
     return () => { exitTl.kill(); };
-  }, [loading, reducedMotion]);
+  }, [loading, reducedVisualMode]);
 
   return visible ? (
     <>
@@ -155,6 +190,10 @@ const HomeLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
               <span className={styles.progress_suffix}>] {Math.floor(progress).toString().padStart(3, ' ')}%</span>
             </div>
           </div>
+        </div>
+
+        <div className={styles.reduced_status} aria-hidden="true">
+          BOOT SEQUENCE
         </div>
       </div>
     </>

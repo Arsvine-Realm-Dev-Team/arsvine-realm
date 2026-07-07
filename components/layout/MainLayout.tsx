@@ -73,6 +73,7 @@ export default function MainLayout({ children, appLocale }: MainLayoutProps) {
     powerLevel, isFateTypingActive, displayedFateText,
     isEnvParamsTyping, displayedEnvParams, envData, envArtifactStage,
     deactivateTesseract,
+    allowWebGLEffects, allowCustomCursor,
   } = app;
 
   // 当前 URL 的 locale，所有内部跳转都要带上前缀
@@ -118,6 +119,8 @@ export default function MainLayout({ children, appLocale }: MainLayoutProps) {
     }
   }, [forceHomeSection, isHome]);
 
+  const allow3DTesseract = allowWebGLEffects && isDesktop;
+
   // Latch: once WebGL is ready, never unmount it (avoids GPU context destruction during transitions)
   const [webglReady, setWebglReady] = useState(false);
   useEffect(() => {
@@ -132,7 +135,7 @@ export default function MainLayout({ children, appLocale }: MainLayoutProps) {
   }, [animationsComplete, webglReady]);
 
   useMobileTesseractCharge({
-    isDesktop,
+    shouldUseAutoChargeFallback: !allow3DTesseract,
     isTesseractActivated,
     powerLevel,
     chargeBattery,
@@ -354,10 +357,10 @@ export default function MainLayout({ children, appLocale }: MainLayoutProps) {
 
         <div className={styles.leftDotMatrix}></div>
         {mainVisible && <MusicPlayer powerLevel={powerLevel} />}
-        {isDesktop && <CustomCursor />}
-        {webglReady && isDesktop && <RainMorimeEffect />}
+        {isDesktop && allowCustomCursor && <CustomCursor />}
+        {webglReady && isDesktop && allowWebGLEffects && <RainMorimeEffect />}
         <HomeLoadingScreen onComplete={handleLoadingComplete} />
-        {isTesseractActivated && isDesktop && !isStandalone && (
+        {isTesseractActivated && allow3DTesseract && !isStandalone && (
           <TesseractExperience
             chargeBattery={chargeBattery}
             isActivated={isTesseractActivated}

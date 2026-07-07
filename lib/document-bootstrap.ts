@@ -3,10 +3,38 @@ import { BILIBILI_FRIENDLY_COUNTRIES, HIDE_X_COUNTRIES } from './region-visibili
 export const POWER_SYSTEM_STORAGE_KEY = 'arsvine:power-system';
 export const THEME_MODE_STORAGE_KEY = 'arsvine:theme-mode';
 
+const LOW_EFFECTIVE_TYPES = new Set(['slow-2g', '2g', '3g']);
+
+function buildPerformanceTierBootstrap() {
+  return `(() => {
+    try {
+      const html = document.documentElement;
+      const reduceMotion = typeof matchMedia === 'function'
+        && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      const lowNetwork = Boolean(connection && (
+        connection.saveData
+        || ${JSON.stringify(Array.from(LOW_EFFECTIVE_TYPES))}.includes(connection.effectiveType)
+      ));
+      const lowMemory = typeof navigator.deviceMemory === 'number' && navigator.deviceMemory <= 4;
+      const lowConcurrency = typeof navigator.hardwareConcurrency === 'number' && navigator.hardwareConcurrency <= 4;
+
+      if (reduceMotion || lowNetwork || lowMemory || lowConcurrency) {
+        html.setAttribute('data-performance-tier', 'reduced');
+      } else {
+        html.setAttribute('data-performance-tier', 'full');
+      }
+    } catch (error) {
+      console.error('[document-bootstrap] failed to resolve performance tier', error);
+    }
+  })();`;
+}
+
 /**
  * 同步内联脚本 —— 在 hydration / CSS 应用之前跑：
  *   1. 从 sessionStorage / localStorage 恢复 power-system 与 theme-mode（避免反转模式闪烁）；
- *   2. 从 GEO_COUNTRY cookie 读 country，写到 <html data-country / data-x-blocked / data-bilibili-blocked>。
+ *   2. 读取浏览器性能信号，写到 <html data-performance-tier>，让首屏 CSS 先拿到降级档位；
+ *   3. 从 GEO_COUNTRY cookie 读 country，写到 <html data-country / data-x-blocked / data-bilibili-blocked>。
  *
  * 这是 SSR 不再注入 country 后的唯一来源，目的是消除 SSG/ISR 产物被 CDN 共享缓存
  * 时的 country 污染（不同地区访客拿到同一份静态产物）。脚本是同步执行，CSS 命中前完成，
@@ -38,6 +66,8 @@ export function buildDocumentBootstrapScript() {
       } else if (themeMode === 'default' && html.getAttribute('data-theme-mode') === 'inverted') {
         html.setAttribute('data-theme-mode', 'default');
       }
+
+      ${buildPerformanceTierBootstrap()}
 
       const match = document.cookie.match(/(?:^|;\\s*)GEO_COUNTRY=([^;]+)/);
       const country = match ? decodeURIComponent(match[1]).toUpperCase() : '';

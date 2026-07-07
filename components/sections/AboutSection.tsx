@@ -16,7 +16,7 @@ export default function AboutSection({
   const t = useTranslations('sections.about');
   const router = useRouter();
   const { navigateTo } = useTransition();
-  const { runtime, currentVisitDuration } = useApp();
+  const { runtime, currentVisitDuration, allowDecorativeMotion } = useApp();
   const visitorLanguageCode = useVisitorLanguageCode();
   const queryLocale = router.query.locale;
   const locale = isLocale(queryLocale) ? queryLocale : defaultLocale;
@@ -27,7 +27,7 @@ export default function AboutSection({
       : `${siteConfig.copyrightYearStart}`;
   return (
     <div id="about-section" ref={aboutSectionRef} className={`${styles.contentSection} ${styles.aboutSection}`}>
-      <Noise />
+      {allowDecorativeMotion ? <Noise /> : null}
       <div ref={aboutContentRef} className={styles.aboutContentInner}>
         <h2>ABOUT</h2>
         <div className={styles.siteStatsContainer}>

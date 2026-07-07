@@ -345,3 +345,30 @@
   50% { opacity: 0.8; }
 }
 
+:global(html[data-performance-tier='reduced']) .gridBackground {
+  opacity: 0.28;
+
+  &::after {
+    opacity: 0.36;
+  }
+}
+
+:global(html[data-performance-tier='reduced']) .glowEffect,
+:global(html[data-performance-tier='reduced']) .rightStripeGradient,
+:global(html[data-performance-tier='reduced']) .scanLines {
+  display: none;
+}
+
+:global(html[data-performance-tier='reduced']) .leftDotMatrix {
+  opacity: 0.28;
+}
+
+:global(html[data-performance-tier='reduced']) .routeLoadingCard {
+  backdrop-filter: none;
+  background-color: rgba(var(--ark-border-rgb), 0.04);
+}
+
+:global(html[data-performance-tier='reduced']) .routeLoadingText {
+  animation: none;
+}
+

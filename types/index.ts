@@ -258,6 +258,17 @@ export interface RealtimeStatsState {
   currentVisitDuration: string;
 }
 
+export type PerformanceTier = 'full' | 'reduced';
+export type PerformanceReason = 'reduced-motion' | 'device-heuristic' | 'runtime-fps' | null;
+
+export interface AdaptivePerformanceState {
+  performanceTier: PerformanceTier;
+  performanceReason: PerformanceReason;
+  allowWebGLEffects: boolean;
+  allowCustomCursor: boolean;
+  allowDecorativeMotion: boolean;
+}
+
 export interface FateTypingState {
   displayedFateText: string;
   isFateTypingActive: boolean;
@@ -298,6 +309,7 @@ export interface ColumnHoverState {
 export interface AppContextValue
   extends AnimationSequenceState,
     PowerSystemState,
+    AdaptivePerformanceState,
     RealtimeStatsState,
     FateTypingState,
     EnvParamsTypingState,

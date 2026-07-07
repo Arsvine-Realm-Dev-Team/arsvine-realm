@@ -127,6 +127,12 @@ body {
   }
 }
 
+html[data-performance-tier='reduced'],
+html[data-performance-tier='reduced'] body,
+html[data-performance-tier='reduced'] body * {
+  cursor: auto !important;
+}
+
 body::-webkit-scrollbar {
   display: none; 
 }

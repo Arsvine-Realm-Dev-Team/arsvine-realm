@@ -383,6 +383,20 @@
   }
 }
 
+:global(html[data-performance-tier='reduced']) .fateTextContainer.typingActive .fateText::after,
+:global(html[data-performance-tier='reduced']) .envParamsContainer.typingActive .envParamsText::after {
+  animation: none;
+}
+
+:global(html[data-performance-tier='reduced']) .newsTickerTrack {
+  animation: none;
+}
+
+:global(html[data-performance-tier='reduced']) .travellingLink,
+:global(html[data-performance-tier='reduced']) .newsLink {
+  opacity: 0.7;
+}
+
 // --- 新增: 倒置状态渐变 ---
 .gradientLineInverted {
   background: linear-gradient(to right,

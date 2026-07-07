@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 interface UseMobileTesseractChargeOptions {
-  isDesktop: boolean;
+  shouldUseAutoChargeFallback: boolean;
   isTesseractActivated: boolean;
   powerLevel: number;
   chargeBattery: () => void;
@@ -9,7 +9,7 @@ interface UseMobileTesseractChargeOptions {
 }
 
 export default function useMobileTesseractCharge({
-  isDesktop,
+  shouldUseAutoChargeFallback,
   isTesseractActivated,
   powerLevel,
   chargeBattery,
@@ -27,7 +27,7 @@ export default function useMobileTesseractCharge({
   }, [deactivateTesseract]);
 
   useEffect(() => {
-    if (!isDesktop && isTesseractActivated) {
+    if (shouldUseAutoChargeFallback && isTesseractActivated) {
       const intervalId = window.setInterval(() => {
         chargeBatteryRef.current();
       }, 200);
@@ -35,11 +35,11 @@ export default function useMobileTesseractCharge({
     }
 
     return undefined;
-  }, [isDesktop, isTesseractActivated]);
+  }, [shouldUseAutoChargeFallback, isTesseractActivated]);
 
   useEffect(() => {
-    if (!isDesktop && powerLevel >= 100 && isTesseractActivated) {
+    if (shouldUseAutoChargeFallback && powerLevel >= 100 && isTesseractActivated) {
       deactivateTesseractRef.current();
     }
-  }, [isDesktop, isTesseractActivated, powerLevel]);
+  }, [shouldUseAutoChargeFallback, isTesseractActivated, powerLevel]);
 }

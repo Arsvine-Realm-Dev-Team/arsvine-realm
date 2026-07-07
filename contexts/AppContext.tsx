@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, useSyncExternalStore, type ReactNode } from 'react';
 import useAnimationSequence from '../hooks/useAnimationSequence';
+import useAdaptivePerformance from '../hooks/useAdaptivePerformance';
 import usePowerSystem from '../hooks/usePowerSystem';
 import useRealtimeStats from '../hooks/useRealtimeStats';
 import useColumnHover from '../hooks/useColumnHover';
@@ -21,6 +22,11 @@ export function AppProvider({ children }: AppProviderProps) {
     pulsingNormalIndices, pulsingReverseIndices, handleLoadingComplete,
     columnPhase, retractColumns, expandColumns,
   } = animation;
+
+  const adaptivePerformance = useAdaptivePerformance(animationsComplete);
+  const {
+    performanceTier, performanceReason, allowWebGLEffects, allowCustomCursor, allowDecorativeMotion,
+  } = adaptivePerformance;
 
   const power = usePowerSystem(mainVisible);
   const {
@@ -58,6 +64,7 @@ export function AppProvider({ children }: AppProviderProps) {
     leftPanelAnimated, textVisible, animationsComplete, leversVisible,
     pulsingNormalIndices, pulsingReverseIndices, handleLoadingComplete,
     columnPhase, retractColumns, expandColumns,
+    performanceTier, performanceReason, allowWebGLEffects, allowCustomCursor, allowDecorativeMotion,
     // Power
     powerLevel, isInverted, isTesseractActivated, isDischarging,
     chargeBattery, handleDischargeLeverPull, handleActivateTesseract, deactivateTesseract,
@@ -74,6 +81,7 @@ export function AppProvider({ children }: AppProviderProps) {
     leftPanelAnimated, textVisible, animationsComplete, leversVisible,
     pulsingNormalIndices, pulsingReverseIndices, handleLoadingComplete,
     columnPhase, retractColumns, expandColumns,
+    performanceTier, performanceReason, allowWebGLEffects, allowCustomCursor, allowDecorativeMotion,
     powerLevel, isInverted, isTesseractActivated, isDischarging,
     chargeBattery, handleDischargeLeverPull, handleActivateTesseract, deactivateTesseract,
     currentTime, runtime, currentVisitDuration,

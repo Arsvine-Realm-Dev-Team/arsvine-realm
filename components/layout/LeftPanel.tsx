@@ -2,6 +2,7 @@
 import { Fragment, useEffect, useRef, type Ref } from 'react';
 import { useTranslations } from 'next-intl';
 import styles from '../../styles/Home.module.scss';
+import { useApp } from '../../contexts/AppContext';
 import ActivationLever from '../interactive/ActivationLever';
 import { useResponsive } from '../../hooks/useMediaQuery';
 import type { Locale } from '../../i18n/config';
@@ -116,10 +117,12 @@ export default function LeftPanel({
   // Avatar 鼠标视差 + 色散：仅桌面（≥1024px）启用；移动端早返回不挂监听。
   // 与 CustomCursor / GlobalHud 一致，refs + rAF + 直接写 DOM style，避免 setState
   // 引入的 react-hooks/* 警告与重渲染开销。
+  const { allowDecorativeMotion, performanceTier } = useApp();
+  const shouldRenderLogo = allowDecorativeMotion && performanceTier !== 'reduced';
   const logoRef = useRef<HTMLDivElement | null>(null);
   const { isDesktop } = useResponsive();
   useEffect(() => {
-    if (!isDesktop) return;
+    if (!isDesktop || !allowDecorativeMotion) return;
     const el = logoRef.current;
     if (!el) return;
 
@@ -196,7 +199,7 @@ export default function LeftPanel({
       el.style.removeProperty('--avatar-split');
       el.style.removeProperty('transform');
     };
-  }, [isDesktop]);
+  }, [allowDecorativeMotion, isDesktop]);
 
   return (
     <div className={`${styles.leftPanel} ${leftPanelAnimated ? styles.animated : ''} ${drawerOpen ? styles.drawerOpen : ''} ${isStandalone ? styles.standaloneHide : ''}`}>
@@ -277,7 +280,7 @@ export default function LeftPanel({
         </div>
         <span className={styles.powerText}>{powerLevel}%</span>
       </div>
-      <div ref={logoRef} className={styles.logoContainer}></div>
+      {shouldRenderLogo ? <div ref={logoRef} className={styles.logoContainer} aria-hidden="true"></div> : null}
       <div className={`${styles.fateTextContainer} ${isFateTypingActive ? styles.typingActive : ''}`}>
         <span className={styles.fateText}>{displayedFateText}</span>
         <div className={styles.fateLine}></div>

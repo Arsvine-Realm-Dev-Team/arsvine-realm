@@ -253,3 +253,38 @@
     transition: none;
   }
 }
+
+:global(html[data-performance-tier='reduced']) {
+  .drawable_circle,
+  .outer_circle_tick,
+  .center_solid_dot,
+  .inner_hollow_circle,
+  .rotating_sector,
+  .rotating_inner_group,
+  .icon_pulse,
+  .rotating_square,
+  .log_line,
+  .log_text {
+    animation: none;
+  }
+
+  .log_text::after {
+    animation: none;
+  }
+
+  .progress_fill,
+  .main_title,
+  .sub_title {
+    transition: none;
+  }
+
+  .split_diamond,
+  .horizontal_slide,
+  .horizontal_slide_second,
+  .horizontal_slide_third,
+  .transition_line_horizontal,
+  .transition_line_vertical,
+  .transition_glow_line {
+    display: none;
+  }
+}
