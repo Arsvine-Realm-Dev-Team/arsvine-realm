@@ -46,7 +46,7 @@ Run tests by name:
 pnpm vitest run -t "reading time"
 ```
 
-Vitest uses `jsdom` and matches `**/*.test.ts`. Test files currently live near their source files under `lib/`.
+Vitest uses `jsdom` and matches `**/*.test.ts`. New test files should live under `tests/` and be grouped by module or feature area, for example `tests/lib/`, `tests/components/`, `tests/pages/`, and `tests/repo/`.
 
 ## Local environment
 
@@ -256,6 +256,18 @@ When `NEXT_PUBLIC_MEDIA_CDN` is unset, `data/music.ts` falls back to `/music/<fi
 `next.config.js` also honors `NEXT_BUILD_DIR` for a custom Next.js build output directory. Leave it unset unless a deployment wrapper explicitly expects a different dist dir.
 
 Do not commit private or large audio files. The directory is gitignored for audio payloads. COS outbound traffic is billable, so avoid accidental autoplay loops or large repeated downloads.
+
+## Security and dependency guardrails
+
+Keep the following rules in mind when touching security-sensitive or dependency-sensitive code:
+
+- When building GitHub content URLs, treat paths as repo-relative only. Reject absolute URLs, protocol-relative URLs, traversal, query strings, hashes, and encoded traversal before making the request.
+- When rendering external links, parse with `new URL()` and allow only the intended protocols. Do not rely on substring checks for hostnames or schemes.
+- When building internal navigation targets, use the shared blog and locale redirect helpers instead of concatenating untrusted strings into router destinations.
+- Keep blog and protected-content tests under `tests/` so route and feature coverage stays organized and the source tree stays clean.
+- If the lint stack is upgraded again, revalidate the Next.js lint integration first. This repo currently uses the compatible `eslint@9` / `eslint-config-next@16` combination.
+- Keep the `postcss: 8.5.10` override in `pnpm-workspace.yaml` until the upstream Next.js dependency no longer resolves to the vulnerable `postcss@8.4.31`.
+- Move pnpm workspace-level settings into `pnpm-workspace.yaml` rather than `package.json#pnpm`; pnpm 11 ignores the package-level key.
 
 ## Before committing
 
