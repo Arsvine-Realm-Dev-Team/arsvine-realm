@@ -77,15 +77,17 @@ const RainMorimeEffect = () => {
     const quad = new THREE.Mesh(geometry, material);
     scene.add(quad);
 
-    const clock = new THREE.Clock();
+    const timer = new THREE.Timer();
+    timer.connect(document);
     let rafId: number;
     let paused = false;
     let contextLost = false;
 
-    const animate = () => {
+    const animate = (timestamp?: number) => {
       if (paused || contextLost) return;
       rafId = requestAnimationFrame(animate);
-      uniforms.time.value = clock.getElapsedTime();
+      timer.update(timestamp);
+      uniforms.time.value = timer.getElapsed();
       renderer.render(scene, camera);
     };
     animate();
@@ -128,6 +130,7 @@ const RainMorimeEffect = () => {
       if (currentMount && renderer.domElement && currentMount.contains(renderer.domElement)) {
         currentMount.removeChild(renderer.domElement);
       }
+      timer.dispose();
       geometry.dispose();
       material.dispose();
       renderer.dispose();
