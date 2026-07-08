@@ -8,6 +8,10 @@ interface UseMusicPlayerStateOptions {
   playlist: MusicTrack[];
 }
 
+function getAudioPath(src: string) {
+  return new URL(src, window.location.origin).pathname;
+}
+
 export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
   const safeTimers = useSafeTimeouts();
   const initialPersistedState = useMemo(() => {
@@ -24,9 +28,10 @@ export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
   }, [playlist.length]);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const playbackIntentRef = useRef(initialPersistedState?.isPlaying ?? false);
+  const playbackIntentRef = useRef(false);
+  const hasUserInteractedRef = useRef(false);
   const resumeTimeRef = useRef<number | null>(initialPersistedState?.currentTime ?? null);
-  const [isPlaying, setIsPlaying] = useState(initialPersistedState?.isPlaying ?? false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(initialPersistedState?.currentTrackIndex ?? 0);
   const [currentTime, setCurrentTime] = useState(initialPersistedState?.currentTime ?? 0);
   const [duration, setDuration] = useState(0);
@@ -58,10 +63,21 @@ export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
       return;
     }
 
+    hasUserInteractedRef.current = true;
     playbackIntentRef.current = shouldPlay;
     if (!shouldPlay) {
       audio.pause();
       return;
+    }
+
+    const track = playlist[currentTrackIndex];
+    if (track) {
+      const nextSrcPath = getAudioPath(track.src);
+      const currentSrcPath = audio.src ? new URL(audio.src).pathname : null;
+      if (currentSrcPath !== nextSrcPath) {
+        audio.src = track.src;
+        audio.load();
+      }
     }
 
     const playPromise = audio.play();
@@ -71,20 +87,23 @@ export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
         setIsPlaying(false);
       });
     }
-  }, []);
+  }, [currentTrackIndex, playlist]);
 
   const handlePrev = useCallback(() => {
+    hasUserInteractedRef.current = true;
     resumeTimeRef.current = 0;
     setCurrentTrackIndex((previous) => (previous - 1 + playlist.length) % playlist.length);
   }, [playlist.length]);
 
   const handleNext = useCallback(() => {
+    hasUserInteractedRef.current = true;
     resumeTimeRef.current = 0;
     setCurrentTrackIndex((previous) => (previous + 1) % playlist.length);
   }, [playlist.length]);
 
   const selectTrack = useCallback((index: number) => {
     if (index !== currentTrackIndex) {
+      hasUserInteractedRef.current = true;
       playbackIntentRef.current = true;
       resumeTimeRef.current = 0;
       setCurrentTrackIndex(index);
@@ -111,6 +130,10 @@ export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
 
     const nextSrcPath = new URL(track.src, window.location.origin).pathname;
     const currentSrcPath = audio.src ? new URL(audio.src).pathname : null;
+    if (!hasUserInteractedRef.current && !playbackIntentRef.current) {
+      return;
+    }
+
     if (currentSrcPath === nextSrcPath) {
       return;
     }
