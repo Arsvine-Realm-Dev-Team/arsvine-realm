@@ -12,11 +12,27 @@ import type { Locale } from '../i18n/config';
  */
 export type TranslationStatus = 'source' | 'translated' | 'fallback';
 
+export interface ManagedAssetReference {
+  objectKey: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+}
+
+export interface ExternalAssetReference {
+  url: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+}
+
+export type AssetReference = string | ManagedAssetReference | ExternalAssetReference;
+
 export interface GalleryImage {
-  src: string;
+  src: AssetReference;
   caption?: string;
   isMobile?: boolean;
-  invertedSrc?: string;
+  invertedSrc?: AssetReference;
 }
 
 export interface CopyableToken {
@@ -32,7 +48,7 @@ export interface Project {
   description: string;
   tech: string[];
   link: string;
-  imageUrl: string;
+  imageUrl: AssetReference;
   galleryImages: GalleryImage[];
   articleContent?: string;
   role?: string;
@@ -44,7 +60,7 @@ export interface Project {
   status?: 'shipped' | 'wip' | 'archived';
   isConfidential?: boolean;
   noHero?: boolean;
-  invertedImageUrl?: string;
+  invertedImageUrl?: AssetReference;
   /** 内容原文所用 locale；缺省视为 defaultLocale（zh-CN）。
    *  用于在详情页区分「已翻译」与「源语言原文」。 */
   originLocale?: Locale;
@@ -62,7 +78,7 @@ export interface LifeItem {
   description: string;
   tech: string[];
   link?: string;
-  imageUrl: string;
+  imageUrl: AssetReference;
   galleryImages: GalleryImage[];
   articleContent?: string;
   links?: LifeItemLink[];
@@ -113,7 +129,7 @@ export interface FriendLink {
   name: string;
   description: string;
   url: string;
-  avatar: string;
+  avatar: AssetReference;
 }
 
 export interface Skill {
@@ -135,12 +151,21 @@ export interface SkillCategory {
 // ============================================================
 
 export interface MusicTrack {
+  id: string;
   /** 歌曲标题 */
   title: string;
   /** 艺术家 */
   artist: string;
-  /** 音频文件路径（如 /music/foo.m4a）或完整外链 URL，浏览器原生 HTML5 <audio> 支持的格式皆可（mp3/m4a/flac/wav/ogg 等） */
-  src: string;
+  /** COS / CDN objectKey。项目音频使用 realm/audio/... */
+  objectKey?: string;
+  /** 兼容旧测试与迁移期数据；新数据源应优先提供 objectKey。 */
+  src?: string;
+  /** 云端排序字段。 */
+  order?: number;
+  /** 展示日期。 */
+  date?: string;
+  /** 可选时长（秒）。 */
+  duration?: number;
 }
 
 // ============================================================
@@ -190,7 +215,7 @@ export interface ServiceCredit {
   /** 服务方主页 / 项目主页 */
   url: string;
   /** Logo / 头像图 URL */
-  avatar: string;
+  avatar: AssetReference;
 }
 
 export interface SitePages {

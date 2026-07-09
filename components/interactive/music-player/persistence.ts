@@ -2,6 +2,7 @@ export interface PersistedPlayerState {
   currentTrackIndex: number;
   currentTime: number;
   isPlaying: boolean;
+  trackId?: string;
 }
 
 interface StorageLike {
@@ -35,6 +36,7 @@ export function parsePersistedPlayerState(raw: string | null, playlistLength: nu
       currentTrackIndex: clampTrackIndex(parsed?.currentTrackIndex, playlistLength),
       currentTime: clampCurrentTime(parsed?.currentTime),
       isPlaying: parsed?.isPlaying === true,
+      trackId: typeof parsed?.trackId === 'string' ? parsed.trackId : undefined,
     } satisfies PersistedPlayerState;
   } catch {
     return null;

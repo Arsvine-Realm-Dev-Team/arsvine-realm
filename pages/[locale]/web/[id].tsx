@@ -24,6 +24,7 @@ import { useDetailSectionNav, type DetailSectionNavItem } from '../../../hooks/u
 import { useDetailTitleReveal } from '../../../hooks/useDetailTitleReveal';
 import { useTypingSubtitle } from '../../../hooks/useTypingSubtitle';
 import useGalleryLightbox from '../../../hooks/useGalleryLightbox';
+import { resolveImageUrl } from '../../../lib/cdn';
 import { loadProjects, loadMessages, resolveWebProject } from '../../../lib/i18n-data';
 import { locales, type Locale } from '../../../i18n/config';
 import { defaultLocale } from '../../../i18n/config';
@@ -233,8 +234,8 @@ function WebDetailContent({
   }, [locale, navigateTo]);
 
   const showHero = !project.noHero && !project.isConfidential && !!project.imageUrl;
-  const baseCover = project.imageUrl.split('?')[0];
-  const invertedCover = project.invertedImageUrl?.split('?')[0];
+  const baseCover = resolveImageUrl(project.imageUrl, 'large');
+  const invertedCover = project.invertedImageUrl ? resolveImageUrl(project.invertedImageUrl, 'large') : '';
   const coverImage = isInverted && invertedCover ? invertedCover : baseCover;
 
   type WebGalleryGroup =
@@ -316,7 +317,7 @@ function WebDetailContent({
             }}
             data-reveal-idx={group.leftRevealIndex}
           >
-            <LazyImage src={leftImageSrc} alt={group.left.caption || `${project.title} mobile ${group.leftIndex + 1}`} quality="high" />
+            <LazyImage src={leftImageSrc} alt={group.left.caption || `${project.title} mobile ${group.leftIndex + 1}`} quality="high" preset="card" />
           </div>
           <div
             className={styles.mobileGalleryItem}
@@ -327,7 +328,7 @@ function WebDetailContent({
             }}
             data-reveal-idx={group.rightRevealIndex}
           >
-            <LazyImage src={rightImageSrc} alt={group.right.caption || `${project.title} mobile ${group.rightIndex + 1}`} quality="high" />
+            <LazyImage src={rightImageSrc} alt={group.right.caption || `${project.title} mobile ${group.rightIndex + 1}`} quality="high" preset="card" />
           </div>
         </div>
       );
@@ -350,7 +351,7 @@ function WebDetailContent({
           transition: 'opacity 0.8s ease-out, transform 0.8s ease-out',
         }}
       >
-        <LazyImage src={imageSrc} alt={group.image.caption || `${project.title} gallery ${group.index + 1}`} quality="high" />
+        <LazyImage src={imageSrc} alt={group.image.caption || `${project.title} gallery ${group.index + 1}`} quality="high" preset="card" />
       </div>
     );
   });

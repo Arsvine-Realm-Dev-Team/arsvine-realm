@@ -18,7 +18,7 @@ export default function PlaylistPanel({
     <div className={`${styles.playlistContainer} ${isVisible ? styles.visible : ''}`}>
       {playlist.map((track, index) => (
         <div
-          key={track.src}
+          key={track.id}
           className={`${styles.playlistItem} ${index === currentTrackIndex ? styles.activePlaylistItem : ''}`}
           onClick={() => onSelectTrack(index)}
         >

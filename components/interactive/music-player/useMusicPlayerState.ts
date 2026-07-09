@@ -3,9 +3,20 @@ import type { MusicTrack } from '../../../types';
 import { useSafeTimeouts } from '../../../lib/use-safe-timeouts';
 import { MUSIC_PLAYER_STORAGE_KEY } from './constants';
 import { readPersistedPlayerStateFromStorage } from './persistence';
+import { buildManagedAssetUrl } from '../../../lib/cdn';
 
 interface UseMusicPlayerStateOptions {
   playlist: MusicTrack[];
+}
+
+function getTrackSrc(track: MusicTrack) {
+  if (track.src) {
+    return track.src;
+  }
+  if (!track.objectKey) {
+    throw new Error(`Music track "${track.id}" is missing both objectKey and src`);
+  }
+  return buildManagedAssetUrl(track.objectKey);
 }
 
 function getAudioPath(src: string) {
@@ -35,27 +46,44 @@ export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(initialPersistedState?.currentTrackIndex ?? 0);
   const [currentTime, setCurrentTime] = useState(initialPersistedState?.currentTime ?? 0);
   const [duration, setDuration] = useState(0);
+  const resolvedTrackIndex = useMemo(() => {
+    if (!playlist.length) {
+      return 0;
+    }
+
+    const persistedTrackId = initialPersistedState?.trackId;
+    if (persistedTrackId) {
+      const matchedIndex = playlist.findIndex((track) => track.id === persistedTrackId);
+      if (matchedIndex !== -1) {
+        return matchedIndex;
+      }
+    }
+
+    return Math.max(0, Math.min(currentTrackIndex, playlist.length - 1));
+  }, [currentTrackIndex, initialPersistedState?.trackId, playlist]);
 
   const persistPlayerState = useCallback((overrides: Partial<{
     currentTrackIndex: number;
     currentTime: number;
     isPlaying: boolean;
+    trackId: string | undefined;
   }> = {}) => {
     if (typeof window === 'undefined') {
       return;
     }
 
     const nextState = {
-      currentTrackIndex,
+      currentTrackIndex: resolvedTrackIndex,
       currentTime,
       isPlaying: playbackIntentRef.current || isPlaying,
+      trackId: playlist[resolvedTrackIndex]?.id,
       ...overrides,
     };
 
     const serialized = JSON.stringify(nextState);
     window.sessionStorage.setItem(MUSIC_PLAYER_STORAGE_KEY, serialized);
     window.localStorage.setItem(MUSIC_PLAYER_STORAGE_KEY, serialized);
-  }, [currentTime, currentTrackIndex, isPlaying]);
+  }, [currentTime, isPlaying, playlist, resolvedTrackIndex]);
 
   const syncPlayState = useCallback((shouldPlay: boolean) => {
     const audio = audioRef.current;
@@ -70,14 +98,19 @@ export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
       return;
     }
 
-    const track = playlist[currentTrackIndex];
+    const track = playlist[resolvedTrackIndex];
     if (track) {
-      const nextSrcPath = getAudioPath(track.src);
+      const nextSrc = getTrackSrc(track);
+      const nextSrcPath = getAudioPath(nextSrc);
       const currentSrcPath = audio.src ? new URL(audio.src).pathname : null;
       if (currentSrcPath !== nextSrcPath) {
-        audio.src = track.src;
+        audio.src = nextSrc;
         audio.load();
       }
+    } else {
+      playbackIntentRef.current = false;
+      setIsPlaying(false);
+      return;
     }
 
     const playPromise = audio.play();
@@ -87,21 +120,30 @@ export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
         setIsPlaying(false);
       });
     }
-  }, [currentTrackIndex, playlist]);
+  }, [playlist, resolvedTrackIndex]);
 
   const handlePrev = useCallback(() => {
+    if (playlist.length === 0) {
+      return;
+    }
     hasUserInteractedRef.current = true;
     resumeTimeRef.current = 0;
     setCurrentTrackIndex((previous) => (previous - 1 + playlist.length) % playlist.length);
   }, [playlist.length]);
 
   const handleNext = useCallback(() => {
+    if (playlist.length === 0) {
+      return;
+    }
     hasUserInteractedRef.current = true;
     resumeTimeRef.current = 0;
     setCurrentTrackIndex((previous) => (previous + 1) % playlist.length);
   }, [playlist.length]);
 
   const selectTrack = useCallback((index: number) => {
+    if (index < 0 || index >= playlist.length) {
+      return;
+    }
     if (index !== currentTrackIndex) {
       hasUserInteractedRef.current = true;
       playbackIntentRef.current = true;
@@ -113,7 +155,7 @@ export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
     if (!isPlaying) {
       syncPlayState(true);
     }
-  }, [currentTrackIndex, isPlaying, syncPlayState]);
+  }, [currentTrackIndex, isPlaying, playlist.length, syncPlayState]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -123,12 +165,13 @@ export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
 
   useEffect(() => {
     const audio = audioRef.current;
-    const track = playlist[currentTrackIndex];
+    const track = playlist[resolvedTrackIndex];
     if (!audio || !track) {
       return;
     }
 
-    const nextSrcPath = new URL(track.src, window.location.origin).pathname;
+    const nextSrc = getTrackSrc(track);
+    const nextSrcPath = new URL(nextSrc, window.location.origin).pathname;
     const currentSrcPath = audio.src ? new URL(audio.src).pathname : null;
     if (!hasUserInteractedRef.current && !playbackIntentRef.current) {
       return;
@@ -138,7 +181,7 @@ export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
       return;
     }
 
-    audio.src = track.src;
+    audio.src = nextSrc;
     audio.load();
     if (!playbackIntentRef.current) {
       return;
@@ -153,19 +196,20 @@ export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
             retryPromise.catch(() => {
               playbackIntentRef.current = false;
               setIsPlaying(false);
-              persistPlayerState({ isPlaying: false });
+              persistPlayerState({ isPlaying: false, trackId: track.id });
             });
           }
         }, 120);
       });
     }
-  }, [currentTrackIndex, persistPlayerState, playlist, safeTimers]);
+  }, [persistPlayerState, playlist, resolvedTrackIndex, safeTimers]);
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) {
       return;
     }
+    const activeTrack = playlist[resolvedTrackIndex];
 
     const updateProgress = () => {
       setCurrentTime(audio.currentTime);
@@ -192,7 +236,7 @@ export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
         playPromise.catch(() => {
           playbackIntentRef.current = false;
           setIsPlaying(false);
-          persistPlayerState({ isPlaying: false, currentTime: audio.currentTime });
+          persistPlayerState({ isPlaying: false, currentTime: audio.currentTime, trackId: activeTrack?.id });
         });
       }
     };
@@ -224,11 +268,11 @@ export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
       audio.removeEventListener('pause', setAudioPaused);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [handleNext, persistPlayerState]);
+  }, [handleNext, persistPlayerState, playlist, resolvedTrackIndex]);
 
   useEffect(() => {
     persistPlayerState();
-  }, [currentTime, currentTrackIndex, isPlaying, persistPlayerState]);
+  }, [currentTime, isPlaying, persistPlayerState, resolvedTrackIndex]);
 
   useEffect(() => {
     const handlePageHide = () => {
@@ -236,14 +280,15 @@ export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
       persistPlayerState({
         currentTime: audio ? audio.currentTime : currentTime,
         isPlaying: playbackIntentRef.current || !audio?.paused,
+        trackId: playlist[resolvedTrackIndex]?.id,
       });
     };
 
     window.addEventListener('pagehide', handlePageHide);
     return () => window.removeEventListener('pagehide', handlePageHide);
-  }, [currentTime, persistPlayerState]);
+  }, [currentTime, persistPlayerState, playlist, resolvedTrackIndex]);
 
-  const currentTrack = playlist[currentTrackIndex];
+  const currentTrack = playlist[resolvedTrackIndex] ?? null;
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
   const shouldPreloadMetadata = isPlaying || currentTime > 0;
 

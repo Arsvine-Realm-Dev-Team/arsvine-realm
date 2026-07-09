@@ -21,6 +21,7 @@ import HreflangLinks from '../../components/shared/HreflangLinks';
 
 import { getAllPostsForLocale } from '../../lib/blog';
 import { buildBlogPostHref } from '../../lib/blog-client';
+import { resolveImageUrl } from '../../lib/cdn';
 import { setHudTypingOverlaySuppressed } from '../../lib/hud-typing-visibility';
 import { siteConfig } from '../../data/site';
 import { loadProjects, loadLife, loadExperience, loadSkills, loadMessages } from '../../lib/i18n-data';
@@ -182,7 +183,7 @@ export default function ContentPage({
   }, []);
 
   const handleWorkItemClick = useCallback((item: Project) => {
-    const coverImg = item.imageUrl?.split('?')[0];
+    const coverImg = resolveImageUrl(item.imageUrl, 'large');
     if (coverImg) {
       const img = new Image();
       img.src = coverImg;
@@ -207,7 +208,7 @@ export default function ContentPage({
   }, []);
 
   const handleLifeItemClick = useCallback((item: LifeItem) => {
-    const coverImg = item.imageUrl?.split('?')[0];
+    const coverImg = resolveImageUrl(item.imageUrl, 'large');
     if (coverImg) {
       const img = new Image();
       img.src = coverImg;

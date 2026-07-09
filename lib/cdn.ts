@@ -1,55 +1,195 @@
-// ============================================================
-// CDN helpers
-// ------------------------------------------------------------
-// 媒体 / 静态资源托管在腾讯云 COS（香港桶 `arsvine-cdn`，
-// region `ap-hongkong`），通过 `cdn.arsvine.com` 对外服务。
-//
-//   NEXT_PUBLIC_MEDIA_CDN=https://cdn.arsvine.com
-//
-// 在生产环境部署时设置该变量；本地 dev 通常不设，此时所有 helper
-// 都返回相对路径（如 `/covers/projects/foo.webp`），方便把"无 CDN
-// 时本地放在 public/ 镜像同名目录里"作为可选 fallback。
-//
-// 对象 Key 前缀约定见 docs / 内部规范：
-//   posts/<year>/        文章正文配图
-//   covers/              文章 / 项目 / Life 封面
-//   gallery/             图集
-//   avatar/              头像
-//   music/               公开音频
-//   fonts/               Google Fonts 自托管副本（详见 scripts/fetch-google-fonts.mjs）
-//   assets/              通用静态资源
-//   test/                测试
-// ============================================================
+import type { AssetReference, ExternalAssetReference, ManagedAssetReference } from '../types';
 
-const MEDIA_CDN = process.env.NEXT_PUBLIC_MEDIA_CDN || '';
+export const DEFAULT_CDN_BASE = 'https://cdn.arsvine.com';
+export const REALM_NAMESPACE = 'realm/';
+export const SHARED_NAMESPACE = 'shared/';
 
-/** 拼接任意 COS 对象 Key 为可访问 URL；保证只有一个 `/` 分隔。 */
-export const cdn = (key: string): string => {
-  const clean = key.replace(/^\/+/, '');
-  return `${MEDIA_CDN}/${clean}`;
+export const IMAGE_PRESET_PARAMS = {
+  thumb: 'eo-img.resize=w/320&eo-img.format=webp',
+  card: 'eo-img.resize=w/720&eo-img.format=webp',
+  large: 'eo-img.resize=l/1800&eo-img.format=webp',
+  blur: 'eo-img.resize=w/32&eo-img.format=webp',
+  rawDisplay: 'eo-img.format=webp',
+  thumbAvif: 'eo-img.resize=w/320&eo-img.format=avif',
+  cardAvif: 'eo-img.resize=w/720&eo-img.format=avif',
+  largeAvif: 'eo-img.resize=l/1800&eo-img.format=avif',
+} as const;
+
+export type ImagePreset = keyof typeof IMAGE_PRESET_PARAMS;
+
+const AVIF_FALLBACK_PRESET: Partial<Record<ImagePreset, ImagePreset>> = {
+  thumb: 'thumbAvif',
+  card: 'cardAvif',
+  large: 'largeAvif',
 };
 
-/** 封面图：`covers/<key>`，例：cover('projects/arsvine-realm.webp')。 */
+const LEGACY_MEDIA_CDN = process.env.NEXT_PUBLIC_CDN_BASE || DEFAULT_CDN_BASE;
+
+export function normalizeCdnBase(base = process.env.NEXT_PUBLIC_CDN_BASE || DEFAULT_CDN_BASE) {
+  return base.replace(/\/+$/, '');
+}
+
+export function normalizeObjectKey(objectKey: string) {
+  return objectKey.replace(/^\/+/, '');
+}
+
+export function hasAllowedCdnNamespace(objectKey: string) {
+  const normalized = normalizeObjectKey(objectKey);
+  return normalized.startsWith(REALM_NAMESPACE) || normalized.startsWith(SHARED_NAMESPACE);
+}
+
+export function isManagedObjectKey(value: string) {
+  return hasAllowedCdnNamespace(value);
+}
+
+export function isManagedAssetReference(value: AssetReference): value is ManagedAssetReference {
+  return typeof value === 'object' && !!value && 'objectKey' in value;
+}
+
+export function isExternalAssetReference(value: AssetReference): value is ExternalAssetReference {
+  return typeof value === 'object' && !!value && 'url' in value;
+}
+
+export function isAbsoluteUrl(value: string) {
+  return /^https?:\/\//i.test(value);
+}
+
+export function assertAllowedManagedObjectKey(objectKey: string) {
+  const normalized = normalizeObjectKey(objectKey);
+  if (!hasAllowedCdnNamespace(normalized)) {
+    throw new Error(`Unsupported CDN objectKey namespace: ${objectKey}`);
+  }
+  return normalized;
+}
+
+export function managedAsset(objectKey: string, meta: Omit<ManagedAssetReference, 'objectKey'> = {}): ManagedAssetReference {
+  return {
+    objectKey: assertAllowedManagedObjectKey(objectKey),
+    ...meta,
+  };
+}
+
+export function externalAsset(url: string, meta: Omit<ExternalAssetReference, 'url'> = {}): ExternalAssetReference {
+  return { url, ...meta };
+}
+
+export function buildManagedAssetUrl(objectKey: string) {
+  const cleanKey = assertAllowedManagedObjectKey(objectKey);
+  return `${normalizeCdnBase()}/${cleanKey}`;
+}
+
+export function buildImageUrl(objectKey: string, preset: ImagePreset) {
+  const cleanKey = assertAllowedManagedObjectKey(objectKey);
+  return `${normalizeCdnBase()}/${cleanKey}?${IMAGE_PRESET_PARAMS[preset]}`;
+}
+
+export function buildImagePictureSources(objectKey: string, preset: ImagePreset) {
+  const cleanKey = assertAllowedManagedObjectKey(objectKey);
+  const webpUrl = buildImageUrl(cleanKey, preset);
+  const avifPreset = AVIF_FALLBACK_PRESET[preset];
+  return {
+    avifUrl: avifPreset ? buildImageUrl(cleanKey, avifPreset) : null,
+    webpUrl,
+  };
+}
+
+export function resolveRawAssetUrl(asset: AssetReference | null | undefined) {
+  if (!asset) {
+    return '';
+  }
+
+  if (typeof asset === 'string') {
+    if (!asset) {
+      return '';
+    }
+    if (isAbsoluteUrl(asset) || asset.startsWith('/')) {
+      return asset;
+    }
+    if (isManagedObjectKey(asset)) {
+      return buildManagedAssetUrl(asset);
+    }
+    return `${normalizeCdnBase(LEGACY_MEDIA_CDN)}/${normalizeObjectKey(asset)}`;
+  }
+
+  if (isManagedAssetReference(asset)) {
+    return buildManagedAssetUrl(asset.objectKey);
+  }
+
+  if (isExternalAssetReference(asset)) {
+    return asset.url;
+  }
+
+  return '';
+}
+
+export function resolveImageUrl(asset: AssetReference | null | undefined, preset: ImagePreset) {
+  if (!asset) {
+    return '';
+  }
+
+  if (typeof asset === 'string') {
+    if (isAbsoluteUrl(asset) || asset.startsWith('/')) {
+      return asset;
+    }
+    if (isManagedObjectKey(asset)) {
+      return buildImageUrl(asset, preset);
+    }
+    return `${normalizeCdnBase(LEGACY_MEDIA_CDN)}/${normalizeObjectKey(asset)}`;
+  }
+
+  if (isManagedAssetReference(asset)) {
+    return buildImageUrl(asset.objectKey, preset);
+  }
+
+  if (isExternalAssetReference(asset)) {
+    return asset.url;
+  }
+
+  return '';
+}
+
+export function resolveImagePictureSources(asset: AssetReference | null | undefined, preset: ImagePreset) {
+  if (!asset) {
+    return null;
+  }
+
+  if (typeof asset === 'string') {
+    if (isManagedObjectKey(asset)) {
+      return buildImagePictureSources(asset, preset);
+    }
+    return null;
+  }
+
+  if (isManagedAssetReference(asset)) {
+    return buildImagePictureSources(asset.objectKey, preset);
+  }
+
+  return null;
+}
+
+export function resolveAssetAlt(asset: AssetReference | null | undefined, fallback = '') {
+  if (!asset || typeof asset === 'string') {
+    return fallback;
+  }
+
+  return asset.alt || fallback;
+}
+
+export function rawSharedAsset(key: string) {
+  return buildManagedAssetUrl(`shared/${normalizeObjectKey(key)}`);
+}
+
+export function rawRealmAsset(key: string) {
+  return buildManagedAssetUrl(`realm/${normalizeObjectKey(key)}`);
+}
+
+// Legacy helpers are kept only to avoid breaking existing static content before
+// the canonical realm/shared objectKey inventory is uploaded.
+export const cdn = (key: string): string => `${normalizeCdnBase(LEGACY_MEDIA_CDN)}/${normalizeObjectKey(key)}`;
 export const cover = (key: string): string => cdn(`covers/${key}`);
-
-/** 图集：`gallery/<key>`，例：gallery('life/arknights/01.webp')。 */
 export const gallery = (key: string): string => cdn(`gallery/${key}`);
-
-/** 文章正文配图：`posts/<key>`，例：post('2026/first-meeting-hero.webp')。 */
 export const post = (key: string): string => cdn(`posts/${key}`);
-
-/** 头像：`avatar/<key>`，例：avatar('main.webp')。 */
 export const avatar = (key: string): string => cdn(`avatar/${key}`);
-
-/** 音频：`music/<key>`，例：music('jane-doe.m4a')。 */
 export const music = (key: string): string => cdn(`music/${key}`);
-
-/** 通用静态资产：`assets/<key>`，例：asset('logo.svg')。 */
 export const asset = (key: string): string => cdn(`assets/${key}`);
-
-/** 字体资产：`fonts/<key>`，例：font('google-fonts.css')。
- *  字体文件由 scripts/fetch-google-fonts.mjs 抓取并上传，目录结构：
- *    fonts/google-fonts.css           入口样式表（已改写 url 指向同 CDN）
- *    fonts/<family-slug>/<file>.woff2 各 unicode-range 分片
- */
-export const font = (key: string): string => cdn(`fonts/${key}`);
+export const font = (key: string): string => rawSharedAsset(`fonts/${key}`);

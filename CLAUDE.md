@@ -52,7 +52,7 @@ npx vitest run -t "name pattern"
 | Need | Edit first |
 |---|---|
 | Site metadata, SEO, fonts, social links | `data/site.ts` |
-| Music playlist | `data/music.ts` |
+| Music playlist / cloud audio catalog | `pages/api/assets/audio`, `lib/assets/catalog-provider.ts`, `components/interactive/MusicPlayer.tsx` |
 | Projects / experience / life / skills / friend links | `data/<topic>/*.ts` |
 | UI copy | `locales/*.json` |
 | Remote image domains | `config/image-hosts.js` |

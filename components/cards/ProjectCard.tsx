@@ -1,13 +1,15 @@
 import React from 'react';
 import styles from '../../styles/Home.module.scss';
 import { useApp } from '../../contexts/AppContext';
+import { resolveImageUrl } from '../../lib/cdn';
 
 const ProjectCard = ({ project, onClick }) => {
   const { title, description, tech, link, imageUrl, invertedImageUrl, role, year, isConfidential, liveUrl } = project;
   const { isInverted } = useApp();
 
   const resolvedImageUrl = isInverted && invertedImageUrl ? invertedImageUrl : imageUrl;
-  const imageStyle = resolvedImageUrl ? { backgroundImage: `url(${resolvedImageUrl})` } : {};
+  const backgroundImageUrl = resolveImageUrl(resolvedImageUrl, 'card');
+  const imageStyle = backgroundImageUrl ? { backgroundImage: `url(${backgroundImageUrl})` } : {};
 
   const handleCardClick = (e) => {
     if (onClick) {

@@ -6,11 +6,13 @@ import type { MusicTrack } from '../../../../types';
 
 const playlist: MusicTrack[] = [
   {
+    id: 'track-one',
     title: 'Track One',
     artist: 'Artist One',
     src: 'https://cdn.arsvine.com/music/track-one.m4a',
   },
   {
+    id: 'track-two',
     title: 'Track Two',
     artist: 'Artist Two',
     src: 'https://cdn.arsvine.com/music/track-two.m4a',

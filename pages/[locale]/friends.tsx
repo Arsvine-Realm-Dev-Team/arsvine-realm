@@ -7,6 +7,7 @@ import HreflangLinks from '../../components/shared/HreflangLinks';
 import styles from '../../styles/Home.module.scss';
 import { loadFriendLinks, loadServices, loadMessages } from '../../lib/i18n-data';
 import { locales, type Locale } from '../../i18n/config';
+import { resolveRawAssetUrl } from '../../lib/cdn';
 import type { FriendLink, ServiceCredit } from '../../types';
 
 interface FriendsPageProps {
@@ -47,7 +48,7 @@ export default function FriendsPage({
                 data-cursor-label="VISIT"
               >
                 <div className={styles.friendLinkAvatar}>
-                  <img src={link.avatar} alt={link.name} />
+                  <img src={resolveRawAssetUrl(link.avatar)} alt={link.name} />
                 </div>
                 <div className={styles.friendLinkInfo}>
                   <h3>{link.name}</h3>
@@ -71,7 +72,7 @@ export default function FriendsPage({
                     data-cursor-label="VISIT"
                   >
                     <div className={styles.friendLinkAvatar}>
-                      <img src={svc.avatar} alt={svc.name} />
+                      <img src={resolveRawAssetUrl(svc.avatar)} alt={svc.name} />
                     </div>
                     <div className={styles.friendLinkInfo}>
                       <h3>{svc.name}</h3>

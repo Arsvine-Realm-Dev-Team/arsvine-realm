@@ -1,0 +1,31 @@
+[
+  {
+    "id": "draft-track",
+    "status": "draft",
+    "title": "Draft Track",
+    "artist": "Hidden Artist",
+    "objectKey": "realm/audio/2026/07/08/draft-track.deadbeef.m4a",
+    "order": 1,
+    "date": "2026-07-08"
+  },
+  {
+    "id": "track-two",
+    "status": "published",
+    "title": "Track Two",
+    "artist": "Artist Two",
+    "objectKey": "realm/audio/2026/07/08/track-two.deadbeef.m4a",
+    "order": 2,
+    "date": "2026-07-08",
+    "duration": 222
+  },
+  {
+    "id": "track-one",
+    "status": "published",
+    "title": "Track One",
+    "artist": "Artist One",
+    "objectKey": "realm/audio/2026/07/08/track-one.feedbead.m4a",
+    "order": 1,
+    "date": "2026-07-09",
+    "duration": 111
+  }
+]

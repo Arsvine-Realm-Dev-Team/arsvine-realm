@@ -22,6 +22,7 @@ import { useDetailSectionNav, type DetailSectionNavItem } from '../../../hooks/u
 import { useDetailTitleReveal } from '../../../hooks/useDetailTitleReveal';
 import { useTypingSubtitle } from '../../../hooks/useTypingSubtitle';
 import useGalleryLightbox from '../../../hooks/useGalleryLightbox';
+import { resolveImageUrl } from '../../../lib/cdn';
 import { loadLife, loadMessages, resolveLifeItem } from '../../../lib/i18n-data';
 import { defaultLocale, locales, type Locale } from '../../../i18n/config';
 import type { LifeItem, TranslationStatus } from '../../../types';
@@ -166,7 +167,7 @@ function LifeDetailContent({
     navigateTo(`/${locale}/content#life`);
   }, [locale, navigateTo]);
 
-  const coverImage = item.imageUrl.split('?')[0];
+  const coverImage = resolveImageUrl(item.imageUrl, 'large');
   let revealCursor = 0;
   const storyRevealIndices = paragraphs.map(() => revealCursor++);
   const galleryRevealIndices = galleryImages.map(() => revealCursor++);
@@ -229,7 +230,7 @@ function LifeDetailContent({
               const revealIndex = galleryRevealIndices[index];
               return (
                 <div
-                  key={`${image.src}-${index}`}
+                  key={`${resolveImageUrl(image.src, 'card')}-${index}`}
                   className={styles.galleryItem}
                   onClick={(event) => openLightbox(index, event, 'gallery')}
                   ref={(element) => {
@@ -242,6 +243,7 @@ function LifeDetailContent({
                     src={image.src}
                     alt={image.caption || `${item.title} gallery ${index + 1}`}
                     quality="medium"
+                    preset="card"
                   />
                   <div className={styles.galleryOverlay} />
                   <div className={styles.galleryCornerTL} />
