@@ -5,7 +5,6 @@ import sharp from 'sharp';
 
 const DEFAULT_WORKSPACE = path.join(process.cwd(), 'cos-workspace');
 const DEFAULT_DIST = path.join(process.cwd(), 'dist');
-const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif']);
 const AUDIO_EXTENSIONS = new Set(['.mp3', '.m4a', '.aac', '.ogg', '.wav']);
 const ALLOWED_STATUSES = new Set(['published', 'draft', 'hidden']);
 const MAX_IMAGE_BYTES = 32 * 1024 * 1024;
