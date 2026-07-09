@@ -16,6 +16,9 @@ package-lock.json
 # Production
 /build
 
+# Deployment
+dist/
+
 # Misc
 .DS_Store
 *.pem
@@ -63,3 +66,4 @@ rainmorime-template/
 
 # Archived (unused) assets — kept locally for review, excluded from git
 /.archive/
+cos-workspace/

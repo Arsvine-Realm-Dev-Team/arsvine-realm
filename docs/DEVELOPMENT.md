@@ -102,6 +102,35 @@ $env:PORT=80; pnpm dev
 
 Then open `http://dev.arsvine.com`.
 
+## Local COS workspace
+
+`cos-workspace/` is now a purely local working directory and should stay out of Git.
+
+Recommended media workflow:
+
+```bash
+pnpm assets:prepare
+pnpm assets:build -- --publish-current
+```
+
+`pnpm assets:prepare` expects a full mirror of the current public bucket under:
+
+```text
+cos-workspace/public-root-legacy/
+```
+
+It then:
+
+1. rewrites the mirror into canonical `public-root/realm/...` and `public-root/shared/...` paths;
+2. normalizes object base names to short English kebab-case before the build step appends hashes;
+3. regenerates `_meta/realm/{home,works,collections,links,audio}.json`.
+
+After `pnpm assets:build -- --publish-current`, upload:
+
+- `dist/cos-upload/public-root/shared/` to the public bucket root `shared/`
+- `dist/cos-upload/public-root/realm/` to the public bucket root `realm/`
+- `dist/cos-upload/private-root/realm/catalog/` to the private bucket key prefix `realm/catalog/`
+
 ## Data and content editing
 
 For routine content changes, prefer these locations before editing component logic:
