@@ -99,9 +99,6 @@ export function resolveRawAssetUrl(asset: AssetReference | null | undefined) {
   }
 
   if (typeof asset === 'string') {
-    if (!asset) {
-      return '';
-    }
     if (isAbsoluteUrl(asset) || asset.startsWith('/')) {
       return asset;
     }
