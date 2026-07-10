@@ -303,6 +303,15 @@ async function main() {
     const loadedSection = await loadMetaSection(metaRoot, sectionName);
     transformedSections[sectionName] = replaceSourceFields(loadedSection, assetMap, seenIds);
   }
+  const legacyAssetsPath = path.join(metaRoot, 'legacy-asset-sources.json');
+  if (await stat(legacyAssetsPath).then(() => true).catch(() => false)) {
+    const legacySources = await loadMetaSection(metaRoot, 'legacy-asset-sources');
+    transformedSections['static-assets'] = replaceSourceFields(
+      { assets: Object.fromEntries(Object.entries(legacySources).map(([key, source]) => [key, { source }])) },
+      assetMap,
+      seenIds,
+    );
+  }
 
   const privateCatalogRoot = path.join(distPrivateRoot, 'realm', 'catalog');
   const versionRoot = path.join(privateCatalogRoot, 'versions', version);

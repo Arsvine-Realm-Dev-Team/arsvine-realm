@@ -392,6 +392,7 @@ async function stageStructuredAssets(legacyFiles) {
     }
     const destination = toPosix(path.join('realm', 'audio', ...CANONICAL_DATE, `${item.id}${path.extname(item.file)}`));
     await copyFileStrict(sourcePath, path.join(PUBLIC_ROOT, ...destination.split('/')));
+    sourceMap.set(`music/${item.file}`, makeSource(destination));
   }
 
   await copyDirectoryContents(path.join(LEGACY_ROOT, 'fonts'), path.join(PUBLIC_ROOT, 'shared', 'fonts'));
@@ -471,6 +472,7 @@ async function stageStructuredAssets(legacyFiles) {
     collections,
     linkRecords,
     audioRecords,
+    legacyAssetSources: Object.fromEntries(sourceMap),
   };
 }
 
@@ -498,6 +500,7 @@ async function main() {
   await writeFile(path.join(META_ROOT, 'collections.json'), `${JSON.stringify(generated.collections, null, 2)}\n`);
   await writeFile(path.join(META_ROOT, 'links.json'), `${JSON.stringify(generated.linkRecords, null, 2)}\n`);
   await writeFile(path.join(META_ROOT, 'audio.json'), `${JSON.stringify(generated.audioRecords, null, 2)}\n`);
+  await writeFile(path.join(META_ROOT, 'legacy-asset-sources.json'), `${JSON.stringify(generated.legacyAssetSources, null, 2)}\n`);
 
   console.log('[prepare-cos-workspace] prepared public-root and catalog metadata');
 }

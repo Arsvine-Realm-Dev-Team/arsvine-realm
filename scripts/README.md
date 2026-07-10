@@ -7,7 +7,7 @@
 | 脚本 | 入口 | 何时用 |
 |---|---|---|
 | `dev-host-setup.cmd` (`.ps1`) | 双击 / `.\scripts\dev-host-setup.cmd` | 本地开发，让 `cdn.arsvine.com` 通过 Referer 白名单（写 hosts + 启动 dev server，退出自动清理） |
-| `fetch-google-fonts.mjs` | `node scripts/fetch-google-fonts.mjs` | 改 Google Fonts 选择后，重新生成 `public/_fonts-staging/` 给 COS 手动上传 |
+| `fetch-google-fonts.mjs` | `node scripts/fetch-google-fonts.mjs` | 改 Google Fonts 选择后，重新生成 `public/_fonts-staging/` 上传到 COS `shared/fonts/` |
 | `convert-images.mjs` | `node scripts/convert-images.mjs [format] [opts]` | 批量图片格式转换（webp/jpg/png/avif），输出到 `scripts/images/out/` |
 | `regen-favicons.mjs` | `node scripts/regen-favicons.mjs` | 从透明源图重新生成 `public/favicon*` + `public/icons/*` 全套 |
 | `jpg-to-transparent-png.mjs` | `node scripts/jpg-to-transparent-png.mjs <src.jpg> <dst.png>` | 白底 JPG → 真透明 PNG（alpha unmix 算法，颜色不会染白边） |
@@ -40,9 +40,9 @@ $env:PORT=80; pnpm dev
 
 ## `fetch-google-fonts` 详细
 
-读 `data/site.ts` 的 `siteConfig.fonts.googleStylesheet`，用现代 Chrome User-Agent 抓 CSS（否则 Google 返回 `.ttf`），下载所有 woff2，把 `url()` 改写为 `cdn.arsvine.com/fonts/<family>/<file>`，写入 `public/_fonts-staging/`（gitignored）。
+读 `data/site.ts` 的 `siteConfig.fonts.googleStylesheet`，用现代 Chrome User-Agent 抓 CSS（否则 Google 返回 `.ttf`），下载所有 woff2，把 `url()` 改写为 `cdn.arsvine.com/shared/fonts/<family>/<file>`，写入 `public/_fonts-staging/`（gitignored）。
 
-**生产分发是腾讯云 COS 网页控制台手动上传，不使用 `coscli`**。脚本末尾会打印准确的 web 控制台元数据 Header 配置步骤 —— 跟着做即可，不要假设有 CLI 可调。
+生产分发使用 `cos-workspace/coscli-windows-amd64.exe` 上传到 `shared/fonts/`；凭据仅从当前环境传入，不保存到 CLI 配置。脚本输出的 Content-Type 与 Cache-Control 要求仍然适用。
 
 > Variable Font 复用是 Google Fonts 的设计行为：多个 `@font-face` 块的 `font-weight:` 不同但 `src` 指同一个 woff2 文件。脚本的 dedup 按这个机制设计，**不要**改成"每个 weight 一个文件"。
 

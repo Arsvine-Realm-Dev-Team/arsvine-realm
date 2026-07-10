@@ -8,6 +8,8 @@ import styles from '../../styles/Home.module.scss';
 import { loadFriendLinks, loadServices, loadMessages } from '../../lib/i18n-data';
 import { locales, type Locale } from '../../i18n/config';
 import { resolveRawAssetUrl } from '../../lib/cdn';
+import { getStaticCatalogAssets } from '../../lib/assets/catalog-provider';
+import { hydrateCatalogAssets } from '../../lib/assets/hydrate-catalog-assets';
 import type { FriendLink, ServiceCredit } from '../../types';
 
 interface FriendsPageProps {
@@ -98,6 +100,7 @@ export const getStaticProps: GetStaticProps<FriendsPageProps> = async ({ params 
   const locale = params!.locale as Locale;
   const messages = await loadMessages(locale);
   const friends = loadFriendLinks(locale).friendLinksData;
+  const catalogAssets = await getStaticCatalogAssets();
   const services = loadServices();
 
   const friendsPage = (messages.pages as Record<string, { title?: string; description?: string }>)?.friends ?? {};
@@ -105,10 +108,11 @@ export const getStaticProps: GetStaticProps<FriendsPageProps> = async ({ params 
     props: {
       locale,
       messages,
-      friends,
+      friends: hydrateCatalogAssets(friends, catalogAssets),
       services,
       pageTitle: friendsPage.title ?? 'FRIENDS',
       pageDescription: friendsPage.description ?? '',
     },
+    revalidate: 300,
   };
 };

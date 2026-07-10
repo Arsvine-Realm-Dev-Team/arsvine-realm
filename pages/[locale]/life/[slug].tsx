@@ -23,6 +23,8 @@ import { useDetailTitleReveal } from '../../../hooks/useDetailTitleReveal';
 import { useTypingSubtitle } from '../../../hooks/useTypingSubtitle';
 import useGalleryLightbox from '../../../hooks/useGalleryLightbox';
 import { resolveImageUrl } from '../../../lib/cdn';
+import { getStaticCatalogAssets } from '../../../lib/assets/catalog-provider';
+import { hydrateCatalogAssets } from '../../../lib/assets/hydrate-catalog-assets';
 import { loadLife, loadMessages, resolveLifeItem } from '../../../lib/i18n-data';
 import { defaultLocale, locales, type Locale } from '../../../i18n/config';
 import type { LifeItem, TranslationStatus } from '../../../types';
@@ -56,17 +58,19 @@ export const getStaticProps: GetStaticProps<PageProps> = async ({ params }) => {
 
   const life = loadLife(locale);
   const allItems = [...life.gameData, ...life.travelData, ...life.otherData];
+  const catalogAssets = await getStaticCatalogAssets();
 
   return {
     props: {
       locale,
       messages,
-      item: resolved.item,
-      allItems,
+      item: hydrateCatalogAssets(resolved.item, catalogAssets),
+      allItems: hydrateCatalogAssets(allItems, catalogAssets),
       translationStatus: resolved.status,
       actualLocale: resolved.actualLocale,
       originLocale: resolved.originLocale,
     },
+    revalidate: 300,
   };
 };
 

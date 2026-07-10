@@ -6,7 +6,7 @@ const PROJECT_NAMESPACE = 'realm';
 const DEFAULT_PRIVATE_ROOT = path.join(/* turbopackIgnore: true */ process.cwd(), 'dist', 'cos-upload', 'private-root');
 const DEFAULT_WORKS_PAGE_SIZE = 12;
 
-type CatalogSectionName = 'home' | 'works' | 'collections' | 'links' | 'audio';
+type CatalogSectionName = 'home' | 'works' | 'collections' | 'links' | 'audio' | 'static-assets';
 type CatalogStatus = 'published' | 'draft' | 'hidden';
 
 interface CatalogCurrentPointer {
@@ -63,6 +63,13 @@ export interface PublicCatalogAudioRecord {
   order?: number;
   date?: string;
   duration?: number;
+}
+
+export interface PublicCatalogStaticAsset {
+  objectKey: string;
+  alt?: string;
+  width?: number;
+  height?: number;
 }
 
 interface CatalogCollectionsFile {
@@ -310,4 +317,16 @@ export async function getAudioAssets() {
       : [];
 
   return sortByOrderDate(items.map(toPublicAudioRecord).filter((item): item is PublicCatalogAudioRecord => !!item));
+}
+
+export async function getStaticCatalogAssets(): Promise<Record<string, PublicCatalogStaticAsset>> {
+  const section = await loadSection('static-assets') as { assets?: Record<string, CatalogImageRecord> };
+  const assets: Record<string, PublicCatalogStaticAsset> = {};
+
+  for (const [key, record] of Object.entries(section.assets || {})) {
+    if (record.objectKey) {
+      assets[key] = { objectKey: record.objectKey, alt: record.alt, width: record.width, height: record.height };
+    }
+  }
+  return assets;
 }

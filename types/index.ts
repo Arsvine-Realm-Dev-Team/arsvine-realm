@@ -26,7 +26,12 @@ export interface ExternalAssetReference {
   height?: number;
 }
 
-export type AssetReference = string | ManagedAssetReference | ExternalAssetReference;
+export interface CatalogAssetReference {
+  catalogKey: string;
+  alt?: string;
+}
+
+export type AssetReference = string | ManagedAssetReference | ExternalAssetReference | CatalogAssetReference;
 
 export interface GalleryImage {
   src: AssetReference;
@@ -193,7 +198,7 @@ export interface SiteFonts {
    *  读取并抓取，浏览器不直接加载它。修改后需重跑脚本 + 重新上传 COS。 */
   googleStylesheet: string;
   /** 浏览器实际加载的 stylesheet href。由 scripts/fetch-google-fonts.mjs 抓取
-   *  googleStylesheet 后改写 url 生成，托管在 cdn.arsvine.com/fonts/。 */
+   *  googleStylesheet 后改写 url 生成，托管在 cdn.arsvine.com/shared/fonts/。 */
   cdnStylesheet: string;
 }
 

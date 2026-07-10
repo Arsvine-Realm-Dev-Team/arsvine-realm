@@ -123,13 +123,17 @@ It then:
 
 1. rewrites the mirror into canonical `public-root/realm/...` and `public-root/shared/...` paths;
 2. normalizes object base names to short English kebab-case before the build step appends hashes;
-3. regenerates `_meta/realm/{home,works,collections,links,audio}.json`.
+3. regenerates `_meta/realm/{home,works,collections,links,audio}.json` plus logical asset-source metadata.
+
+`pnpm assets:build -- --publish-current` resolves that metadata to actual hashed object keys in private `realm/catalog/versions/<version>/static-assets.json`. Static data keeps only catalog identities; ISR reads this catalog segment and never hard-codes hashes or old COS prefixes.
 
 After `pnpm assets:build -- --publish-current`, upload:
 
 - `dist/cos-upload/public-root/shared/` to the public bucket root `shared/`
 - `dist/cos-upload/public-root/realm/` to the public bucket root `realm/`
 - `dist/cos-upload/private-root/realm/catalog/` to the private bucket key prefix `realm/catalog/`
+
+Use `cos-workspace/coscli-windows-amd64.exe` for upload and verification. Pass credentials from the environment for the current command only; do not run `coscli config init` or commit `cos-workspace/`.
 
 ## Data and content editing
 
@@ -244,10 +248,10 @@ The script:
 
 1. fetches Google CSS with a modern Chrome User-Agent;
 2. downloads `.woff2` font files;
-3. rewrites all `url()` references to `cdn.arsvine.com/fonts/...`;
+3. rewrites all `url()` references to `cdn.arsvine.com/shared/fonts/...`;
 4. writes the staging tree to `public/_fonts-staging/`.
 
-Upload is manual through the Tencent COS web console. This project intentionally does **not** use `coscli`.
+Upload `public/_fonts-staging/` under the public bucket's `shared/fonts/` prefix with `coscli`. Use temporary credentials supplied by the current shell rather than a saved CLI profile.
 
 Required COS metadata:
 
@@ -261,7 +265,7 @@ The COS custom-header UI has separate **Key** and **Value** fields. Put only the
 Verify after upload:
 
 ```bash
-curl -I -H "Referer: https://arsvine.com/" https://cdn.arsvine.com/fonts/google-fonts.css
+curl -I -H "Referer: https://arsvine.com/" https://cdn.arsvine.com/shared/fonts/google-fonts.css
 ```
 
 `Content-Type` and `Cache-Control` should each appear once.
@@ -271,16 +275,16 @@ curl -I -H "Referer: https://arsvine.com/" https://cdn.arsvine.com/fonts/google-
 Production audio is hosted on Tencent COS and usually served from:
 
 ```text
-https://cdn.arsvine.com/music/...
+https://cdn.arsvine.com/realm/audio/YYYY/MM/DD/<name>.<hash>.m4a
 ```
 
 Set:
 
 ```env
-NEXT_PUBLIC_MEDIA_CDN=https://cdn.arsvine.com
+NEXT_PUBLIC_CDN_BASE=https://cdn.arsvine.com
 ```
 
-When `NEXT_PUBLIC_MEDIA_CDN` is unset, `data/music.ts` falls back to `/music/<file>` and reads from `public/music/`. Drop same-named local files there for offline testing.
+The player reads its production playlist from the private `realm/catalog/**` catalog. `public/music/` is local-development-only and is not a production fallback.
 
 `next.config.js` also honors `NEXT_BUILD_DIR` for a custom Next.js build output directory. Leave it unset unless a deployment wrapper explicitly expects a different dist dir.
 

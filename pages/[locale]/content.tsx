@@ -20,6 +20,8 @@ import LifeDetailView from '../../components/detail/LifeDetailView';
 import HreflangLinks from '../../components/shared/HreflangLinks';
 
 import { getAllPostsForLocale } from '../../lib/blog';
+import { getStaticCatalogAssets } from '../../lib/assets/catalog-provider';
+import { hydrateCatalogAssets } from '../../lib/assets/hydrate-catalog-assets';
 import { buildBlogPostHref } from '../../lib/blog-client';
 import { resolveImageUrl } from '../../lib/cdn';
 import { setHudTypingOverlaySuppressed } from '../../lib/hud-typing-visibility';
@@ -391,6 +393,7 @@ export const getStaticProps: GetStaticProps<ContentPageProps> = async ({ params 
   const exp = loadExperience(locale);
   const skills = loadSkills(locale);
   const blogPosts = await getAllPostsForLocale(locale);
+  const catalogAssets = await getStaticCatalogAssets();
 
   const pageDescription =
     (messages.pages as Record<string, { description?: string }>)?.content?.description ?? '';
@@ -400,13 +403,13 @@ export const getStaticProps: GetStaticProps<ContentPageProps> = async ({ params 
       locale,
       messages,
       blogPosts,
-      webProjects: projects.webProjects,
-      gameProjects: projects.gameProjects,
-      earlyProjects: projects.earlyProjects,
-      experienceData: exp.experienceData,
-      gameData: life.gameData,
-      travelData: life.travelData,
-      otherData: life.otherData,
+      webProjects: hydrateCatalogAssets(projects.webProjects, catalogAssets),
+      gameProjects: hydrateCatalogAssets(projects.gameProjects, catalogAssets),
+      earlyProjects: hydrateCatalogAssets(projects.earlyProjects, catalogAssets),
+      experienceData: hydrateCatalogAssets(exp.experienceData, catalogAssets),
+      gameData: hydrateCatalogAssets(life.gameData, catalogAssets),
+      travelData: hydrateCatalogAssets(life.travelData, catalogAssets),
+      otherData: hydrateCatalogAssets(life.otherData, catalogAssets),
       alsoPlayGames: life.alsoPlayGames,
       artPlaceholderText: life.artPlaceholderText,
       skillCategories: skills.skillCategories,

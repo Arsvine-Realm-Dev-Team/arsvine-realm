@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
+  avatar,
   buildImagePictureSources,
   buildImageUrl,
   buildManagedAssetUrl,
+  cover,
+  gallery,
   hasAllowedCdnNamespace,
+  music,
   normalizeCdnBase,
+  post,
 } from '../../lib/cdn';
 
 describe('cdn helpers', () => {
@@ -35,5 +40,13 @@ describe('cdn helpers', () => {
     expect(buildManagedAssetUrl('shared/fonts/google-fonts.css')).toBe(
       'https://cdn.arsvine.com/shared/fonts/google-fonts.css',
     );
+  });
+
+  it('keeps static-data helpers as stable catalog identities', () => {
+    expect(cover('arsvine-realm-preview.webp')).toEqual({ catalogKey: 'covers/arsvine-realm-preview.webp' });
+    expect(gallery('photo-ujs-5.webp')).toEqual({ catalogKey: 'gallery/photo-ujs-5.webp' });
+    expect(post('endfield-planner-screenshot-1.png')).toEqual({ catalogKey: 'posts/endfield-planner-screenshot-1.png' });
+    expect(avatar('avatar-arning-1.webp')).toEqual({ catalogKey: 'avatar/avatar-arning-1.webp' });
+    expect(music('dont-be-so-serious.m4a')).toEqual({ catalogKey: 'music/dont-be-so-serious.m4a' });
   });
 });

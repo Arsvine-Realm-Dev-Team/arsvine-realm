@@ -25,6 +25,8 @@ import { useDetailTitleReveal } from '../../../hooks/useDetailTitleReveal';
 import { useTypingSubtitle } from '../../../hooks/useTypingSubtitle';
 import useGalleryLightbox from '../../../hooks/useGalleryLightbox';
 import { resolveImageUrl } from '../../../lib/cdn';
+import { getStaticCatalogAssets } from '../../../lib/assets/catalog-provider';
+import { hydrateCatalogAssets } from '../../../lib/assets/hydrate-catalog-assets';
 import { loadProjects, loadMessages, resolveWebProject } from '../../../lib/i18n-data';
 import { locales, type Locale } from '../../../i18n/config';
 import { defaultLocale } from '../../../i18n/config';
@@ -65,17 +67,19 @@ export const getStaticProps: GetStaticProps<PageProps> = async ({ params }) => {
   }
 
   const projectsModule = loadProjects(locale);
+  const catalogAssets = await getStaticCatalogAssets();
   return {
     props: {
       locale,
       messages,
-      project: resolved.project,
-      webProjects: projectsModule.webProjects,
+      project: hydrateCatalogAssets(resolved.project, catalogAssets),
+      webProjects: hydrateCatalogAssets(projectsModule.webProjects, catalogAssets),
       copyableTokens: projectsModule.copyableTokens,
       translationStatus: resolved.status,
       actualLocale: resolved.actualLocale,
       originLocale: resolved.originLocale,
     },
+    revalidate: 300,
   };
 };
 
