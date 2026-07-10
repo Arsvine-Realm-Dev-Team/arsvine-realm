@@ -7,6 +7,7 @@ import { promisify } from 'node:util';
 const execFileAsync = promisify(execFile);
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has('--dry-run');
+const forceFull = args.has('--force-full');
 const rollbackIndex = process.argv.indexOf('--rollback');
 const rollbackVersion = rollbackIndex >= 0 ? process.argv[rollbackIndex + 1] : '';
 const root = process.cwd();
@@ -35,7 +36,14 @@ async function revalidate() {
   const response = await fetch(`${required('NEXT_PUBLIC_SITE_URL').replace(/\/$/, '')}/api/revalidate-assets`, {
     method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ secret: required('REVALIDATE_SECRET') }),
   });
-  if (!response.ok) throw new Error(`Asset revalidation failed with HTTP ${response.status}`);
+  let body = {};
+  try { body = await response.json(); } catch { /* body stays empty */ }
+  if (response.ok && (!body.failed || body.failed.length === 0)) return;
+  if (response.ok && body.failed && body.failed.length > 0) {
+    console.warn(`[assets:publish] revalidation partial: ${body.failed.length} path(s) failed`, body.failed);
+    return;
+  }
+  throw new Error(`Asset revalidation failed with HTTP ${response.status}${body.failed ? ` (failed: ${body.failed.join(', ')})` : ''}`);
 }
 
 async function writePointer(version) {
@@ -65,8 +73,10 @@ async function main() {
   const publicRegion = required('COS_PUBLIC_REGION');
   const privateRegion = required('COS_PRIVATE_REGION');
 
-  await cos(publicRegion, ['cp', path.join(root, 'dist', 'cos-upload', 'public-root'), `cos://${publicBucket}/`, '-r']);
-  await cos(privateRegion, ['cp', path.join(root, 'dist', 'cos-upload', 'private-root'), `cos://${privateBucket}/`, '-r']);
+  const uploadCmd = forceFull ? 'cp' : 'sync';
+  const uploadFlags = forceFull ? ['-r'] : ['--exclude', 'current.json', '--exclude', 'current.next.json'];
+  await cos(publicRegion, [uploadCmd, path.join(root, 'dist', 'cos-upload', 'public-root') + path.sep, `cos://${publicBucket}/`, ...uploadFlags]);
+  await cos(privateRegion, [uploadCmd, path.join(root, 'dist', 'cos-upload', 'private-root') + path.sep, `cos://${privateBucket}/`, ...uploadFlags]);
   await cos(publicRegion, ['ls', `cos://${publicBucket}/realm/site-catalog/versions/${version}/assets.json`]);
   await cos(privateRegion, ['ls', `cos://${privateBucket}/realm/catalog/versions/${version}/static-assets.json`]);
   await writePointer(version);

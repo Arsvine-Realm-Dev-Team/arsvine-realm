@@ -23,9 +23,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ...projects.map((project) => `/${locale}/web/${project.id}`),
     ...lifeItems.map((item) => `/${locale}/life/${item.id}`),
   ]);
-  const failed = [];
-  for (const route of paths) {
-    try { await res.revalidate(route); } catch { failed.push(route); }
+  const results = await Promise.allSettled(paths.map((route) => res.revalidate(route)));
+  const failed: string[] = [];
+  results.forEach((result, index) => {
+    if (result.status === 'rejected') {
+      const route = paths[index];
+      failed.push(route);
+      console.error('[api/revalidate-assets] failed for', route, result.reason);
+    }
+  });
+
+  if (failed.length === paths.length) {
+    return res.status(500).json({ revalidated: false, paths, failed, message: 'All revalidations failed' });
   }
-  return res.status(failed.length ? 500 : 200).json({ revalidated: failed.length === 0, paths, failed });
+  if (failed.length > 0) {
+    return res.status(200).json({ revalidated: false, paths, failed, partial: true });
+  }
+  return res.status(200).json({ revalidated: true, paths, failed: [] });
 }
