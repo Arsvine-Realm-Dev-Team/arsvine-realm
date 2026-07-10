@@ -9,6 +9,8 @@ import IndustrialHud, { IndustrialHudRef } from './LoadingScreen/IndustrialHud';
 import LogoTitle, { LogoTitleRef } from './LoadingScreen/LogoTitle';
 import SplitTransition, { SplitTransitionRef } from './LoadingScreen/SplitTransition';
 
+const PROGRESS_BAR_CHARS = '/'.repeat(300);
+
 export function collectGsapTargets<T>(targets: Array<T | null | undefined>): T[] {
   return targets.filter((target): target is T => target !== null && target !== undefined);
 }
@@ -181,12 +183,12 @@ const HomeLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
           <div className={styles.text_progress_container}>
             <div className={styles.text_progress_base}>
               <span className={styles.progress_prefix}>&gt; SYSTEM INITIALIZING... [</span>
-              <span className={styles.progress_bar_chars}>{"/".repeat(300)}</span>
+              <span className={styles.progress_bar_chars}>{PROGRESS_BAR_CHARS}</span>
               <span className={styles.progress_suffix}>] {Math.floor(progress).toString().padStart(3, ' ')}%</span>
             </div>
             <div className={styles.text_progress_fill} style={{ clipPath: `inset(0 ${100 - progress}% 0 0)` }}>
               <span className={styles.progress_prefix}>&gt; SYSTEM INITIALIZING... [</span>
-              <span className={styles.progress_bar_chars}>{"/".repeat(300)}</span>
+              <span className={styles.progress_bar_chars}>{PROGRESS_BAR_CHARS}</span>
               <span className={styles.progress_suffix}>] {Math.floor(progress).toString().padStart(3, ' ')}%</span>
             </div>
           </div>

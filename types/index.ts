@@ -74,6 +74,7 @@ export interface Project {
 export interface LifeItemLink {
   href: string;
   text: string;
+  /** 链接的次级说明文本，例如副标题或补充信息，区别于主显示文案 text。 */
   sub: string;
 }
 

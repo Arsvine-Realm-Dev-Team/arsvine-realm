@@ -54,10 +54,11 @@ async function main() {
 
   function gracefulShutdown(signal) {
     console.log(`Received ${signal}, shutting down...`);
+    const forceExitTimer = setTimeout(() => process.exit(0), 3000);
     httpServer.close(() => {
+      clearTimeout(forceExitTimer);
       process.exit(0);
     });
-    setTimeout(() => process.exit(0), 3000);
   }
 
   process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
