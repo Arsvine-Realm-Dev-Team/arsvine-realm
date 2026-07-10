@@ -47,6 +47,7 @@ next-env.d.ts
 *.sublime-project
 *.sublime-workspace
 docs/dev/*
+docs/superpowers/*
 !docs/preview.png
 .codex*/
 .claude/
@@ -66,4 +67,7 @@ rainmorime-template/
 
 # Archived (unused) assets — kept locally for review, excluded from git
 /.archive/
+
+# COS Workplace
 cos-workspace/
+coscli_output/
