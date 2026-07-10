@@ -65,6 +65,13 @@ describe('assets build script', () => {
         },
       ], null, 2),
     );
+    await writeFile(
+      path.join(workspaceRoot, '_meta', 'realm', 'legacy-asset-sources.json'),
+      JSON.stringify({
+        'posts/arsvine-realm-screenshot-1.png': 'public-root/realm/images/post/2026/07/08/demo.png',
+        'posts/arsvine-realm-screenshot-2.png': 'public-root/realm/images/post/2026/07/08/demo.png',
+      }, null, 2),
+    );
 
     await execFileAsync(process.execPath, [
       'scripts/assets-build.mjs',
@@ -94,6 +101,18 @@ describe('assets build script', () => {
     );
     const works = JSON.parse(worksRaw) as Array<{ objectKey: string }>;
     expect(works[0].objectKey).toMatch(/^realm\/images\/post\/2026\/07\/08\/demo\.[a-f0-9]{8}\.png$/);
+
+    const staticAssetsRaw = await readFile(
+      path.join(distRoot, 'cos-upload', 'private-root', 'realm', 'catalog', 'versions', current.version, 'static-assets.json'),
+      'utf-8',
+    );
+    const staticAssets = JSON.parse(staticAssetsRaw) as { assets: Record<string, { objectKey: string }> };
+    expect(Object.keys(staticAssets.assets)).toEqual([
+      'posts/arsvine-realm-screenshot-1.png',
+      'posts/arsvine-realm-screenshot-2.png',
+    ]);
+    expect(staticAssets.assets).not.toHaveProperty('posts/arsvine-realm-sceenshot-1.png');
+    expect(staticAssets.assets).not.toHaveProperty('posts/arsvine-realm-sceenshot-2.png');
 
     const publicPointerRaw = await readFile(
       path.join(distRoot, 'cos-upload', 'public-root', 'realm', 'site-catalog', 'current.next.json'),

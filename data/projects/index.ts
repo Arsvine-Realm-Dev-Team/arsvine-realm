@@ -24,8 +24,8 @@ export const webProjects: Project[] = [
     liveUrl: '',
     imageUrl: cover('arsvine-realm-preview.webp'),
     galleryImages: [
-      { src: post('arsvine-realm-sceenshot-1.png') },
-      { src: post('arsvine-realm-sceenshot-2.png') },
+      { src: post('arsvine-realm-screenshot-1.png') },
+      { src: post('arsvine-realm-screenshot-2.png') },
     ],
     articleContent: `Arsvine Realm，即本站。它不是单纯的作品集页面，而是一个逐渐成型的个人档案系统：项目、文章、兴趣、旅行、艺术与一些还在发酵的设定，都被收束到同一个界面秩序里。技术上使用 Next.js 构建，部署在 Vercel 上，并通过一套相对轻量的内容结构维护多语言页面、图片资源与详情页正文。
 

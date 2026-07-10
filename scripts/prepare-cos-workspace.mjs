@@ -20,7 +20,7 @@ const PROJECT_ITEMS = [
     collection: 'web-projects',
     date: '2026-01-01',
     cover: 'covers/arsvine-realm-preview.webp',
-    gallery: ['posts/arsvine-realm-sceenshot-1.png', 'posts/arsvine-realm-sceenshot-2.png'],
+    gallery: ['posts/arsvine-realm-screenshot-1.png', 'posts/arsvine-realm-screenshot-2.png'],
   },
   {
     id: 'endfield-planner',
