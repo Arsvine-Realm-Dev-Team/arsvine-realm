@@ -319,7 +319,29 @@ export default function LeftPanel({
           aria-label={travellingLabel}
           data-cursor-label={travellingLabel}
         >
-          <img src={getSiteAssetUrl('site/travelling', '/travel.svg')} alt={travellingLabel} draggable={false} />
+          <img
+            className={styles.travellingDesktopBadge}
+            src={getSiteAssetUrl('site/travelling', '/travel.svg')}
+            alt=""
+            draggable={false}
+          />
+          <span className={styles.travellingMobileBadge} aria-hidden="true">
+            <svg
+              className={styles.travellingMobileIcon}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              focusable="false"
+              aria-hidden="true"
+            >
+              <path d="M7 3.5h10a2 2 0 0 1 2 2v9.25a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5.5a2 2 0 0 1 2-2Z" />
+              <path d="M8 7h8M8 11h8M8 20.5l2-3.75m6 3.75-2-3.75M8.5 14h.01m6.99 0h.01" />
+            </svg>
+            <span>{travellingLabel}</span>
+          </span>
         </a>
         <a
           href={newsUrl}

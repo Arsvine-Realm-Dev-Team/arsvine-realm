@@ -254,15 +254,19 @@
     opacity: 1;
   }
 
-  img {
+  .travellingDesktopBadge {
     display: block;
     width: 100%;
     height: 100%;
     transition: filter 0.5s ease-in-out;
   }
 
+  .travellingMobileBadge {
+    display: none;
+  }
+
   // 反色模式下，浅灰图形反成深灰，保持在浅色背景上的可见度
-  .inverted & img {
+  .inverted & .travellingDesktopBadge {
     filter: invert(1);
   }
 }

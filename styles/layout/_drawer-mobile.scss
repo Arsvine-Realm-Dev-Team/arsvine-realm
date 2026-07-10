@@ -21,9 +21,45 @@
   }
 
   .travellingLink {
-    width: 100%;
-    max-width: 240px;
+    width: fit-content;
+    max-width: 100%;
     min-width: 0;
+    min-height: 44px;
+    aspect-ratio: auto;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 14px;
+    border: 1px solid var(--ark-border);
+    background: rgba(var(--ark-dark-blue-rgb), 0.28);
+    color: var(--ark-text-secondary);
+    font-family: var(--font-hud);
+    font-size: var(--fs-sm);
+    letter-spacing: 0.08em;
+    opacity: 0.7 !important;
+
+    .travellingDesktopBadge {
+      display: none;
+    }
+
+    .travellingMobileBadge {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+      white-space: nowrap;
+    }
+
+    .travellingMobileIcon {
+      width: 20px;
+      height: 20px;
+      flex: 0 0 20px;
+    }
+
+    &:hover,
+    &:focus-visible {
+      opacity: 1 !important;
+      border-color: var(--ark-primary);
+    }
   }
 
   .travelStatusRow {
