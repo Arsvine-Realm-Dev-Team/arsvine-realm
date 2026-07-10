@@ -124,15 +124,19 @@ describe('getContentBlogIndex', () => {
     vi.resetModules();
     const { getContentBlogIndex } = await import('../../../lib/content/github');
     const index = await getContentBlogIndex();
-    expect(index.posts).toEqual([]);
+    expect(index.posts).toHaveLength(1);
+    expect(index.posts[0]?.slug).toBe('init');
+    expect(index.posts[0]?.variants['zh-CN']?.title).toBe('初次见面');
     expect(index.version).toBe(1);
   });
 
-  it('returns an empty index on 404 (fresh private repos)', async () => {
+  it('returns the bundled fallback index on 404 (fresh private repos)', async () => {
     vi.stubGlobal('fetch', async () => new Response('missing', { status: 404, statusText: 'Not Found' }));
     const { getContentBlogIndex } = await import('../../../lib/content/github');
     const index = await getContentBlogIndex();
-    expect(index.posts).toEqual([]);
+    expect(index.posts).toHaveLength(1);
+    expect(index.posts[0]?.slug).toBe('init');
+    expect(index.posts[0]?.variants['zh-CN']?.title).toBe('初次见面');
   });
 
   it('caches the index within TTL', async () => {

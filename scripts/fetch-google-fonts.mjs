@@ -4,7 +4,7 @@
 //
 // Run with: `node scripts/fetch-google-fonts.mjs`
 //
-// Output layout (mirrors what gets uploaded to cos://arsvine-cdn/fonts/):
+// Output layout (mirrors what gets uploaded to cos://arsvine-cdn/shared/fonts/):
 //   public/_fonts-staging/google-fonts.css        ← entry stylesheet, url() rewritten
 //   public/_fonts-staging/manifest.json           ← run record (timestamp, file count, sha8)
 //   public/_fonts-staging/<family-slug>/<file>.woff2
@@ -13,7 +13,7 @@
 // same filenames → byte-identical output.
 //
 // Upload step (manual, via COS web console — coscli is not used in this project):
-//   1. 打开腾讯云 COS 控制台 → 桶 arsvine-cdn → fonts/ 目录
+//   1. 打开腾讯云 COS 控制台 → 桶 arsvine-cdn → shared/fonts/ 目录
 //   2. 把 public/_fonts-staging/ 下的 google-fonts.css 和所有子目录上传过去
 //      （woff2 子目录用「文件夹上传」，保持目录结构）
 //   3. 为 google-fonts.css 在「文件详情 → 自定义 Header」设置：
@@ -39,7 +39,7 @@ import { dirname, join } from 'node:path';
 import { spawn } from 'node:child_process';
 
 const STAGING_DIR = 'public/_fonts-staging';
-const CDN_BASE = 'https://cdn.arsvine.com/fonts';
+const CDN_BASE = 'https://cdn.arsvine.com/shared/fonts';
 const MODERN_CHROME_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
 const DOWNLOAD_CONCURRENCY = 4;
@@ -240,7 +240,7 @@ async function main() {
   console.log('');
   console.log('上传到 COS（腾讯云控制台网页操作，本项目不使用 coscli）：');
   console.log('');
-  console.log('  1. 控制台 → 桶 arsvine-cdn → fonts/ 目录');
+  console.log('  1. 控制台 → 桶 arsvine-cdn → shared/fonts/ 目录');
   console.log('  2. 上传 public/_fonts-staging/google-fonts.css 和所有 woff2 子目录');
   console.log('     （woff2 用「文件夹上传」，保持目录结构）');
   console.log('');
@@ -257,7 +257,7 @@ async function main() {
   console.log('    Firefox 会拒绝渲染字体，繁体/低频字 fallback 到系统字体。');
   console.log('');
   console.log('Verify with:');
-  console.log('  curl -I -H "Referer: https://arsvine.com/" https://cdn.arsvine.com/fonts/google-fonts.css');
+  console.log('  curl -I -H "Referer: https://arsvine.com/" https://cdn.arsvine.com/shared/fonts/google-fonts.css');
   console.log('  → Content-Type / Cache-Control 各只出现一次');
 }
 

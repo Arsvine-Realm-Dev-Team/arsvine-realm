@@ -29,19 +29,20 @@ export function useVinylDrag({
   const [vinylContainer, setVinylContainer] = useState<HTMLDivElement | null>(null);
   const [dragCurrentX, setDragCurrentX] = useState(0);
 
-  const nextTrackIndex = (currentTrackIndex + 1) % playlist.length;
-  const prevTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
+  const hasTracks = playlist.length > 0;
+  const nextTrackIndex = hasTracks ? (currentTrackIndex + 1) % playlist.length : -1;
+  const prevTrackIndex = hasTracks ? (currentTrackIndex - 1 + playlist.length) % playlist.length : -1;
   const incomingTrack = incomingTrackIndex === -1 ? null : playlist[incomingTrackIndex] ?? null;
 
   const startDrag = useCallback((clientX: number) => {
-    if (isDraggingDisabled) {
+    if (isDraggingDisabled || playlist.length <= 1) {
       return;
     }
 
     setIsDragging(true);
     setDragStartX(clientX);
     setDragCurrentX(clientX);
-  }, [isDraggingDisabled]);
+  }, [isDraggingDisabled, playlist.length]);
 
   const moveDrag = useCallback((clientX: number) => {
     if (!isDragging) {

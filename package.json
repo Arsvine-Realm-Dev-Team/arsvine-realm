@@ -10,6 +10,9 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "assets:prepare": "node scripts/prepare-cos-workspace.mjs",
+    "assets:build": "node scripts/assets-build.mjs",
+    "env:sync": "node scripts/sync-env-files.mjs",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
   "keywords": [],
@@ -29,6 +32,7 @@
     "@vercel/speed-insights": "^2.0.0",
     "cannon-es": "^0.20.0",
     "clsx": "^2.1.1",
+    "cos-nodejs-sdk-v5": "^2.15.4",
     "dotenv": "^17.4.2",
     "gray-matter": "^4.0.3",
     "gsap": "^3.13.0",
@@ -53,6 +57,7 @@
     "eslint-config-next": "^16.2.7",
     "globals": "^16.4.0",
     "jsdom": "^29.1.1",
+    "sharp": "^0.34.4",
     "simple-icons": "^16.23.0",
     "typescript": "^5.9.3",
     "vitest": "^4.1.10"

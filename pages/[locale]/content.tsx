@@ -20,7 +20,10 @@ import LifeDetailView from '../../components/detail/LifeDetailView';
 import HreflangLinks from '../../components/shared/HreflangLinks';
 
 import { getAllPostsForLocale } from '../../lib/blog';
+import { getStaticCatalogAssets } from '../../lib/assets/catalog-provider';
+import { hydrateCatalogAssets } from '../../lib/assets/hydrate-catalog-assets';
 import { buildBlogPostHref } from '../../lib/blog-client';
+import { resolveImageUrl } from '../../lib/cdn';
 import { setHudTypingOverlaySuppressed } from '../../lib/hud-typing-visibility';
 import { siteConfig } from '../../data/site';
 import { loadProjects, loadLife, loadExperience, loadSkills, loadMessages } from '../../lib/i18n-data';
@@ -182,7 +185,7 @@ export default function ContentPage({
   }, []);
 
   const handleWorkItemClick = useCallback((item: Project) => {
-    const coverImg = item.imageUrl?.split('?')[0];
+    const coverImg = resolveImageUrl(item.imageUrl, 'large');
     if (coverImg) {
       const img = new Image();
       img.src = coverImg;
@@ -207,7 +210,7 @@ export default function ContentPage({
   }, []);
 
   const handleLifeItemClick = useCallback((item: LifeItem) => {
-    const coverImg = item.imageUrl?.split('?')[0];
+    const coverImg = resolveImageUrl(item.imageUrl, 'large');
     if (coverImg) {
       const img = new Image();
       img.src = coverImg;
@@ -390,6 +393,7 @@ export const getStaticProps: GetStaticProps<ContentPageProps> = async ({ params 
   const exp = loadExperience(locale);
   const skills = loadSkills(locale);
   const blogPosts = await getAllPostsForLocale(locale);
+  const catalogAssets = await getStaticCatalogAssets();
 
   const pageDescription =
     (messages.pages as Record<string, { description?: string }>)?.content?.description ?? '';
@@ -399,13 +403,13 @@ export const getStaticProps: GetStaticProps<ContentPageProps> = async ({ params 
       locale,
       messages,
       blogPosts,
-      webProjects: projects.webProjects,
-      gameProjects: projects.gameProjects,
-      earlyProjects: projects.earlyProjects,
-      experienceData: exp.experienceData,
-      gameData: life.gameData,
-      travelData: life.travelData,
-      otherData: life.otherData,
+      webProjects: hydrateCatalogAssets(projects.webProjects, catalogAssets),
+      gameProjects: hydrateCatalogAssets(projects.gameProjects, catalogAssets),
+      earlyProjects: hydrateCatalogAssets(projects.earlyProjects, catalogAssets),
+      experienceData: hydrateCatalogAssets(exp.experienceData, catalogAssets),
+      gameData: hydrateCatalogAssets(life.gameData, catalogAssets),
+      travelData: hydrateCatalogAssets(life.travelData, catalogAssets),
+      otherData: hydrateCatalogAssets(life.otherData, catalogAssets),
       alsoPlayGames: life.alsoPlayGames,
       artPlaceholderText: life.artPlaceholderText,
       skillCategories: skills.skillCategories,

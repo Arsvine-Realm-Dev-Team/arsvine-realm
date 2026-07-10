@@ -45,7 +45,7 @@ NEXT_PUBLIC_SITE_URL=https://arsvine.com
 ## Optional public variables
 
 ```env
-NEXT_PUBLIC_MEDIA_CDN=https://cdn.arsvine.com
+NEXT_PUBLIC_CDN_BASE=https://cdn.arsvine.com
 NEXT_PUBLIC_UMAMI_SRC=https://cloud.umami.is/script.js
 NEXT_PUBLIC_UMAMI_WEBSITE_ID=your-website-id
 NEXT_PUBLIC_UMAMI_DOMAINS=arsvine.com,www.arsvine.com
@@ -153,13 +153,23 @@ Use these routes only from trusted automation or content-publish workflows.
 
 The project uses Tencent COS Hong Kong bucket `arsvine-cdn`, served through `cdn.arsvine.com`.
 
-Documented assumptions:
+Canonical object layout:
+
+```text
+public bucket:  shared/fonts/**
+public bucket:  realm/images/YYYY/MM/DD/<name>.<hash>.<ext>
+public bucket:  realm/audio/YYYY/MM/DD/<name>.<hash>.<ext>
+private bucket: realm/catalog/current.json
+private bucket: realm/catalog/versions/<version>/{home,works,collections,links,audio}.json
+```
+
+Operational assumptions:
 
 - bucket is public-read / private-write;
 - audio and larger media are not committed to Git;
-- fonts are manually uploaded to `fonts/`;
-- music files are served from `music/`;
-- image and content assets may also use `cdn.arsvine.com`.
+- hashes make public media immutable; `current.json` is the only mutable catalog pointer;
+- `cos-workspace/coscli-windows-amd64.exe` is used with temporary environment credentials for upload, listing, and cleanup;
+- old root-level media prefixes must not be referenced after a catalog cutover.
 
 COS traffic is billable. A traffic package is not a hard limit; after the package is exhausted, traffic may continue and charge by usage. Keep budget alerts enabled.
 
@@ -180,7 +190,7 @@ Font refresh flow:
 
 1. edit `data/site.ts` font URL configuration;
 2. run `node scripts/fetch-google-fonts.mjs`;
-3. upload `public/_fonts-staging/` to COS `fonts/` through the web console;
+3. upload `public/_fonts-staging/` to COS `shared/fonts/` with `coscli`;
 4. set object metadata exactly;
 5. verify with `curl -I`.
 
@@ -263,3 +273,4 @@ After each production deployment, verify:
 - mobile layout has no HUD overlap on hash navigation;
 - analytics are absent on localhost/preview when domain whitelist is set;
 - `pnpm check` passes before release.
+- `realm/catalog/current.json` and every catalog `objectKey` exist before removing old prefixes.

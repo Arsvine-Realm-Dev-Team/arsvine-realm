@@ -1,7 +1,7 @@
 # Music Files
 
 Audio playback is hosted on **Tencent COS** (Hong Kong bucket `arsvine-cdn`,
-region `ap-hongkong`) and served from `https://cdn.arsvine.com/music/...` in
+region `ap-hongkong`) and served from `https://cdn.arsvine.com/realm/audio/...` in
 production. The bucket is **public-read / private-write** — do **not** drop
 private files here.
 

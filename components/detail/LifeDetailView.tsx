@@ -3,11 +3,13 @@ import styles from '../../styles/LifeDetailView.module.scss';
 import Lightbox from '../interactive/Lightbox';
 import LazyImage from '../shared/LazyImage';
 import useGalleryLightbox from '../../hooks/useGalleryLightbox';
+import { resolveImageUrl } from '../../lib/cdn';
 
 
 const LifeDetailView = ({ item }) => {
   const { title, description, tech, imageUrl, articleContent, galleryImages } = item || {};
-  const imageStyle = imageUrl ? { backgroundImage: `url(${imageUrl})` } : {};
+  const backgroundImageUrl = resolveImageUrl(imageUrl, 'large');
+  const imageStyle = backgroundImageUrl ? { backgroundImage: `url(${backgroundImageUrl})` } : {};
 
   const paragraphs = articleContent ? articleContent.split('\n\n') : [];
   const imagesForGallery = galleryImages || [];
@@ -38,7 +40,7 @@ const LifeDetailView = ({ item }) => {
       <div className={styles.detailContent}>
           <div className={styles.detailImageContainer}>
               <div className={styles.detailImage} style={imageStyle}>
-                 {!imageUrl && <span>Image not available</span>} {/* 无主图时显示占位文本 */}
+                 {!backgroundImageUrl && <span>Image not available</span>} {/* 无主图时显示占位文本 */}
                  <div className={styles.imageScanlineOverlay}></div> {/* 图片扫描线覆盖层 */}
               </div>
           </div>

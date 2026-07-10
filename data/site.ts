@@ -108,8 +108,9 @@ export const siteConfig: SiteConfig = {
     googleStylesheet:
       'https://fonts.googleapis.com/css2?family=Dosis:wght@300;400;500&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;700&display=swap',
     // 对应 COS 上的改写版 CSS。fetch-google-fonts.mjs 会解析 Google 返回的 CSS、
-    // 下载每段 unicode-range 的 woff2、把 url 改写为 cdn.arsvine.com/fonts/<family>/<file>。
-    cdnStylesheet: 'https://cdn.arsvine.com/fonts/google-fonts.css',
+    // 下载每段 unicode-range 的 woff2、把 url 改写为
+    // cdn.arsvine.com/shared/fonts/<family>/<file>。
+    cdnStylesheet: 'https://cdn.arsvine.com/shared/fonts/google-fonts.css',
   },
   locale: {
     htmlLang: 'zh',

@@ -22,6 +22,9 @@ import { useDetailSectionNav, type DetailSectionNavItem } from '../../../hooks/u
 import { useDetailTitleReveal } from '../../../hooks/useDetailTitleReveal';
 import { useTypingSubtitle } from '../../../hooks/useTypingSubtitle';
 import useGalleryLightbox from '../../../hooks/useGalleryLightbox';
+import { resolveImageUrl } from '../../../lib/cdn';
+import { getStaticCatalogAssets } from '../../../lib/assets/catalog-provider';
+import { hydrateCatalogAssets } from '../../../lib/assets/hydrate-catalog-assets';
 import { loadLife, loadMessages, resolveLifeItem } from '../../../lib/i18n-data';
 import { defaultLocale, locales, type Locale } from '../../../i18n/config';
 import type { LifeItem, TranslationStatus } from '../../../types';
@@ -55,17 +58,19 @@ export const getStaticProps: GetStaticProps<PageProps> = async ({ params }) => {
 
   const life = loadLife(locale);
   const allItems = [...life.gameData, ...life.travelData, ...life.otherData];
+  const catalogAssets = await getStaticCatalogAssets();
 
   return {
     props: {
       locale,
       messages,
-      item: resolved.item,
-      allItems,
+      item: hydrateCatalogAssets(resolved.item, catalogAssets),
+      allItems: hydrateCatalogAssets(allItems, catalogAssets),
       translationStatus: resolved.status,
       actualLocale: resolved.actualLocale,
       originLocale: resolved.originLocale,
     },
+    revalidate: 300,
   };
 };
 
@@ -166,7 +171,7 @@ function LifeDetailContent({
     navigateTo(`/${locale}/content#life`);
   }, [locale, navigateTo]);
 
-  const coverImage = item.imageUrl.split('?')[0];
+  const coverImage = resolveImageUrl(item.imageUrl, 'large');
   let revealCursor = 0;
   const storyRevealIndices = paragraphs.map(() => revealCursor++);
   const galleryRevealIndices = galleryImages.map(() => revealCursor++);
@@ -229,7 +234,7 @@ function LifeDetailContent({
               const revealIndex = galleryRevealIndices[index];
               return (
                 <div
-                  key={`${image.src}-${index}`}
+                  key={`${resolveImageUrl(image.src, 'card')}-${index}`}
                   className={styles.galleryItem}
                   onClick={(event) => openLightbox(index, event, 'gallery')}
                   ref={(element) => {
@@ -242,6 +247,7 @@ function LifeDetailContent({
                     src={image.src}
                     alt={image.caption || `${item.title} gallery ${index + 1}`}
                     quality="medium"
+                    preset="card"
                   />
                   <div className={styles.galleryOverlay} />
                   <div className={styles.galleryCornerTL} />

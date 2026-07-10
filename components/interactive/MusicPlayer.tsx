@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useTranslations } from 'next-intl';
 import styles from './MusicPlayer.module.scss';
-import { musicPlaylist } from '../../data/music';
 import { defaultLocale, isLocale, type Locale } from '../../i18n/config';
 import { useResponsive } from '../../hooks/useMediaQuery';
 import { useSafeTimeouts } from '../../lib/use-safe-timeouts';
@@ -12,8 +11,7 @@ import PlaylistPanel from './music-player/PlaylistPanel';
 import { useMusicPlayerState } from './music-player/useMusicPlayerState';
 import { useVinylDrag } from './music-player/useVinylDrag';
 import VinylDeck from './music-player/VinylDeck';
-
-const playlist = musicPlaylist;
+import type { MusicTrack } from '../../types';
 
 const commonLabelFallbacks: Record<Locale, Record<'expandPlaylist' | 'collapsePlaylist', string>> = {
   'zh-CN': {
@@ -45,6 +43,7 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
   const [isPlaylistVisible, setIsPlaylistVisible] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [idleNudge, setIdleNudge] = useState(0);
+  const [playlist, setPlaylist] = useState<MusicTrack[]>([]);
   const handleRef = useRef<HTMLDivElement | null>(null);
 
   const {
@@ -76,6 +75,34 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
     onNext: handleNext,
     safeTimers,
   });
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadPlaylist() {
+      try {
+        const response = await fetch('/api/assets/audio', {
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        if (!response.ok) {
+          throw new Error(`audio api ${response.status}`);
+        }
+        const data = await response.json() as { items?: MusicTrack[] };
+        setPlaylist(Array.isArray(data.items) ? data.items : []);
+      } catch (error) {
+        if ((error as Error).name === 'AbortError') {
+          return;
+        }
+        console.error('[music-player] failed to load audio catalog:', error);
+        setPlaylist([]);
+      }
+    }
+
+    loadPlaylist();
+
+    return () => controller.abort();
+  }, []);
 
   const bumpIdleTimer = useCallback(() => {
     setIdleNudge((value) => value + 1);

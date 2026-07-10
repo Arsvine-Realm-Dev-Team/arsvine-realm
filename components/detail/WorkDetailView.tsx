@@ -4,13 +4,15 @@ import styles from '../../styles/WorkDetailView.module.scss';
 import Lightbox from '../interactive/Lightbox';
 import useGalleryLightbox from '../../hooks/useGalleryLightbox';
 import { getSafeExternalHref, getSafeExternalLinkVariant, getSafeExternalUrl } from '../../lib/safe-external-href';
+import { resolveImageUrl } from '../../lib/cdn';
 
 // Reusing ProjectCard might be complex due to layout differences in detail view.
 // Let's build a dedicated detail view component.
 
 const WorkDetailView = ({ item }) => {
   const { title, description, tech, imageUrl, link, galleryImages, articleContent } = item || {};
-  const imageStyle = imageUrl ? { backgroundImage: `url(${imageUrl})` } : {};
+  const backgroundImageUrl = resolveImageUrl(imageUrl, 'large');
+  const imageStyle = backgroundImageUrl ? { backgroundImage: `url(${backgroundImageUrl})` } : {};
   const safeProjectLink = getSafeExternalHref(link);
 
   const imagesForGallery = galleryImages || [];
@@ -40,7 +42,7 @@ const WorkDetailView = ({ item }) => {
       <div className={styles.detailContent}> 
           <div className={styles.detailImageContainer}>
               <div className={styles.detailImage} style={imageStyle}>
-                 {!imageUrl && <span>Image not available</span>} 
+                 {!backgroundImageUrl && <span>Image not available</span>} 
                  <div className={styles.imageScanlineOverlay}></div> 
               </div>
           </div>
@@ -166,7 +168,7 @@ const WorkDetailView = ({ item }) => {
                 ref={bindThumbnailRef(`thumb_${index}`)}
               >
                 <img 
-                  src={img.src} 
+                  src={resolveImageUrl(img.src, 'card')} 
                   alt={img.caption || `${title} thumbnail ${index + 1}`} 
                   className={styles.thumbnailImage}
                 />

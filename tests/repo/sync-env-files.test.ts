@@ -1,0 +1,58 @@
+import { execFile } from 'node:child_process';
+import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { promisify } from 'node:util';
+import { describe, expect, it } from 'vitest';
+
+const execFileAsync = promisify(execFile);
+
+describe('sync-env-files script', () => {
+  it('removes unknown keys, preserves existing values, and fills missing keys', async () => {
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), 'arsvine-env-sync-'));
+    const localPath = path.join(tempDir, '.env.local');
+    const examplePath = path.join(tempDir, '.env.example');
+
+    await writeFile(
+      localPath,
+      [
+        '# legacy local file',
+        'PORT=4000',
+        'NEXT_PUBLIC_SITE_URL=https://dev.arsvine.com',
+        'NEXT_PUBLIC_MEDIA_CDN_ORIGIN=https://cdn.arsvine.com',
+        'ACCESS_GRANT_SECRET=my-secret',
+        'TOTP_GROUPS_JSON=\'{"friends-a":{"current":"abc"}}\'',
+      ].join('\n'),
+      'utf-8',
+    );
+    await writeFile(examplePath, '# old example\nNEXT_PUBLIC_MEDIA_CDN=https://cdn.arsvine.com\n', 'utf-8');
+
+    const scriptPath = path.join(process.cwd(), 'scripts', 'sync-env-files.mjs');
+    await execFileAsync(process.execPath, [
+      scriptPath,
+      '--local',
+      localPath,
+      '--example',
+      examplePath,
+    ], {
+      cwd: process.cwd(),
+    });
+
+    const localOutput = await readFile(localPath, 'utf-8');
+    const exampleOutput = await readFile(examplePath, 'utf-8');
+
+    expect(localOutput).toContain('PORT=4000');
+    expect(localOutput).toContain('NEXT_PUBLIC_SITE_URL=https://dev.arsvine.com');
+    expect(localOutput).toContain('ACCESS_GRANT_SECRET=my-secret');
+    expect(localOutput).toContain('TOTP_GROUPS_JSON=\'{"friends-a":{"current":"abc"}}\'');
+    expect(localOutput).toContain('NEXT_PUBLIC_CDN_BASE=https://cdn.arsvine.com');
+    expect(localOutput).toContain('ANALYZE=');
+    expect(localOutput).toContain('NEXT_BUILD_DIR=');
+    expect(localOutput).not.toContain('NEXT_PUBLIC_MEDIA_CDN_ORIGIN=');
+
+    expect(exampleOutput).toContain('NEXT_PUBLIC_CDN_BASE=https://cdn.arsvine.com');
+    expect(exampleOutput).toContain('# ANALYZE=true');
+    expect(exampleOutput).toContain('# NEXT_BUILD_DIR=.next');
+    expect(exampleOutput).not.toContain('NEXT_PUBLIC_MEDIA_CDN=');
+  });
+});

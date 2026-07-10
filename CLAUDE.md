@@ -43,7 +43,7 @@ npx vitest run -t "name pattern"
 5. **Do not dynamically require locale data.** `lib/i18n-data.ts` intentionally uses a static registry.
 6. **Do not reintroduce `reading-time`.** The in-house estimator handles CJK; whitespace-based packages do not.
 7. **Do not use `--font-display` for translated/user content.** `ZELDA Free` is Latin-only and breaks CJK/accented text.
-8. **Do not shell out to `coscli`.** COS upload workflows are documented as web-console-only.
+8. **Use `coscli` only with temporary environment-provided credentials.** Never persist COS keys in a CLI config or commit `cos-workspace/`.
 9. **Do not ship protected MDX in static props.** Protected posts must remain runtime-gated through the API and signed access cookie.
 10. **Preserve the protected-post reducer/effect race fixes.** See `docs/GOTCHAS.md` before touching `useBlogPostState.ts` or `lib/blog-post-state.ts`.
 
@@ -52,7 +52,7 @@ npx vitest run -t "name pattern"
 | Need | Edit first |
 |---|---|
 | Site metadata, SEO, fonts, social links | `data/site.ts` |
-| Music playlist | `data/music.ts` |
+| Music playlist / cloud audio catalog | `pages/api/assets/audio`, `lib/assets/catalog-provider.ts`, `components/interactive/MusicPlayer.tsx` |
 | Projects / experience / life / skills / friend links | `data/<topic>/*.ts` |
 | UI copy | `locales/*.json` |
 | Remote image domains | `config/image-hosts.js` |

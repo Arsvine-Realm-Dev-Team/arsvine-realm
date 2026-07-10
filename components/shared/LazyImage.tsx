@@ -1,6 +1,17 @@
-/* eslint-disable @next/next/no-img-element -- this component intentionally wraps a raw img for progressive loading without next/image constraints */
 import React, { useState, useEffect, useRef } from 'react';
 import styles from '../../styles/LazyImage.module.scss';
+import {
+  resolveAssetAlt,
+  resolveImagePictureSources,
+  resolveImageUrl,
+  type ImagePreset,
+} from '../../lib/cdn';
+
+const QUALITY_PRESET_MAP: Record<string, ImagePreset> = {
+  low: 'thumb',
+  medium: 'card',
+  high: 'large',
+};
 
 const LazyImage = ({ 
   src, 
@@ -9,22 +20,25 @@ const LazyImage = ({
   thumbnailSrc = null, 
   onLoad = null,
   enableWebP = true,
-  quality = 'medium' // low, medium, high
+  quality = 'medium', // low, medium, high
+  preset = null,
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(thumbnailSrc || null);
   const imgRef = useRef<HTMLImageElement | null>(null);
+  const effectivePreset = preset || QUALITY_PRESET_MAP[quality] || 'card';
+  const pictureSources = resolveImagePictureSources(src, effectivePreset);
+  const resolvedAlt = resolveAssetAlt(src, alt);
 
   // Generate processed image URL with quality parameters.
-  // Customize this function for your image CDN (e.g. Cloudinary, Imgix, Tencent COS).
-  // By default, returns the URL as-is.
-  const getProcessedImageUrl = (originalUrl, _quality = 'medium') => {
-    return originalUrl;
+  // EO 参数统一由 lib/cdn.ts 里的固定 preset 映射控制。
+  const getProcessedImageUrl = (originalUrl, requestedPreset) => {
+    return resolveImageUrl(originalUrl, requestedPreset);
   };
 
   const getThumbnailUrl = (originalUrl) => {
-    return originalUrl;
+    return resolveImageUrl(originalUrl, 'blur');
   };
 
   // Intersection Observer 用于检测图片是否进入视窗
@@ -65,7 +79,7 @@ const LazyImage = ({
       }
 
       // 然后加载高质量版本
-      const highQualityUrl = getProcessedImageUrl(src, quality);
+      const highQualityUrl = getProcessedImageUrl(src, effectivePreset);
       const highQualityImg = new Image();
       
       highQualityImg.onload = () => {
@@ -78,17 +92,21 @@ const LazyImage = ({
     };
 
     loadImage();
-  }, [isInView, src, quality, thumbnailSrc, enableWebP, onLoad]);
+  }, [effectivePreset, enableWebP, isInView, onLoad, quality, src, thumbnailSrc]);
 
   return (
     <div ref={imgRef} className={`${styles.lazyImageContainer} ${className}`}>
       {currentSrc ? (
-        <img
-          src={currentSrc}
-          alt={alt}
-          className={`${styles.lazyImage} ${isLoaded ? styles.loaded : styles.loading}`}
-          loading="lazy"
-        />
+        <picture>
+          {enableWebP && pictureSources?.avifUrl && <source srcSet={pictureSources.avifUrl} type="image/avif" />}
+          {enableWebP && pictureSources?.webpUrl && <source srcSet={pictureSources.webpUrl} type="image/webp" />}
+          <img
+            src={currentSrc}
+            alt={resolvedAlt}
+            className={`${styles.lazyImage} ${isLoaded ? styles.loaded : styles.loading}`}
+            loading="lazy"
+          />
+        </picture>
       ) : (
         <div className={styles.placeholder}>
           <div className={styles.spinner}></div>

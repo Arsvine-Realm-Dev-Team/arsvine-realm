@@ -1,3 +1,6 @@
+import { readdir, readFile } from 'node:fs/promises';
+import path from 'node:path';
+import matter from 'gray-matter';
 import type { ContentBlogIndex } from './types';
 
 const OWNER = process.env.GITHUB_OWNER?.trim();
@@ -14,6 +17,7 @@ const PROTOCOL_PREFIX_RE = /^[A-Za-z][A-Za-z\d+.-]*:/;
 
 let blogIndexCache: { data: ContentBlogIndex; ts: number } | null = null;
 const BLOG_INDEX_TTL_MS = 60_000;
+let bundledFallbackCache: ContentBlogIndex | null = null;
 
 export function hasContentRepoConfig() {
   return Boolean(OWNER && REPO && READ_TOKEN);
@@ -88,8 +92,80 @@ function buildContentsUrl(path: string) {
   return url.toString();
 }
 
+function getBundledBlogInitDir() {
+  return path.join(process.cwd(), 'content', 'blog', 'init');
+}
+
+async function readBundledFallbackContent(contentPath: string) {
+  const normalizedPath = normalizeContentPath(contentPath);
+  const prefix = 'blog/init/';
+  if (!normalizedPath.startsWith(prefix) || !normalizedPath.endsWith('.mdx')) {
+    return null;
+  }
+
+  const localeFile = normalizedPath.slice(prefix.length);
+  const filePath = path.join(getBundledBlogInitDir(), localeFile);
+  try {
+    return await readFile(filePath, 'utf-8');
+  } catch {
+    return null;
+  }
+}
+
+async function getBundledFallbackBlogIndex(): Promise<ContentBlogIndex> {
+  if (bundledFallbackCache) {
+    return bundledFallbackCache;
+  }
+
+  const dirPath = getBundledBlogInitDir();
+  const entries = await readdir(dirPath, { withFileTypes: true });
+  const variants: Record<string, { title: string; excerpt: string; tags?: string[] }> = {};
+  const availableLocales: string[] = [];
+  let baseDate = '2026-06-10';
+
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith('.mdx')) continue;
+    const locale = entry.name.replace(/\.mdx$/i, '');
+    const raw = await readFile(path.join(dirPath, entry.name), 'utf-8');
+    const parsed = matter(raw);
+    const title = typeof parsed.data.title === 'string' ? parsed.data.title.trim() : '初次见面';
+    const excerpt = typeof parsed.data.excerpt === 'string' ? parsed.data.excerpt.trim() : '';
+    const tags = Array.isArray(parsed.data.tags) ? parsed.data.tags.filter((tag) => typeof tag === 'string') : [];
+    const date = typeof parsed.data.date === 'string' ? parsed.data.date : baseDate;
+
+    variants[locale] = { title, excerpt, tags };
+    availableLocales.push(locale);
+    if (locale === 'zh-CN') {
+      baseDate = date;
+    }
+  }
+
+  bundledFallbackCache = {
+    version: 1,
+    updatedAt: new Date(`${baseDate}T00:00:00.000Z`).toISOString(),
+    posts: [
+      {
+        slug: 'init',
+        date: baseDate,
+        updatedAt: new Date(`${baseDate}T00:00:00.000Z`).toISOString(),
+        tags: [],
+        pinned: true,
+        access: { mode: 'public' },
+        availableLocales,
+        variants,
+      },
+    ],
+  };
+
+  return bundledFallbackCache;
+}
+
 export async function fetchGitHubContent(path: string): Promise<string> {
   if (!hasContentRepoConfig()) {
+    const bundled = await readBundledFallbackContent(path);
+    if (bundled != null) {
+      return bundled;
+    }
     throw new Error('Content repository is not configured.');
   }
 
@@ -112,6 +188,10 @@ export async function fetchGitHubContent(path: string): Promise<string> {
   }
 
   if (!response.ok) {
+    const bundled = await readBundledFallbackContent(path);
+    if (bundled != null) {
+      return bundled;
+    }
     throw new Error(`Failed to fetch ${path}: ${response.status} ${response.statusText}`);
   }
 
@@ -142,11 +222,7 @@ export async function getContentBlogIndex(): Promise<ContentBlogIndex> {
       message.includes('Content repository is not configured') ||
       message.includes('Failed to fetch blog-index.json: 404')
     ) {
-      return {
-        version: 1,
-        updatedAt: new Date(0).toISOString(),
-        posts: [],
-      };
+      return getBundledFallbackBlogIndex();
     }
     // 上游超时 / 5xx / 限流时若有 stale cache 则回退到 stale 数据避免整页 504；
     // 无 stale 则把错误抛出去，由调用方决定是 500 还是降级空数据。
@@ -154,6 +230,7 @@ export async function getContentBlogIndex(): Promise<ContentBlogIndex> {
       console.warn('[content/github] blog-index fetch failed, serving stale cache:', message);
       return blogIndexCache.data;
     }
-    throw error;
+    console.warn('[content/github] blog-index fetch failed, serving bundled fallback:', message);
+    return getBundledFallbackBlogIndex();
   }
 }
