@@ -127,9 +127,9 @@ body {
   }
 }
 
-html[data-performance-tier='reduced'],
-html[data-performance-tier='reduced'] body,
-html[data-performance-tier='reduced'] body * {
+html[data-performance-tier='minimal'],
+html[data-performance-tier='minimal'] body,
+html[data-performance-tier='minimal'] body * {
   cursor: auto !important;
 }
 

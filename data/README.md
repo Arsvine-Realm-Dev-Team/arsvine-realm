@@ -58,7 +58,7 @@ gallery('life/games/001.jpg')       // → cdn.arsvine.com/gallery/life/games/00
 post('2026/blog-image.png')         // → cdn.arsvine.com/posts/2026/blog-image.png
 ```
 
-未配置 `NEXT_PUBLIC_MEDIA_CDN` 时 helper 返回相对路径（如 `/covers/projects/foo.webp`），同名文件可放到 `public/` 镜像目录作为本地 fallback。
+Catalog helper 返回稳定逻辑引用，由 SSG/ISR 通过私有 catalog 解析为带 hash 的 COS object key。缺少 catalog 时不应把附加媒体复制到 `public/` 作为生产 fallback。
 
 ## UI 文案（不在这里）
 

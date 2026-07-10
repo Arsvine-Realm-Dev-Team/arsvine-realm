@@ -115,10 +115,10 @@ describe('useAdaptivePerformance', () => {
 
     const { result } = renderHook(() => useAdaptivePerformance(false));
 
-    expect(result.current.performanceTier).toBe('reduced');
+    expect(result.current.performanceTier).toBe('minimal');
     expect(result.current.performanceReason).toBe('reduced-motion');
     expect(result.current.allowDecorativeMotion).toBe(false);
-    expect(document.documentElement.getAttribute('data-performance-tier')).toBe('reduced');
+    expect(document.documentElement.getAttribute('data-performance-tier')).toBe('minimal');
   });
 
   it('reduces immediately when saveData or 2g effective type is reported', () => {
@@ -144,7 +144,7 @@ describe('useAdaptivePerformance', () => {
 
     const { result } = renderHook(() => useAdaptivePerformance(false));
 
-    expect(result.current.performanceTier).toBe('reduced');
+    expect(result.current.performanceTier).toBe('balanced');
     expect(result.current.performanceReason).toBe('device-heuristic');
   });
 
@@ -154,11 +154,11 @@ describe('useAdaptivePerformance', () => {
     expect(result.current.performanceTier).toBe('full');
 
     flushNextAnimationFrame(0);
-    for (let frame = 1; frame <= 63; frame += 1) {
+    for (let frame = 1; frame <= 127; frame += 1) {
       flushNextAnimationFrame(frame * 40);
     }
 
-    expect(result.current.performanceTier).toBe('reduced');
+    expect(result.current.performanceTier).toBe('balanced');
     expect(result.current.performanceReason).toBe('runtime-fps');
   });
 
@@ -166,14 +166,14 @@ describe('useAdaptivePerformance', () => {
     matchesByQuery.set('(prefers-reduced-motion: reduce)', true);
     const { result } = renderHook(() => useAdaptivePerformance(false));
 
-    expect(result.current.performanceTier).toBe('reduced');
+    expect(result.current.performanceTier).toBe('minimal');
 
     matchesByQuery.set('(prefers-reduced-motion: reduce)', false);
     act(() => {
       fireMediaQueryChange('(prefers-reduced-motion: reduce)');
     });
 
-    expect(result.current.performanceTier).toBe('reduced');
+    expect(result.current.performanceTier).toBe('minimal');
     expect(result.current.performanceReason).toBe('reduced-motion');
   });
 });

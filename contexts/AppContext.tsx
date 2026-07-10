@@ -25,7 +25,8 @@ export function AppProvider({ children }: AppProviderProps) {
 
   const adaptivePerformance = useAdaptivePerformance(animationsComplete);
   const {
-    performanceTier, performanceReason, allowWebGLEffects, allowCustomCursor, allowDecorativeMotion,
+    performanceTier, performanceReason, allowLogoMotion, allowAmbientWebGL, allowInteractiveWebGL,
+    allowHeavyCssEffects, allowCustomCursor, allowDecorativeMotion,
   } = adaptivePerformance;
 
   const power = usePowerSystem(mainVisible);
@@ -64,7 +65,8 @@ export function AppProvider({ children }: AppProviderProps) {
     leftPanelAnimated, textVisible, animationsComplete, leversVisible,
     pulsingNormalIndices, pulsingReverseIndices, handleLoadingComplete,
     columnPhase, retractColumns, expandColumns,
-    performanceTier, performanceReason, allowWebGLEffects, allowCustomCursor, allowDecorativeMotion,
+    performanceTier, performanceReason, allowLogoMotion, allowAmbientWebGL, allowInteractiveWebGL,
+    allowHeavyCssEffects, allowCustomCursor, allowDecorativeMotion,
     // Power
     powerLevel, isInverted, isTesseractActivated, isDischarging,
     chargeBattery, handleDischargeLeverPull, handleActivateTesseract, deactivateTesseract,
@@ -81,7 +83,8 @@ export function AppProvider({ children }: AppProviderProps) {
     leftPanelAnimated, textVisible, animationsComplete, leversVisible,
     pulsingNormalIndices, pulsingReverseIndices, handleLoadingComplete,
     columnPhase, retractColumns, expandColumns,
-    performanceTier, performanceReason, allowWebGLEffects, allowCustomCursor, allowDecorativeMotion,
+    performanceTier, performanceReason, allowLogoMotion, allowAmbientWebGL, allowInteractiveWebGL,
+    allowHeavyCssEffects, allowCustomCursor, allowDecorativeMotion,
     powerLevel, isInverted, isTesseractActivated, isDischarging,
     chargeBattery, handleDischargeLeverPull, handleActivateTesseract, deactivateTesseract,
     currentTime, runtime, currentVisitDuration,

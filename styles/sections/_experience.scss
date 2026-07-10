@@ -264,7 +264,7 @@
     width: 420px;
     height: 420px;
     transform: translate(-50%, -50%);
-    background-image: url('/decor/experience-title.webp');
+    background-image: var(--site-experience-title, url('/decor/experience-title.webp'));
     background-repeat: no-repeat;
     background-position: center center;
     background-size: contain;

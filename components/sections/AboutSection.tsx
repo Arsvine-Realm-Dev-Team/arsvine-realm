@@ -7,6 +7,7 @@ import { siteConfig } from '../../data/site';
 import { defaultLocale, isLocale } from '../../i18n/config';
 import { useTransition } from '../../contexts/TransitionContext';
 import { useApp } from '../../contexts/AppContext';
+import { useSiteAssets } from '../../contexts/SiteAssetsContext';
 import useVisitorLanguageCode from '../../hooks/useVisitorLanguageCode';
 
 export default function AboutSection({
@@ -17,6 +18,7 @@ export default function AboutSection({
   const router = useRouter();
   const { navigateTo } = useTransition();
   const { runtime, currentVisitDuration, allowDecorativeMotion } = useApp();
+  const { getSiteAssetUrl } = useSiteAssets();
   const visitorLanguageCode = useVisitorLanguageCode();
   const queryLocale = router.query.locale;
   const locale = isLocale(queryLocale) ? queryLocale : defaultLocale;
@@ -53,7 +55,7 @@ export default function AboutSection({
         </div>
         <div className={styles.aboutImageContainer}>
           <img
-            src="/about-qr.svg"
+            src={getSiteAssetUrl('site/about-qr', '/about-qr.svg')}
             alt="Website QR Code"
             className={styles.aboutImage}
             draggable={false}

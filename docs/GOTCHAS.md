@@ -57,11 +57,9 @@ This is normal for Variable Fonts. The file may cover a continuous `wght` axis e
 
 Do not rewrite `scripts/fetch-google-fonts.mjs` to force one file per weight.
 
-## 5. Do not shell out to `coscli`
+## 5. Keep COSCLI credentials ephemeral
 
-The current project workflow is manual upload through the Tencent COS web console.
-
-Any old documentation or script comment that says to run `coscli sync` / `coscli cp` is stale. The font script should print web-console upload steps, not invoke COS CLI.
+The supported asset workflow uses the local COSCLI binary through `pnpm assets:publish`. Pass credentials for the current process only. Do not run `coscli config init`, commit a config file, or print secrets in command summaries.
 
 ## 6. Internal navigation must use `navigateTo()`
 

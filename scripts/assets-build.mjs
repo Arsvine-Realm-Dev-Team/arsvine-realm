@@ -11,6 +11,10 @@ const MAX_IMAGE_BYTES = 32 * 1024 * 1024;
 const MAX_DIMENSION = 30000;
 const MAX_OUTPUT_DIMENSION = 9999;
 const MAX_TOTAL_PIXELS = 250_000_000;
+const SITE_ASSET_KEYS = new Set([
+  'site/about-qr', 'site/travelling', 'decor/contour-map', 'decor/portfolio-title',
+  'decor/experience-title', 'decor/life-title', 'decor/texture-noise',
+]);
 
 function parseArgs(argv) {
   const options = {
@@ -327,6 +331,29 @@ async function main() {
   const currentFileName = options.publishCurrent ? 'current.json' : 'current.next.json';
   await writeFile(
     path.join(privateCatalogRoot, currentFileName),
+    JSON.stringify({ version }, null, 2),
+  );
+
+  const staticAssets = transformedSections['static-assets']?.assets || {};
+  const publicSiteAssets = Object.fromEntries(
+    Object.entries(staticAssets)
+      .filter(([key]) => SITE_ASSET_KEYS.has(key))
+      .map(([key, record]) => [key, {
+        objectKey: record.objectKey,
+        ...(record.alt ? { alt: record.alt } : {}),
+        ...(record.width ? { width: record.width } : {}),
+        ...(record.height ? { height: record.height } : {}),
+      }]),
+  );
+  const publicSiteCatalogRoot = path.join(distPublicRoot, 'realm', 'site-catalog');
+  const publicSiteVersionRoot = path.join(publicSiteCatalogRoot, 'versions', version);
+  await mkdir(publicSiteVersionRoot, { recursive: true });
+  await writeFile(
+    path.join(publicSiteVersionRoot, 'assets.json'),
+    JSON.stringify({ version, assets: publicSiteAssets }, null, 2),
+  );
+  await writeFile(
+    path.join(publicSiteCatalogRoot, currentFileName),
     JSON.stringify({ version }, null, 2),
   );
 

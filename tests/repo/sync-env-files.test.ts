@@ -19,13 +19,13 @@ describe('sync-env-files script', () => {
         '# legacy local file',
         'PORT=4000',
         'NEXT_PUBLIC_SITE_URL=https://dev.arsvine.com',
-        'NEXT_PUBLIC_MEDIA_CDN_ORIGIN=https://cdn.arsvine.com',
+        'LEGACY_PUBLIC_ASSET_ORIGIN=https://cdn.arsvine.com',
         'ACCESS_GRANT_SECRET=my-secret',
         'TOTP_GROUPS_JSON=\'{"friends-a":{"current":"abc"}}\'',
       ].join('\n'),
       'utf-8',
     );
-    await writeFile(examplePath, '# old example\nNEXT_PUBLIC_MEDIA_CDN=https://cdn.arsvine.com\n', 'utf-8');
+    await writeFile(examplePath, '# old example\nLEGACY_PUBLIC_ASSET_BASE=https://cdn.arsvine.com\n', 'utf-8');
 
     const scriptPath = path.join(process.cwd(), 'scripts', 'sync-env-files.mjs');
     await execFileAsync(process.execPath, [
@@ -48,11 +48,11 @@ describe('sync-env-files script', () => {
     expect(localOutput).toContain('NEXT_PUBLIC_CDN_BASE=https://cdn.arsvine.com');
     expect(localOutput).toContain('ANALYZE=');
     expect(localOutput).toContain('NEXT_BUILD_DIR=');
-    expect(localOutput).not.toContain('NEXT_PUBLIC_MEDIA_CDN_ORIGIN=');
+    expect(localOutput).not.toContain('LEGACY_PUBLIC_ASSET_ORIGIN=');
 
     expect(exampleOutput).toContain('NEXT_PUBLIC_CDN_BASE=https://cdn.arsvine.com');
     expect(exampleOutput).toContain('# ANALYZE=true');
     expect(exampleOutput).toContain('# NEXT_BUILD_DIR=.next');
-    expect(exampleOutput).not.toContain('NEXT_PUBLIC_MEDIA_CDN=');
+    expect(exampleOutput).not.toContain('LEGACY_PUBLIC_ASSET_BASE=');
   });
 });

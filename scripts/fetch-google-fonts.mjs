@@ -12,9 +12,8 @@
 // public/_fonts-staging/ is gitignored. Re-run is idempotent: same source CSS →
 // same filenames → byte-identical output.
 //
-// Upload step (manual, via COS web console — coscli is not used in this project):
-//   1. 打开腾讯云 COS 控制台 → 桶 arsvine-cdn → shared/fonts/ 目录
-//   2. 把 public/_fonts-staging/ 下的 google-fonts.css 和所有子目录上传过去
+// Upload through the documented COSCLI asset workflow. Credentials must be
+// supplied by the current process and must not be persisted in a CLI config.
 //      （woff2 子目录用「文件夹上传」，保持目录结构）
 //   3. 为 google-fonts.css 在「文件详情 → 自定义 Header」设置：
 //        Content-Type:   text/css; charset=utf-8
@@ -238,7 +237,7 @@ async function main() {
   console.log(`[fonts] Families: ${manifest.families.join(', ')}`);
   console.log('================================================================');
   console.log('');
-  console.log('上传到 COS（腾讯云控制台网页操作，本项目不使用 coscli）：');
+  console.log('按 docs/ASSETS.md 使用临时环境凭据和 COSCLI 上传到 COS：');
   console.log('');
   console.log('  1. 控制台 → 桶 arsvine-cdn → shared/fonts/ 目录');
   console.log('  2. 上传 public/_fonts-staging/google-fonts.css 和所有 woff2 子目录');

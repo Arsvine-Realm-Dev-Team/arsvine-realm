@@ -254,7 +254,8 @@
   }
 }
 
-:global(html[data-performance-tier='reduced']) {
+:global(html[data-performance-tier='reduced']),
+:global(html[data-performance-tier='minimal']) {
   .drawable_circle,
   .outer_circle_tick,
   .center_solid_dot,

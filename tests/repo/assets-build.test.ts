@@ -94,5 +94,17 @@ describe('assets build script', () => {
     );
     const works = JSON.parse(worksRaw) as Array<{ objectKey: string }>;
     expect(works[0].objectKey).toMatch(/^realm\/images\/post\/2026\/07\/08\/demo\.[a-f0-9]{8}\.png$/);
+
+    const publicPointerRaw = await readFile(
+      path.join(distRoot, 'cos-upload', 'public-root', 'realm', 'site-catalog', 'current.next.json'),
+      'utf-8',
+    );
+    expect(JSON.parse(publicPointerRaw)).toEqual({ version: current.version });
+
+    const publicAssetsRaw = await readFile(
+      path.join(distRoot, 'cos-upload', 'public-root', 'realm', 'site-catalog', 'versions', current.version, 'assets.json'),
+      'utf-8',
+    );
+    expect(JSON.parse(publicAssetsRaw)).toEqual({ version: current.version, assets: {} });
   });
 });

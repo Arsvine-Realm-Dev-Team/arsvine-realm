@@ -260,7 +260,7 @@
     width: 360px;
     height: 360px;
     transform: translate(-50%, -50%);
-    background-image: url('/decor/life-title.webp');
+    background-image: var(--site-life-title, url('/decor/life-title.webp'));
     background-repeat: no-repeat;
     background-position: center center;
     background-size: contain;

@@ -3,6 +3,7 @@ import { Fragment, useEffect, useRef, type Ref } from 'react';
 import { useTranslations } from 'next-intl';
 import styles from '../../styles/Home.module.scss';
 import { useApp } from '../../contexts/AppContext';
+import { useSiteAssets } from '../../contexts/SiteAssetsContext';
 import ActivationLever from '../interactive/ActivationLever';
 import { useResponsive } from '../../hooks/useMediaQuery';
 import type { Locale } from '../../i18n/config';
@@ -96,6 +97,7 @@ export default function LeftPanel({
   const newsLabel = tSite('newsLabel');
   const newsMessage = tSite('newsMessage');
   const newsCursorLabel = tSite('newsCursor');
+  const { getSiteAssetUrl } = useSiteAssets();
   const chargeLeverLabel = isTesseractActivated ? 'CHARGING' : 'START CHARGE';
   const dischargeLeverLabel = isDischarging
     ? 'DISCHARGING'
@@ -117,12 +119,11 @@ export default function LeftPanel({
   // Avatar 鼠标视差 + 色散：仅桌面（≥1024px）启用；移动端早返回不挂监听。
   // 与 CustomCursor / GlobalHud 一致，refs + rAF + 直接写 DOM style，避免 setState
   // 引入的 react-hooks/* 警告与重渲染开销。
-  const { allowDecorativeMotion, performanceTier } = useApp();
-  const shouldRenderLogo = allowDecorativeMotion && performanceTier !== 'reduced';
+  const { allowLogoMotion } = useApp();
   const logoRef = useRef<HTMLDivElement | null>(null);
   const { isDesktop } = useResponsive();
   useEffect(() => {
-    if (!isDesktop || !allowDecorativeMotion) return;
+    if (!isDesktop || !allowLogoMotion) return;
     const el = logoRef.current;
     if (!el) return;
 
@@ -199,7 +200,7 @@ export default function LeftPanel({
       el.style.removeProperty('--avatar-split');
       el.style.removeProperty('transform');
     };
-  }, [allowDecorativeMotion, isDesktop]);
+  }, [allowLogoMotion, isDesktop]);
 
   return (
     <div className={`${styles.leftPanel} ${leftPanelAnimated ? styles.animated : ''} ${drawerOpen ? styles.drawerOpen : ''} ${isStandalone ? styles.standaloneHide : ''}`}>
@@ -280,7 +281,7 @@ export default function LeftPanel({
         </div>
         <span className={styles.powerText}>{powerLevel}%</span>
       </div>
-      {shouldRenderLogo ? <div ref={logoRef} className={styles.logoContainer} aria-hidden="true"></div> : null}
+      <div ref={logoRef} className={styles.logoContainer} aria-hidden="true"></div>
       <div className={`${styles.fateTextContainer} ${isFateTypingActive ? styles.typingActive : ''}`}>
         <span className={styles.fateText}>{displayedFateText}</span>
         <div className={styles.fateLine}></div>
@@ -318,7 +319,7 @@ export default function LeftPanel({
           aria-label={travellingLabel}
           data-cursor-label={travellingLabel}
         >
-          <img src="/travel.svg" alt={travellingLabel} draggable={false} />
+          <img src={getSiteAssetUrl('site/travelling', '/travel.svg')} alt={travellingLabel} draggable={false} />
         </a>
         <a
           href={newsUrl}

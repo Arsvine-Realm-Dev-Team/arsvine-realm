@@ -40,7 +40,7 @@ The following are generally out of scope:
 - phishing simulations
 - denial-of-service or stress testing
 - excessive crawling, scraping, or bandwidth abuse
-- attacks against GitHub, Vercel, Cloudflare, Umami, or other external providers
+- attacks against GitHub, Vercel, Cloudflare, or other external providers
 - issues requiring physical access to the maintainer's devices
 - browser-specific warnings that do not create a practical security impact
 

@@ -30,7 +30,7 @@ function evaluateBootstrap(script: string, env: {
 
   const fn = new Function('document', 'matchMedia', 'navigator', 'sessionStorage', 'localStorage', script);
   fn(
-    { documentElement: html },
+    { documentElement: html, cookie: '' },
     matchMedia,
     {
       connection,
@@ -53,10 +53,14 @@ describe('buildDocumentBootstrapScript performance tier', () => {
     expect(attrs.get('data-performance-tier')).toBe('reduced');
   });
 
-  it('writes reduced tier for low device memory or hardware concurrency', () => {
+  it('writes balanced tier for low device memory or hardware concurrency', () => {
     const script = buildDocumentBootstrapScript();
-    expect(evaluateBootstrap(script, { deviceMemory: 4 }).attrs.get('data-performance-tier')).toBe('reduced');
-    expect(evaluateBootstrap(script, { hardwareConcurrency: 4 }).attrs.get('data-performance-tier')).toBe('reduced');
+    expect(evaluateBootstrap(script, { deviceMemory: 4 }).attrs.get('data-performance-tier')).toBe('balanced');
+    expect(evaluateBootstrap(script, { hardwareConcurrency: 4 }).attrs.get('data-performance-tier')).toBe('balanced');
+  });
+
+  it('writes minimal tier for reduced motion', () => {
+    expect(evaluateBootstrap(buildDocumentBootstrapScript(), { reduceMotion: true }).attrs.get('data-performance-tier')).toBe('minimal');
   });
 
   it('keeps full tier when no low-power signals are present', () => {

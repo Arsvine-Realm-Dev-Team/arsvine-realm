@@ -22,6 +22,8 @@ This README is only the entry point. Detailed maintenance information is split b
 | [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md) | Local setup, commands, scripts, COS Referer workflow, fonts, images, music, and daily maintenance. |
 | [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | Router structure, content sources, protected-post flow, API routes, transitions, styling, and 3D effects. |
 | [`docs/OPERATIONS.md`](./docs/OPERATIONS.md) | Deployment, environment variables, analytics, CDN/COS operations, ISR, Upstash, SEO files, and operational checks. |
+| [`docs/PERFORMANCE.md`](./docs/PERFORMANCE.md) | Adaptive performance tiers, capability gates, sampling, and recovery. |
+| [`docs/ASSETS.md`](./docs/ASSETS.md) | Public/COS boundaries, catalogs, COSCLI publishing, validation, and rollback. |
 | [`docs/GOTCHAS.md`](./docs/GOTCHAS.md) | Historical bugs and fragile conventions that should not be reintroduced. |
 | [`CLAUDE.md`](./CLAUDE.md) | Short instruction index for coding agents. It should stay concise and point to the documents above. |
 

@@ -12,6 +12,7 @@
     "test": "vitest run",
     "assets:prepare": "node scripts/prepare-cos-workspace.mjs",
     "assets:build": "node scripts/assets-build.mjs",
+    "assets:publish": "node scripts/assets-publish.mjs",
     "env:sync": "node scripts/sync-env-files.mjs",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },

@@ -6,8 +6,11 @@
     filter:
       grayscale(100%) brightness(0.3) drop-shadow(0 0 5px rgba(0, 0, 0, 0.15)) drop-shadow(calc(var(--avatar-split) * 3px) 0 0 rgba(0, 220, 255, calc(var(--avatar-split) * 0.55))) drop-shadow(calc(var(--avatar-split) * -3px) 0 0 rgba(255, 50, 180, calc(var(--avatar-split) * 0.55)));
 
-    @media (hover: none),
-    (pointer: coarse) {
+    html:not([data-performance-tier='full']) & {
+      filter: grayscale(100%) brightness(0.3) drop-shadow(0 0 5px rgba(0, 0, 0, 0.15));
+    }
+
+    @media (hover: none), (pointer: coarse) {
       filter: grayscale(100%) brightness(0.3) drop-shadow(0 0 5px rgba(0, 0, 0, 0.15));
     }
   }

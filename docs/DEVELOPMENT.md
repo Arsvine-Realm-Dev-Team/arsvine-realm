@@ -55,7 +55,7 @@ Start from `.env.example`. The most common local values are:
 ```env
 PORT=3000
 NEXT_PUBLIC_SITE_URL=https://arsvine.com
-# NEXT_PUBLIC_MEDIA_CDN=https://cdn.arsvine.com
+NEXT_PUBLIC_CDN_BASE=https://cdn.arsvine.com
 # GITHUB_OWNER=ArsvineZhu
 # GITHUB_REPO=arsvine-content
 # GITHUB_BRANCH=main
@@ -284,7 +284,7 @@ Set:
 NEXT_PUBLIC_CDN_BASE=https://cdn.arsvine.com
 ```
 
-The player reads its production playlist from the private `realm/catalog/**` catalog. `public/music/` is local-development-only and is not a production fallback.
+The player reads its playlist from the private `realm/catalog/**` catalog. There is no production or offline fallback under `public/music/`.
 
 `next.config.js` also honors `NEXT_BUILD_DIR` for a custom Next.js build output directory. Leave it unset unless a deployment wrapper explicitly expects a different dist dir.
 

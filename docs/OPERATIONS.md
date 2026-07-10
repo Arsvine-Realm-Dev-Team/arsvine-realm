@@ -46,16 +46,14 @@ NEXT_PUBLIC_SITE_URL=https://arsvine.com
 
 ```env
 NEXT_PUBLIC_CDN_BASE=https://cdn.arsvine.com
-NEXT_PUBLIC_UMAMI_SRC=https://cloud.umami.is/script.js
-NEXT_PUBLIC_UMAMI_WEBSITE_ID=your-website-id
-NEXT_PUBLIC_UMAMI_DOMAINS=arsvine.com,www.arsvine.com
+# NEXT_PUBLIC_TELEMETRY_PROVIDER=vercel
 ```
 
 Rules:
 
 - Public variables are visible in browser bundles.
-- `NEXT_PUBLIC_UMAMI_DOMAINS` should be comma-separated and must not include protocol.
-- Localhost and Vercel preview deployments should be excluded from analytics when the domain whitelist is configured.
+- Telemetry is disabled when `NEXT_PUBLIC_TELEMETRY_PROVIDER` is unset.
+- Set it to `vercel` only in deployments where Analytics and Speed Insights are intended.
 
 ## Server-only variables
 
@@ -205,22 +203,13 @@ Do not paste header names into the Value field. The Value field should contain o
 
 ## Analytics
 
-Umami is optional. The environment variables are:
+Telemetry is optional and disabled by default:
 
 ```env
-NEXT_PUBLIC_UMAMI_SRC=https://cloud.umami.is/script.js
-NEXT_PUBLIC_UMAMI_WEBSITE_ID=your-website-id
-NEXT_PUBLIC_UMAMI_DOMAINS=arsvine.com,www.arsvine.com
+NEXT_PUBLIC_TELEMETRY_PROVIDER=vercel
 ```
 
-The tracker is injected only when configured. The documented behavior includes:
-
-- `defer` loading;
-- `data-do-not-track="true"`;
-- `data-exclude-search="true"`;
-- optional domain whitelist.
-
-For custom events, add `data-umami-event` attributes to elements or call `window.umami?.track(...)` where appropriate.
+The application imports only its local telemetry adapter. Provider loading, rendering, and event failures are isolated and never block site behavior. Custom events must use `trackTelemetryEvent`; business components must not import provider packages.
 
 ## SEO and feed files
 

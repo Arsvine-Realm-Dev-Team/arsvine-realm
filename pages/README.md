@@ -7,7 +7,7 @@ Next.js Pages Router。**不要换 App Router**。所有用户路由都在 `[loc
 | 文件 | 职责 |
 |---|---|
 | `_app.tsx` | 全局 Providers (`AppContext`、`TransitionContext`、`NextIntlClientProvider`)、`MainLayout` |
-| `_document.tsx` | `<html lang>`、Open Graph、字体外链、Umami、`document-bootstrap` 内联脚本（先于 hydration 设置主题/反转避免闪烁） |
+| `_document.tsx` | `<html lang>`、Open Graph、字体外链、`document-bootstrap` 内联脚本（先于 hydration 设置主题/反转与性能档位，避免闪烁） |
 | `sitemap.xml.tsx` | 站点 sitemap（多 locale，hreflang），`getServerSideProps` |
 | `robots.txt.tsx` | 动态 robots（指向 sitemap） |
 | `rss.xml.tsx` | 顶层 RSS（重定向到默认 locale 的 `/<locale>/rss.xml`） |

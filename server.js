@@ -33,7 +33,7 @@ function toParsedUrl(req) {
   };
 }
 
-// Optional: Analytics proxy (e.g. Umami, Plausible)
+// Optional: external-service proxy routes may be added here when required.
 // const ANALYTICS_TARGET = 'http://127.0.0.1:3001';
 // Uncomment and configure if you use a self-hosted analytics service.
 

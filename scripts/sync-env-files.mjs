@@ -28,25 +28,11 @@ const SECTIONS = [
     title: 'Public',
     entries: [
       {
-        key: 'NEXT_PUBLIC_UMAMI_SRC',
+        key: 'NEXT_PUBLIC_TELEMETRY_PROVIDER',
         localDefault: '""',
-        exampleValue: 'https://cloud.umami.is/script.js',
+        exampleValue: 'vercel',
         commentOutInExample: true,
-        comments: ['Optional Umami script URL.'],
-      },
-      {
-        key: 'NEXT_PUBLIC_UMAMI_WEBSITE_ID',
-        localDefault: '""',
-        exampleValue: 'your-website-id',
-        commentOutInExample: true,
-        comments: ['Optional Umami website ID.'],
-      },
-      {
-        key: 'NEXT_PUBLIC_UMAMI_DOMAINS',
-        localDefault: '""',
-        exampleValue: 'arsvine.com,www.arsvine.com',
-        commentOutInExample: true,
-        comments: ['Optional Umami domain allowlist. Comma-separated, without protocol.'],
+        comments: ['Optional telemetry provider. Supported value: vercel. Unset disables telemetry.'],
       },
       {
         key: 'NEXT_PUBLIC_CDN_BASE',

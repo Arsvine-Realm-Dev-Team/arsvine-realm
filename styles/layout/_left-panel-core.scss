@@ -110,8 +110,11 @@
     filter: grayscale(100%) brightness(0.8) drop-shadow(0 0 5px rgba(0, 0, 0, 0.1));
   }
 
-  html[data-performance-tier='reduced'] & {
-    display: none !important;
+  html:not([data-performance-tier='full']) & {
+    --avatar-dx: 0px;
+    --avatar-dy: 0px;
+    --avatar-split: 0;
+    filter: grayscale(100%) brightness(0.8) drop-shadow(0 0 5px rgba(0, 0, 0, 0.1));
   }
 }
 

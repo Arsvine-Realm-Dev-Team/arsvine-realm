@@ -131,7 +131,8 @@ function buildAppState(overrides: Record<string, unknown> = {}) {
     envData: null,
     envArtifactStage: 0,
     deactivateTesseract: vi.fn(),
-    allowWebGLEffects: true,
+    allowAmbientWebGL: true,
+    allowInteractiveWebGL: true,
     allowCustomCursor: true,
     ...overrides,
   };
@@ -151,7 +152,8 @@ describe('MainLayout adaptive performance gates', () => {
 
   it('skips optional desktop effects and enables fallback charging in reduced mode', () => {
     useAppMock.mockReturnValue(buildAppState({
-      allowWebGLEffects: false,
+      allowAmbientWebGL: false,
+      allowInteractiveWebGL: false,
       allowCustomCursor: false,
     }));
 

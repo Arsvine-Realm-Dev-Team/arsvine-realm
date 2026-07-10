@@ -19,8 +19,12 @@ function buildPerformanceTierBootstrap() {
       const lowMemory = typeof navigator.deviceMemory === 'number' && navigator.deviceMemory <= 4;
       const lowConcurrency = typeof navigator.hardwareConcurrency === 'number' && navigator.hardwareConcurrency <= 4;
 
-      if (reduceMotion || lowNetwork || lowMemory || lowConcurrency) {
+      if (reduceMotion) {
+        html.setAttribute('data-performance-tier', 'minimal');
+      } else if (lowNetwork) {
         html.setAttribute('data-performance-tier', 'reduced');
+      } else if (lowMemory || lowConcurrency) {
+        html.setAttribute('data-performance-tier', 'balanced');
       } else {
         html.setAttribute('data-performance-tier', 'full');
       }

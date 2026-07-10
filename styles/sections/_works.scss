@@ -287,7 +287,7 @@
     width: 320px;
     height: 320px;
     transform: translate(-50%, -50%);
-    background-image: url('/decor/portfolio-title.webp');
+    background-image: var(--site-portfolio-title, url('/decor/portfolio-title.webp'));
     background-repeat: no-repeat;
     background-position: center center;
     background-size: contain;

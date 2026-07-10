@@ -2,12 +2,12 @@ import { useRef } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { NextIntlClientProvider } from 'next-intl';
-import { Analytics } from '@vercel/analytics/next';
-import { SpeedInsights } from '@vercel/speed-insights/next';
 import '../styles/globals.scss';
 import { AppProvider } from '../contexts/AppContext';
 import { TransitionProvider } from '../contexts/TransitionContext';
+import { SiteAssetsProvider } from '../contexts/SiteAssetsContext';
 import MainLayout from '../components/layout/MainLayout';
+import TelemetryRoot from '../components/telemetry/TelemetryRoot';
 import { resolveLocale, type Locale } from '../i18n/config';
 
 function MyApp({ Component, pageProps }) {
@@ -26,7 +26,6 @@ function MyApp({ Component, pageProps }) {
   const messagesByLocale = pageProps.messagesByLocale as Partial<Record<Locale, Record<string, unknown>>> | undefined;
   // pageProps.messages 来自页面级 getStaticProps；根级错误页可改用 messagesByLocale 兜底。
   const messages = pageProps.messages ?? messagesByLocale?.[locale] ?? {};
-  const shouldRenderVercelTelemetry = process.env.NODE_ENV === 'production';
 
   return (
     <NextIntlClientProvider
@@ -36,6 +35,7 @@ function MyApp({ Component, pageProps }) {
       onError={() => {/* 静默：缺译走 fallback，不阻塞渲染 */}}
       getMessageFallback={({ key }) => key}
     >
+      <SiteAssetsProvider>
       <AppProvider>
         <Head>
           <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -51,9 +51,9 @@ function MyApp({ Component, pageProps }) {
             </div>
           </MainLayout>
         </TransitionProvider>
-        {shouldRenderVercelTelemetry ? <Analytics /> : null}
-        {shouldRenderVercelTelemetry ? <SpeedInsights /> : null}
+        <TelemetryRoot />
       </AppProvider>
+      </SiteAssetsProvider>
     </NextIntlClientProvider>
   );
 }

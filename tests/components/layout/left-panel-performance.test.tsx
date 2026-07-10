@@ -57,7 +57,7 @@ function buildProps(overrides: Record<string, unknown> = {}) {
 describe('LeftPanel adaptive performance', () => {
   beforeEach(() => {
     useResponsiveMock.mockReturnValue({ isMobile: false, isTablet: false, isDesktop: true });
-    useAppMock.mockReturnValue({ allowDecorativeMotion: true, performanceTier: 'full' });
+    useAppMock.mockReturnValue({ allowLogoMotion: true, performanceTier: 'full' });
   });
 
   afterEach(() => {
@@ -74,11 +74,11 @@ describe('LeftPanel adaptive performance', () => {
 
   it('skips logo color dispersion in reduced mode', () => {
     const addSpy = vi.spyOn(window, 'addEventListener');
-    useAppMock.mockReturnValue({ allowDecorativeMotion: false, performanceTier: 'reduced' });
+    useAppMock.mockReturnValue({ allowLogoMotion: false, performanceTier: 'reduced' });
 
     const { container } = render(<LeftPanel {...buildProps()} />);
 
     expect(addSpy).not.toHaveBeenCalledWith('mousemove', expect.any(Function), { passive: true });
-    expect(container.querySelector('[class*="logoContainer"]')).toBeNull();
+    expect(container.querySelector('[class*="logoContainer"]')).not.toBeNull();
   });
 });
