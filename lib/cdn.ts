@@ -23,7 +23,7 @@ export function isCatalogAssetReference(value: AssetReference): value is Catalog
 export function isAbsoluteUrl(value: string) { return /^https?:\/\//i.test(value); }
 export function assertAllowedManagedObjectKey(objectKey: string) { const key = normalizeObjectKey(objectKey); if (!hasAllowedCdnNamespace(key)) throw new Error(`Unsupported CDN objectKey namespace: ${objectKey}`); return key; }
 export function managedAsset(objectKey: string, meta: Omit<ManagedAssetReference, 'objectKey'> = {}): ManagedAssetReference { return { objectKey: assertAllowedManagedObjectKey(objectKey), ...meta }; }
-export function catalogAsset(catalogKey: string, alt?: string): CatalogAssetReference { return { catalogKey, alt }; }
+export function catalogAsset(catalogKey: string, alt?: string): CatalogAssetReference { return alt ? { catalogKey, alt } : { catalogKey }; }
 export function externalAsset(url: string, meta: Omit<ExternalAssetReference, 'url'> = {}): ExternalAssetReference { return { url, ...meta }; }
 export function buildManagedAssetUrl(objectKey: string) { return `${normalizeCdnBase()}/${assertAllowedManagedObjectKey(objectKey)}`; }
 export function buildImageUrl(objectKey: string, preset: ImagePreset) { return `${buildManagedAssetUrl(objectKey)}?${IMAGE_PRESET_PARAMS[preset]}`; }
