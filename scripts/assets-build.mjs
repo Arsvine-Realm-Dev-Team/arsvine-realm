@@ -115,12 +115,18 @@ async function processImageFile(filePath, relativePath, outRoot, manifestEntries
   let outputBuffer = inputBuffer;
   let processed = false;
 
-  if (fileStats.size > MAX_IMAGE_BYTES) warnings.push('Source image exceeds 32MB EdgeOne input limit');
-  if (width > MAX_DIMENSION || height > MAX_DIMENSION) warnings.push('Source image exceeds 30000px EdgeOne input limit');
-  if (totalPixels > MAX_TOTAL_PIXELS) warnings.push('Source image exceeds 250M total pixel limit');
-  if (ext.toLowerCase() === '.gif' && gifFrames > 300) warnings.push('GIF frame count exceeds 300 frame guideline');
+  const exceedsInputBytes = fileStats.size > MAX_IMAGE_BYTES;
+  const exceedsDimensions = width > MAX_DIMENSION || height > MAX_DIMENSION;
+  const exceedsTotalPixels = totalPixels > MAX_TOTAL_PIXELS;
+  const exceedsGifFrames = ext.toLowerCase() === '.gif' && gifFrames > 300;
 
-  if (warnings.length > 0) {
+  if (exceedsInputBytes) warnings.push('Source image exceeds 32MB EdgeOne input limit');
+  if (exceedsDimensions) warnings.push('Source image exceeds 30000px EdgeOne input limit');
+  if (exceedsTotalPixels) warnings.push('Source image exceeds 250M total pixel limit');
+  if (exceedsGifFrames) warnings.push('GIF frame count exceeds 300 frame guideline');
+
+  const needsResize = exceedsInputBytes || exceedsDimensions || exceedsTotalPixels || exceedsGifFrames;
+  if (needsResize) {
     const constrained = calculateConstrainedSize(width, height);
     outputBuffer = await sharp(inputBuffer, { animated: true })
       .resize({
