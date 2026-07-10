@@ -7,7 +7,10 @@ export function hydrateCatalogAssets<T>(value: T, assets: Record<string, PublicC
   if (isCatalogAssetReference(value as never)) {
     const catalogReference = value as unknown as { catalogKey: string; alt?: string };
     const catalogAsset = assets[catalogReference.catalogKey];
-    if (!catalogAsset) throw new Error(`Catalog does not contain ${catalogReference.catalogKey}`);
+    if (!catalogAsset) {
+      if (Object.keys(assets).length === 0) return value;
+      throw new Error(`Catalog does not contain ${catalogReference.catalogKey}`);
+    }
     const metadata = Object.fromEntries(
       Object.entries({
         alt: catalogReference.alt || catalogAsset.alt,

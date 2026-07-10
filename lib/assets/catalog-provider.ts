@@ -320,6 +320,10 @@ export async function getAudioAssets() {
 }
 
 export async function getStaticCatalogAssets(): Promise<Record<string, PublicCatalogStaticAsset>> {
+  if (!process.env.COS_PRIVATE_BUCKET || !process.env.COS_PRIVATE_REGION || !getCosClient()) {
+    return {};
+  }
+
   const section = await loadSection('static-assets') as { assets?: Record<string, CatalogImageRecord> };
   const assets: Record<string, PublicCatalogStaticAsset> = {};
 
