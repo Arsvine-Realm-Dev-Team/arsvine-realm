@@ -291,11 +291,6 @@ async function main() {
       continue;
     }
 
-    if (relativePath.startsWith('shared/fonts/')) {
-      await copySharedAsset(filePath, relativePath, distPublicRoot);
-      continue;
-    }
-
     await copySharedAsset(filePath, relativePath, distPublicRoot);
   }
 
