@@ -60,7 +60,7 @@
     "jsdom": "^29.1.1",
     "sharp": "^0.34.4",
     "simple-icons": "^16.23.0",
-    "typescript": "^5.9.3",
+    "typescript": "^7.0.2",
     "vitest": "^4.1.10"
   }
 }
