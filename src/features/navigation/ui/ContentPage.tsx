@@ -1,6 +1,6 @@
+'use client';
+
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/router';
-import Head from 'next/head';
 import { useTranslations } from 'next-intl';
 import styles from '../../../app/styles/Shell.module.scss';
 import contentStyles from '../styles/ContentPage.module.scss';
@@ -17,7 +17,6 @@ import AboutSection from '../../profile/ui/AboutSection';
 import WorkDetailView from '../../portfolio/ui/WorkDetailView';
 import ExperienceDetailView from '../../experience/ui/ExperienceDetailView';
 import LifeDetailView from '../../life/ui/LifeDetailView';
-import HreflangLinks from '../../../shared/ui/HreflangLinks';
 
 import { buildBlogPostHref } from '../../blog/model/blogClient';
 import { resolveImageUrl } from '@/shared/lib/cdn';
@@ -25,6 +24,7 @@ import { setHudTypingOverlaySuppressed } from '@/shared/lib/hud-typing-visibilit
 import { siteConfig } from '@/shared/config/site';
 import type { Locale } from '@/shared/contracts/locale';
 import type { BlogPostMeta, Project, LifeItem, ExperienceItem, SkillCategory } from '../../../shared/types';
+import { useNavigationRuntime } from '../model/NavigationRuntime';
 
 type DetailMode =
   | { type: 'none' }
@@ -64,7 +64,7 @@ export default function ContentPage({
   skillCategories,
   pageDescription,
 }: ContentPageProps) {
-  const router = useRouter();
+  const { prefetch } = useNavigationRuntime();
   const { navigateTo, setBackOverride } = useTransition();
   const { registerScrollContainer } = useLayoutAnchors();
   const tSite = useTranslations('pages.site');
@@ -130,7 +130,7 @@ export default function ContentPage({
         return;
       }
       prefetched.add(url);
-      void router.prefetch(url);
+      void prefetch(url);
     };
 
     immediateUrls.forEach(prefetchUrl);
@@ -147,7 +147,7 @@ export default function ContentPage({
       cancelled = true;
       window.clearTimeout(scheduleIdle);
     };
-  }, [router, blogPosts, gameData, travelData, otherData, gameProjects, webProjects, locale]);
+  }, [prefetch, blogPosts, gameData, travelData, otherData, gameProjects, webProjects, locale]);
 
   useEffect(() => {
     if (isClosing && scrollContainerRef.current) {
@@ -248,25 +248,8 @@ export default function ContentPage({
 
   const isDetailOpen = isDetailMounted && !isClosing;
 
-  const detailTitle = isDetailOpen
-    ? detail.type === 'work'
-      ? `${detail.item.title} - WORKS`
-      : detail.type === 'experience'
-        ? `${detail.item.title} - EXPERIENCE`
-        : `${detail.item.title} - LIFE`
-    : tSite('title');
-
   return (
     <>
-      <Head>
-        <title>{detailTitle}</title>
-        <meta property="og:type" content="website" />
-        {!isDetailOpen && (
-          <meta name="description" content={pageDescription} />
-        )}
-        <HreflangLinks basePath="/content" />
-      </Head>
-
       <div
         ref={(element) => {
           scrollContainerRef.current = element;

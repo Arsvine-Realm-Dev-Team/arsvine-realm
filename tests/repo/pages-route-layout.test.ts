@@ -1,62 +1,40 @@
-import { existsSync, readdirSync, statSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const DISALLOWED_ROUTE_TEST_RE = /\.(?:test|spec)\.(?:ts|tsx|js|jsx)$/i;
-
-function walk(dir: string, files: string[] = []) {
-  for (const entry of readdirSync(dir)) {
-    const fullPath = path.join(dir, entry);
-    const stats = statSync(fullPath);
-
-    if (stats.isDirectory()) {
-      walk(fullPath, files);
-      continue;
-    }
-
-    files.push(fullPath);
-  }
-
-  return files;
-}
-
-describe('pages route layout', () => {
-  it('does not allow test files inside pages/', () => {
+describe('app route layout', () => {
+  it('removes the retired Pages Router tree', () => {
     const pagesDir = path.join(process.cwd(), 'src', 'pages');
-    const offenders = walk(pagesDir)
-      .map((file) => path.relative(process.cwd(), file).replaceAll('\\', '/'))
-      .filter((file) => DISALLOWED_ROUTE_TEST_RE.test(file));
-
-    expect(
-      offenders,
-      `Test files cannot live under src/pages/: ${offenders.join(', ') || 'none'}`,
-    ).toEqual([]);
+    expect(existsSync(pagesDir), 'src/pages/ must not coexist with App Router routes').toBe(false);
   });
 
   it('keeps canonical routes and removes retired aliases', () => {
-    const pagesDir = path.join(process.cwd(), 'src', 'pages');
+    const appDir = path.join(process.cwd(), 'src', 'app');
     const canonicalRoutes = [
-      '[locale]/index.tsx',
-      '[locale]/content.tsx',
-      '[locale]/blog/[slug].tsx',
-      '[locale]/life/[slug].tsx',
-      '[locale]/web/[id].tsx',
-      '[locale]/access/[group].tsx',
+      '[locale]/layout.tsx',
+      '[locale]/page.tsx',
+      '[locale]/not-found.tsx',
+      '[locale]/[...missing]/page.tsx',
+      '[locale]/content/page.tsx',
+      '[locale]/blog/[slug]/page.tsx',
+      '[locale]/life/[slug]/page.tsx',
+      '[locale]/web/[id]/page.tsx',
+      '[locale]/access/[group]/page.tsx',
     ];
     const retiredAliases = [
-      '[locale]/blog.tsx',
-      '[locale]/license.tsx',
-      '[locale]/posts.tsx',
-      '[locale]/posts/[slug].tsx',
-      '[locale]/game.tsx',
+      '[locale]/blog/page.tsx',
+      '[locale]/license/page.tsx',
+      '[locale]/posts/page.tsx',
+      '[locale]/posts/[slug]/page.tsx',
+      '[locale]/game/page.tsx',
     ];
 
     for (const route of canonicalRoutes) {
-      expect(existsSync(path.join(pagesDir, route)), `Missing canonical route: ${route}`).toBe(true);
+      expect(existsSync(path.join(appDir, route)), `Missing canonical route: ${route}`).toBe(true);
     }
 
     for (const route of retiredAliases) {
-      expect(existsSync(path.join(pagesDir, route)), `Retired route must stay deleted: ${route}`).toBe(false);
+      expect(existsSync(path.join(appDir, route)), `Retired route must stay deleted: ${route}`).toBe(false);
     }
   });
 });

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { NextRouter } from 'next/router';
+import { getRouteTemplate } from './NavigationRuntime';
 
 export interface LayoutRouteMode {
   isHome: boolean;
@@ -9,16 +9,17 @@ export interface LayoutRouteMode {
 }
 
 export default function useLayoutRouteMode(
-  router: NextRouter,
+  pathname: string,
   forceHomeSection: boolean,
 ): LayoutRouteMode {
   return useMemo(() => {
-    const isHome = router.pathname === '/[locale]';
-    const isContentPage = router.pathname === '/[locale]/content';
+    const routeTemplate = getRouteTemplate(pathname);
+    const isHome = routeTemplate === '/[locale]';
+    const isContentPage = routeTemplate === '/[locale]/content';
     const isStandalone =
-      router.pathname.startsWith('/[locale]/web/')
-      || router.pathname.startsWith('/[locale]/life/')
-      || router.pathname.startsWith('/[locale]/blog/');
+      routeTemplate.startsWith('/[locale]/web/')
+      || routeTemplate.startsWith('/[locale]/life/')
+      || routeTemplate.startsWith('/[locale]/blog/');
 
     return {
       isHome,
@@ -26,5 +27,5 @@ export default function useLayoutRouteMode(
       isStandalone,
       activeSection: forceHomeSection || isHome ? 'home' : 'content',
     };
-  }, [forceHomeSection, router.pathname]);
+  }, [forceHomeSection, pathname]);
 }

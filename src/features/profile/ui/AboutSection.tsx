@@ -1,5 +1,4 @@
 /* eslint-disable @next/next/no-img-element -- decorative local assets rely on plain img sizing and do not benefit from next/image here */
-import { useRouter } from 'next/router';
 import { useTranslations } from 'next-intl';
 import styles from '../styles/ProfileSections.module.scss';
 import Noise from '../../hud/ui/effects/Noise';
@@ -10,6 +9,7 @@ import { useHudPerformance, useHudStats } from '../../hud/model/HudProvider';
 import { useSiteAssets } from '../../assets/model/SiteAssetsProvider';
 import useVisitorLanguageCode from '@/shared/hooks/useVisitorLanguageCode';
 import type { RefObject } from 'react';
+import { useNavigationRuntime } from '@/features/navigation/model/NavigationRuntime';
 
 interface AboutSectionProps {
   aboutSectionRef: RefObject<HTMLDivElement | null>;
@@ -21,13 +21,13 @@ export default function AboutSection({
   aboutContentRef,
 }: AboutSectionProps) {
   const t = useTranslations('sections.about');
-  const router = useRouter();
+  const { query } = useNavigationRuntime();
   const { navigateTo } = useTransition();
   const { runtime, currentVisitDuration } = useHudStats();
   const { allowDecorativeMotion } = useHudPerformance();
   const { getSiteAssetUrl } = useSiteAssets();
   const visitorLanguageCode = useVisitorLanguageCode();
-  const queryLocale = router.query.locale;
+  const queryLocale = query.locale;
   const locale = isLocale(queryLocale) ? queryLocale : defaultLocale;
   const currentYear = new Date().getFullYear();
   const yearRange =

@@ -10,9 +10,9 @@ This project deploys in two distinct modes. **Do not conflate them** — they ha
 
 The project is deployed on Vercel. Vercel does **not** run `server.js`. It builds the project with `next build` and runs:
 
-- `src/proxy.ts` as **Edge Middleware**;
-- `src/pages/api/**` as **Serverless Functions**;
-- Pages under `src/pages/**` via Next.js's standard Pages Router build output (SSG / ISR / SSR).
+- `src/proxy.ts` as the Next.js **Proxy** layer;
+- `src/app/api/**/route.ts` as **Route Handlers / Serverless Functions**;
+- App Router routes under `src/app/**` via the standard Next.js build output (static rendering, ISR, and dynamic server rendering).
 
 Environment variables are configured in the Vercel project settings. The Vercel build does not execute `pnpm start`.
 
@@ -31,7 +31,7 @@ Or under a process manager:
 pm2 start server.js --name arsvine-realm
 ```
 
-In this mode, `server.js` uses `toParsedUrl()` to supplement `query.locale` from the path segment before handing the request to Next.js. This path is specific to local development and optional self-hosting; Vercel routing does not execute it.
+In this mode, `server.js` passes requests to the standard Next.js request handler. Locale routing remains owned by `src/proxy.ts`, so self-hosted behavior stays aligned with Vercel; Vercel itself does not execute `server.js`.
 
 ## Required production variables
 

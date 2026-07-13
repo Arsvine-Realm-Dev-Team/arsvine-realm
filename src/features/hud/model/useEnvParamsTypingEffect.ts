@@ -1,5 +1,4 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
-import { useRouter } from 'next/router';
 
 import type { EnvParamsTypingState } from '@/shared/types';
 import {
@@ -7,9 +6,10 @@ import {
   ENV_DECAY_INTERVAL_MS,
   ENV_DWELL_INTERVAL_MS,
 } from './envTelemetryController';
+import { useNavigationRuntime } from '@/features/navigation/model/NavigationRuntime';
 
 export function useEnvParamsTypingEffect(textVisible: boolean, routeEnabled: boolean): EnvParamsTypingState {
-  const router = useRouter();
+  const { asPath } = useNavigationRuntime();
   const [controller] = useState(() => new EnvTelemetryController());
   const snapshot = useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
 
@@ -27,10 +27,8 @@ export function useEnvParamsTypingEffect(textVisible: boolean, routeEnabled: boo
   }, [controller, routeEnabled]);
 
   useEffect(() => {
-    const handleRouteChange = () => controller.routeChanged();
-    router.events.on('routeChangeComplete', handleRouteChange);
-    return () => router.events.off('routeChangeComplete', handleRouteChange);
-  }, [controller, router.events]);
+    controller.routeChanged();
+  }, [asPath, controller]);
 
   useEffect(() => {
     const handleVisibility = () => controller.visibilityChanged(document.hidden);

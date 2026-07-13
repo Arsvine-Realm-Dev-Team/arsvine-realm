@@ -4,9 +4,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const useAppMock = vi.fn();
 
-vi.mock('next/router', () => ({
-  useRouter: () => ({
+vi.mock('@/features/navigation/model/NavigationRuntime', () => ({
+  useNavigationRuntime: () => ({
     query: { locale: 'zh-CN' },
+    asPath: '/zh-CN',
+    pathname: '/zh-CN',
   }),
 }));
 

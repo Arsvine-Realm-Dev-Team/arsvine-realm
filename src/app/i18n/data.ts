@@ -1,7 +1,7 @@
 /**
  * i18n 数据加载器。
  *
- * Pages Router 的数据读取发生在 Node 侧，这里统一使用显式静态 registry：
+ * App Router 的 Server Component/Route Handler 数据读取发生在 Node 侧，这里统一使用显式静态 registry：
  *   - 消除动态 require 带来的 Critical dependency 告警
  *   - 保留现有 data/<topic>/<locale>.ts 组织方式
  *   - 新增 locale 时只需在本文件补一条映射

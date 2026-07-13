@@ -1,5 +1,6 @@
-import { createContext, useContext, useCallback, useRef, useEffect } from 'react';
-import { useRouter } from 'next/router';
+'use client';
+
+import { createContext, useContext, useCallback, useRef, useEffect, useState } from 'react';
 import { useHudAnimation } from '../../../features/hud/model/HudProvider';
 import { useResponsive } from '@/shared/hooks/useMediaQuery';
 import {
@@ -11,12 +12,15 @@ import {
 } from './contentHashNavigation';
 import { AnimationRunController } from './animationRunController';
 import { useLayoutAnchors } from './LayoutAnchorsContext';
+import { useNavigationRuntime } from './NavigationRuntime';
 
 interface TransitionContextValue {
   navigateTo: (url: string, options?: { scroll?: boolean }) => void;
   setBackOverride: (handler: (() => void) | null) => void;
   handleBack: () => void;
   isDetailOpen: () => boolean;
+  registerTransitionSurface: (element: HTMLDivElement | null) => void;
+  pendingUrl: string | null;
 }
 
 const TransitionContext = createContext<TransitionContextValue>({
@@ -24,13 +28,14 @@ const TransitionContext = createContext<TransitionContextValue>({
   setBackOverride: () => {},
   handleBack: () => {},
   isDetailOpen: () => false,
+  registerTransitionSurface: () => {},
+  pendingUrl: null,
 });
 
 export const useTransition = () => useContext(TransitionContext);
 
 interface TransitionProviderProps {
   children: React.ReactNode;
-  pageWrapperRef: React.RefObject<HTMLDivElement | null>;
 }
 
 const SLIDE_IN_KF: Keyframe[] = [
@@ -77,14 +82,21 @@ const checkMobile = () => {
   return typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
 };
 
-export function TransitionProvider({ children, pageWrapperRef }: TransitionProviderProps) {
-  const router = useRouter();
+export function TransitionProvider({ children }: TransitionProviderProps) {
+  const { pathname, asPath, query, push } = useNavigationRuntime();
   const { retractColumns, expandColumns } = useHudAnimation();
   const { isMobile: hookIsMobile } = useResponsive();
   const { align: alignContentHash, cancel: cancelContentHashAlignment } = useLayoutAnchors();
   const runControllerRef = useRef(new AnimationRunController());
+  const transitionSurfaceRef = useRef<HTMLDivElement | null>(null);
   const backOverrideRef = useRef<(() => void) | null>(null);
   const navigateToRef = useRef<((url: string, options?: { scroll?: boolean }) => void) | null>(null);
+  const pendingCommitRef = useRef<(() => void) | null>(null);
+  const [pendingUrl, setPendingUrl] = useState<string | null>(null);
+
+  const registerTransitionSurface = useCallback((element: HTMLDivElement | null) => {
+    transitionSurfaceRef.current = element;
+  }, []);
 
   const processQueue = () => {
     const nextNav = runControllerRef.current.complete();
@@ -108,12 +120,12 @@ export function TransitionProvider({ children, pageWrapperRef }: TransitionProvi
   const navigateTo = useCallback((url: string, options?: { scroll?: boolean }) => {
     const mobile = hookIsMobile || checkMobile();
     const transitionPlan = resolveNavigationTransitionPlan({
-      sourcePathname: router.pathname,
+      sourcePathname: pathname,
       targetUrl: url,
       mobile,
     });
     if (transitionPlan === 'samePageHash') {
-      router.push(url, undefined, { scroll: false, ...options });
+      void push(url, { scroll: false, ...options });
       return;
     }
 
@@ -121,10 +133,10 @@ export function TransitionProvider({ children, pageWrapperRef }: TransitionProvi
       return;
     }
 
-    const wrapper = pageWrapperRef.current;
+    const wrapper = transitionSurfaceRef.current;
     if (!wrapper) {
       runControllerRef.current.cancel();
-      router.push(url, undefined, { scroll: false, ...options });
+      void push(url, { scroll: false, ...options });
       return;
     }
 
@@ -135,17 +147,29 @@ export function TransitionProvider({ children, pageWrapperRef }: TransitionProvi
 
     const pushThen = (target: string, cb: () => void, pushOpts?: { scroll?: boolean }) => {
       let removeCleanup = () => false;
+      let timeoutId = 0;
       const cleanup = () => {
-        router.events.off('routeChangeComplete', onComplete);
+        if (timeoutId) window.clearTimeout(timeoutId);
+        if (pendingCommitRef.current === onComplete) pendingCommitRef.current = null;
+        setPendingUrl(null);
         removeCleanup();
       };
       const onComplete = () => {
         cleanup();
         cb();
       };
-      router.events.on('routeChangeComplete', onComplete);
+      pendingCommitRef.current?.();
+      pendingCommitRef.current = onComplete;
+      setPendingUrl(target);
       removeCleanup = runControllerRef.current.addCleanup(cleanup);
-      void Promise.resolve(router.push(target, undefined, { scroll: false, ...pushOpts })).catch(() => {
+      timeoutId = window.setTimeout(() => {
+        if (pendingCommitRef.current === onComplete) {
+          cleanup();
+          runControllerRef.current.cancel();
+          processQueue();
+        }
+      }, 10_000);
+      void push(target, { scroll: false, ...pushOpts }).catch(() => {
         cleanup();
         processQueue();
       });
@@ -275,8 +299,8 @@ export function TransitionProvider({ children, pageWrapperRef }: TransitionProvi
       }).catch(() => {});
     }
   }, [
-    router,
-    pageWrapperRef,
+    pathname,
+    push,
     retractColumns,
     expandColumns,
     hookIsMobile,
@@ -288,29 +312,25 @@ export function TransitionProvider({ children, pageWrapperRef }: TransitionProvi
     navigateToRef.current = navigateTo;
   }, [navigateTo]);
 
+  useEffect(() => {
+    const onComplete = pendingCommitRef.current;
+    if (!onComplete) {
+      if (isHomeUrl(asPath) && !runControllerRef.current.isRunning()) expandColumns();
+      return;
+    }
+    onComplete();
+  }, [asPath, expandColumns]);
+
   // 卸载时清理任何未完成的兜底 timer / transitionend 监听，避免在已 stale 的
   // wrapper / state 上触发副作用（"导航卡死 / 双闪烁"竞态来源之一）。
   useEffect(() => {
     const runController = runControllerRef.current;
     return () => {
       cancelContentHashAlignment();
+      pendingCommitRef.current?.();
       runController.cancel();
     };
   }, [cancelContentHashAlignment]);
-
-  // Handle browser back/forward navigation (popstate) that bypasses navigateTo
-  useEffect(() => {
-    const handleRouteChange = (url: string) => {
-      // 任何形如 /<locale> 的 URL 都视为 home，触发列展开
-      if (isHomeUrl(url) && !runControllerRef.current.isRunning()) {
-        expandColumns();
-      }
-    };
-    router.events.on('routeChangeComplete', handleRouteChange);
-    return () => {
-      router.events.off('routeChangeComplete', handleRouteChange);
-    };
-  }, [router.events, expandColumns]);
 
   const setBackOverride = useCallback((handler: (() => void) | null) => {
     backOverrideRef.current = handler;
@@ -322,21 +342,21 @@ export function TransitionProvider({ children, pageWrapperRef }: TransitionProvi
       return;
     }
     // 路由模板 /[locale] 即为 home
-    const isHome = router.pathname === '/[locale]';
+    const isHome = pathname.split('/').filter(Boolean).length === 1;
     if (!isHome) {
       // 用当前 query.locale 拼出 home 路径
-      const queryLocale = router.query?.locale;
+      const queryLocale = query.locale;
       const locale = typeof queryLocale === 'string' ? queryLocale : 'zh-CN';
       navigateTo(`/${locale}`);
     }
-  }, [router.pathname, router.query, navigateTo]);
+  }, [pathname, query.locale, navigateTo]);
 
   const isDetailOpen = useCallback(() => {
     return backOverrideRef.current !== null;
   }, []);
 
   return (
-    <TransitionContext.Provider value={{ navigateTo, setBackOverride, handleBack, isDetailOpen }}>
+    <TransitionContext.Provider value={{ navigateTo, setBackOverride, handleBack, isDetailOpen, registerTransitionSurface, pendingUrl }}>
       {children}
     </TransitionContext.Provider>
   );

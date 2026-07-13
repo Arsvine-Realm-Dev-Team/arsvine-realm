@@ -6,12 +6,13 @@ const useAppMock = vi.fn();
 const useResponsiveMock = vi.fn();
 const recordMobileTesseractChargeCall = vi.fn();
 
-vi.mock('next/router', () => ({
-  useRouter: () => ({
-    pathname: '/[locale]/content',
+vi.mock('@/features/navigation/model/NavigationRuntime', () => ({
+  useNavigationRuntime: () => ({
+    pathname: '/zh-CN/content',
     asPath: '/zh-CN/content',
     query: { locale: 'zh-CN' },
     push: vi.fn(),
+    prefetch: vi.fn(),
   }),
 }));
 
@@ -46,6 +47,8 @@ vi.mock('@/features/navigation/model/TransitionProvider', () => ({
     navigateTo: vi.fn(),
     handleBack: vi.fn(),
     isDetailOpen: () => false,
+    registerTransitionSurface: vi.fn(),
+    pendingUrl: null,
   }),
 }));
 

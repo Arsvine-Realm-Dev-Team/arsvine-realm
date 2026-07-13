@@ -1,4 +1,6 @@
-import type { ReactNode, RefObject } from 'react';
+'use client';
+
+import type { ReactNode } from 'react';
 
 import { HudProvider } from '../../features/hud/model/HudProvider';
 import { SiteAssetsProvider } from '../../features/assets/model/SiteAssetsProvider';
@@ -7,15 +9,14 @@ import { LayoutAnchorsProvider } from '../../features/navigation/model/LayoutAnc
 
 interface AppProvidersProps {
   children: ReactNode;
-  pageWrapperRef: RefObject<HTMLDivElement | null>;
 }
 
-export default function AppProviders({ children, pageWrapperRef }: AppProvidersProps) {
+export default function AppProviders({ children }: AppProvidersProps) {
   return (
     <SiteAssetsProvider>
       <HudProvider>
         <LayoutAnchorsProvider>
-          <TransitionProvider pageWrapperRef={pageWrapperRef}>
+          <TransitionProvider>
             {children}
           </TransitionProvider>
         </LayoutAnchorsProvider>

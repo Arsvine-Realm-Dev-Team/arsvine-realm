@@ -1,6 +1,4 @@
 import React, { startTransition, useEffect, useState } from 'react';
-import Head from 'next/head';
-import HreflangLinks from '../../../../shared/ui/HreflangLinks';
 import type { BlogContentLocale } from '../../server/blog';
 import { type Locale } from '@/shared/contracts/locale';
 import type { BlogPostMeta } from '../../../../shared/types';
@@ -54,13 +52,6 @@ export default function BlogStateShell({
 
   return (
     <>
-      <Head>
-        <title>{`${meta.title} // Blog`}</title>
-        <meta name="description" content={meta.excerpt} />
-        {isProtected ? <meta name="robots" content="noindex,nofollow,noarchive" /> : null}
-        <HreflangLinks basePath={`/blog/${meta.slug}`} />
-      </Head>
-
       <BlogDetailScaffold
         locale={locale}
         meta={meta}

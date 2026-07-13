@@ -1,7 +1,13 @@
-// Next.js discovers this convention file beside src/pages/.
+// Next.js discovers this App Router convention file from src/.
 import { NextResponse, type NextRequest } from 'next/server';
 import { geolocation } from '@vercel/functions';
-import { locales, defaultLocale, isLocale, type Locale } from './app/i18n/config';
+import { locales, isLocale, type Locale } from './app/i18n/config';
+import {
+  coerceCookieLocale,
+  LOCALE_PATH_PATTERN,
+  pickLocaleFromAcceptLanguage,
+  shouldBypassLocaleProxy,
+} from './shared/lib/locale-resolution';
 
 // 客户端通过该 cookie 读取访客国家二字码（例如 'CN'）。仅供 UI 微调使用，
 // 不参与权限/安全决策。Vercel 之外的环境会拿不到 country，按未知处理。
@@ -14,95 +20,11 @@ const GEO_OVERRIDE_PARAM = '_geo';
 // 注：早先版本通过 x-geo-country 请求头把 country 注入下游 SSR，目的是让"同一次刷新"
 // 立即反映新 geo。但 SSG/ISR 页面在 Vercel CDN 共享缓存层会被多访客复用，
 // 第一访客的 country 会污染整个缓存窗口（B 站等 region UI 漂移）。
-// 现方案：proxy 只写 GEO_COUNTRY cookie；country 完全在 _document 内联脚本里
+// 现方案：proxy 只写 GEO_COUNTRY cookie；country 完全在根布局的内联脚本里
 // （buildDocumentBootstrapScript）从 cookie 读到 <html dataset> —— hydration / CSS
 // 应用前同步执行，单次刷新仍可立即生效，但不再污染 SSG 产物。
 
 // 这些 path 前缀完全跳过 proxy，避免 favicon/API/asset 被 i18n 路由污染
-const BYPASS_PREFIXES = [
-  '/api',
-  '/_next',
-  '/_vercel',
-  '/favicon.ico',
-  '/apple-touch-icon.png',
-  '/icons',
-  '/fonts',
-  '/images',
-  '/decor',
-  '/music',
-  '/robots.txt',
-  '/sitemap.xml',
-  '/rss.xml',
-];
-
-function shouldBypass(pathname: string): boolean {
-  if (BYPASS_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
-    return true;
-  }
-  // 任何带文件扩展名的路径都视为静态资源，bypass
-  // （pages/[locale] 路由不会以 .xxx 结尾）
-  if (/\.[a-z0-9]+$/i.test(pathname)) {
-    return true;
-  }
-  return false;
-}
-
-// 形似 BCP-47 短 locale 的正则：两位语言码，可选两~四位脚本/区域后缀。
-// 用于识别 /fr/web/1、/ja/about 这类"未支持的 locale 候选"段，
-// 避免被当成裸业务路径再前置 locale（旧 bug：/fr/web/1 → /en/fr/web/1）。
-const LOOKS_LIKE_LOCALE = /^[a-z]{2}(-[A-Za-z]{2,4})?$/;
-
-function pickLocaleFromHeader(acceptLanguage: string | null): Locale {
-  if (!acceptLanguage) return defaultLocale;
-  // 简单实现：按权重排序，挑第一个能匹配到的 locale
-  const tags = acceptLanguage
-    .split(',')
-    .map((part) => {
-      const [tag, qStr] = part.trim().split(';q=');
-      return { tag: tag.toLowerCase(), q: qStr ? Number(qStr) : 1 };
-    })
-    .sort((a, b) => b.q - a.q);
-
-  for (const { tag } of tags) {
-    if (tag.startsWith('en')) return 'en';
-    if (tag === 'zh-tw' || tag === 'zh-hk' || tag === 'zh-hant' || tag.startsWith('zh-hant')) return 'zh-TW';
-    if (tag === 'zh' || tag.startsWith('zh-cn') || tag.startsWith('zh-hans') || tag.startsWith('zh')) return 'zh-CN';
-  }
-  return defaultLocale;
-}
-
-function coerceCookieLocale(value: string | undefined): Locale | undefined {
-  if (!value) return undefined;
-  const normalized = value.trim();
-  if (isLocale(normalized)) return normalized;
-
-  switch (normalized.toLowerCase()) {
-    case 'zh':
-    case 'zh-cn':
-    case 'zh-hans':
-      return 'zh-CN';
-    case 'zh-tw':
-    case 'zh-hk':
-    case 'zh-hant':
-      return 'zh-TW';
-    case 'en':
-    case 'en-us':
-    case 'en-gb':
-      return 'en';
-    default:
-      return undefined;
-  }
-}
-
-// shouldBypass / pickLocaleFromHeader / coerceCookieLocale / LOOKS_LIKE_LOCALE 均为纯函数
-// （不依赖 NextRequest / NextResponse），通过 __internals 集中 export 给 vitest 单测覆盖。
-// 业务代码请继续走 `proxy` 入口；不要从 __internals 直接拿 helper 用，会绕过 cookie 写入。
-export const __internals = {
-  shouldBypass,
-  pickLocaleFromHeader,
-  coerceCookieLocale,
-  LOOKS_LIKE_LOCALE,
-};
 
 /**
  * 解析当前请求的"有效 country"，优先级：
@@ -152,7 +74,7 @@ function attachGeo(
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (shouldBypass(pathname)) {
+  if (shouldBypassLocaleProxy(pathname)) {
     return NextResponse.next();
   }
 
@@ -173,11 +95,11 @@ export function proxy(request: NextRequest) {
   const cookieLocale = coerceCookieLocale(request.cookies.get('NEXT_LOCALE')?.value);
   const targetLocale: Locale = cookieLocale
     ? cookieLocale
-    : pickLocaleFromHeader(request.headers.get('accept-language'));
+    : pickLocaleFromAcceptLanguage(request.headers.get('accept-language'));
 
   // 若第一段长得像 locale 但不在受支持列表（如 /fr/web/1），剥掉它再前置目标 locale，
   // 避免拼出 /en/fr/web/1 这种 404 路径。
-  const rest = firstSegment && LOOKS_LIKE_LOCALE.test(firstSegment)
+  const rest = firstSegment && LOCALE_PATH_PATTERN.test(firstSegment)
     ? '/' + segments.slice(1).join('/')
     : pathname;
 

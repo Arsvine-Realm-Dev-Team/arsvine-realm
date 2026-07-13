@@ -1,5 +1,6 @@
+'use client';
+
 import React, { useCallback, useMemo, useRef } from 'react';
-import Head from 'next/head';
 import { useTranslations } from 'next-intl';
 import styles from '../../../shared/ui/detail/StandaloneDetailView.module.scss';
 import hudStyles from '../../../app/styles/Shell.module.scss';
@@ -7,7 +8,6 @@ import { useHudPower } from '../../../features/hud/model/HudProvider';
 import { useTransition } from '../../../features/navigation/model/TransitionProvider';
 import LazyImage from '../../../shared/ui/LazyImage';
 import Lightbox from '../../../shared/ui/Lightbox';
-import HreflangLinks from '../../../shared/ui/HreflangLinks';
 import LocaleFallbackBanner from '../../../shared/ui/LocaleFallbackBanner';
 import DetailFooterNav from '../../../shared/ui/detail/DetailFooterNav';
 import DetailGallerySection from '../../../shared/ui/detail/DetailGallerySection';
@@ -139,13 +139,6 @@ function LifeDetailContent({
 
   return (
     <div ref={wrapperRef} className={`${styles.pageWrapper} ${isInverted ? hudStyles.inverted : ''}`}>
-      <Head>
-        <title>{`${item.title.toUpperCase()} // LIFE`}</title>
-        <meta name="description" content={item.title} />
-        <meta property="og:type" content="article" />
-        <HreflangLinks basePath={`/life/${item.id}`} />
-      </Head>
-
       <div className={styles.mainContent}>
         {translationStatus !== 'source' && (
           <LocaleFallbackBanner

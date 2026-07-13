@@ -20,7 +20,7 @@ data/
 ## 修改流程
 
 1. 三语主题（projects / experience / life / skills / friendLinks）：把字段在三个文件里同步。漏一个会触发翻译 fallback（不是错误，但用户能看出来）。
-2. 单语数据（`music.ts`、`site.ts`）：直接改即可。`site.ts` 的字段会进 `<Head>` / sitemap / RSS / robots。
+2. 单语数据（`music.ts`、`site.ts`）：直接改即可。`site.ts` 的字段会进 App Router metadata / sitemap / RSS / robots。
 3. **不要在 data 文件里写 React 组件 / JSX**。这里是纯数据 + 类型。
 4. **不要新增 dynamic import**。`lib/i18n-data.ts` 用静态 registry 显式映射，新增 locale 时改 registry，而不是改成动态 `require`。
 

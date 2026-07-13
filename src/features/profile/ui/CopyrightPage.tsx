@@ -1,8 +1,8 @@
-import Head from 'next/head';
+'use client';
+
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import SectionPageLayout from '../../../app/shell/SectionPageLayout';
-import HreflangLinks from '../../../shared/ui/HreflangLinks';
 import styles from '../styles/ProfileSections.module.scss';
 import { siteConfig } from '@/shared/config/site';
 import type { Locale } from '@/shared/contracts/locale';
@@ -71,14 +71,7 @@ export default function CopyrightPage({ locale }: CopyrightPageProps) {
   }, []);
 
   return (
-    <>
-      <Head>
-        <title>{t('title')}</title>
-        <meta name="description" content={t('description')} />
-        <meta property="og:type" content="website" />
-        <HreflangLinks basePath="/copyright" />
-      </Head>
-      <SectionPageLayout>
+    <SectionPageLayout>
         <div
           className={`${styles.friendLinkSection} ${styles.copyrightSection} ${entered ? styles.copyrightEntered : ''}`}
         >
@@ -116,7 +109,6 @@ export default function CopyrightPage({ locale }: CopyrightPageProps) {
             © {yearRange} {siteConfig.author}
           </p>
         </div>
-      </SectionPageLayout>
-    </>
+    </SectionPageLayout>
   );
 }

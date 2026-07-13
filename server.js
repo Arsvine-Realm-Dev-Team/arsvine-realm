@@ -8,31 +8,6 @@ const app = next({
   dev,
 });
 const handle = app.getRequestHandler();
-const SUPPORTED_LOCALES = new Set(['zh-CN', 'zh-TW', 'en']);
-
-function toParsedUrl(req) {
-  const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
-  const query = {};
-
-  for (const key of url.searchParams.keys()) {
-    const values = url.searchParams.getAll(key);
-    query[key] = values.length > 1 ? values : values[0] ?? '';
-  }
-
-  const firstSegment = url.pathname.split('/').filter(Boolean)[0];
-  if (firstSegment && SUPPORTED_LOCALES.has(firstSegment) && query.locale == null) {
-    query.locale = firstSegment;
-  }
-
-  return {
-    hash: url.hash,
-    href: `${url.pathname}${url.search}${url.hash}`,
-    pathname: url.pathname,
-    query,
-    search: url.search,
-  };
-}
-
 // Optional: external-service proxy routes may be added here when required.
 // const ANALYTICS_TARGET = 'http://127.0.0.1:3001';
 // Uncomment and configure if you use a self-hosted analytics service.
@@ -41,15 +16,13 @@ async function main() {
   await app.prepare();
 
   const httpServer = createServer(async (req, res) => {
-    const parsedUrl = toParsedUrl(req);
-
     // Optional: Analytics proxy route
-    // if (parsedUrl.pathname.startsWith('/analytics/')) {
-    //   proxyToAnalytics(req, res, parsedUrl);
+    // if ((req.url || '').startsWith('/analytics/')) {
+    //   proxyToAnalytics(req, res);
     //   return;
     // }
 
-    handle(req, res, parsedUrl);
+    handle(req, res);
   });
 
   function gracefulShutdown(signal) {

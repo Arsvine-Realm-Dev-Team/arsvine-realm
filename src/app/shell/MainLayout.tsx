@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useRef, type ReactNode, type RefObject } from 'react';
-import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
 
@@ -13,6 +12,7 @@ import {
 } from '../../features/hud/model/HudProvider';
 import { useLayoutAnchors } from '../../features/navigation/model/LayoutAnchorsContext';
 import { useTransition } from '../../features/navigation/model/TransitionProvider';
+import { useNavigationRuntime } from '../../features/navigation/model/NavigationRuntime';
 import { useResponsive } from '@/shared/hooks/useMediaQuery';
 import useDrawerNavigation from '../../features/navigation/model/useDrawerNavigation';
 import useLayoutRouteMode from '../../features/navigation/model/useLayoutRouteMode';
@@ -62,11 +62,11 @@ interface MainLayoutProps {
 }
 
 export default function MainLayout({ children, appLocale }: MainLayoutProps) {
-  const router = useRouter();
+  const { pathname, asPath, query } = useNavigationRuntime();
   const tNav = useTranslations('mainNav');
   const tCommon = useTranslations('common');
   const tTweets = useTranslations('pages.tweets');
-  const { navigateTo, handleBack, isDetailOpen } = useTransition();
+  const { navigateTo, handleBack, isDetailOpen, registerTransitionSurface, pendingUrl } = useTransition();
   const { getScrollContainer } = useLayoutAnchors();
   const { isMobile, isDesktop } = useResponsive();
   const {
@@ -88,7 +88,7 @@ export default function MainLayout({ children, appLocale }: MainLayoutProps) {
   } = useHudPerformance();
 
   // 当前 URL 的 locale，所有内部跳转都要带上前缀
-  const locale: Locale = appLocale ?? resolveLocale(router.query.locale, router.asPath);
+  const locale: Locale = appLocale ?? resolveLocale(query.locale, asPath);
 
   const {
     drawerOpen,
@@ -103,8 +103,9 @@ export default function MainLayout({ children, appLocale }: MainLayoutProps) {
   });
 
   const [forceHomeSection, setForceHomeSection] = useState(false);
+  const [clientEffectsReady, setClientEffectsReady] = useState(false);
   const { isHome, isContentPage, isStandalone, activeSection } = useLayoutRouteMode(
-    router,
+    pathname,
     forceHomeSection,
   );
   const { localPanelAnimated, localLeversVisible } = useStandalonePanelState({
@@ -112,7 +113,7 @@ export default function MainLayout({ children, appLocale }: MainLayoutProps) {
     leftPanelAnimated,
     leversVisible,
   });
-  const routeLoadingState = useRouteLoadingKind(router);
+  const routeLoadingState = useRouteLoadingKind(pathname, pendingUrl);
   // 桌面 Tesseract 拖拽态 —— 用于让电池在用户拖动物体时给出"被吸引"视觉反馈
   // 不放进 HudContext / PowerSystemState：纯 3D 场景的瞬态 UI 信号，不属于电力系统逻辑
   const {
@@ -126,6 +127,11 @@ export default function MainLayout({ children, appLocale }: MainLayoutProps) {
       return getScrollContainer();
     },
   }), [getScrollContainer]);
+
+  useEffect(() => {
+    const frameId = window.requestAnimationFrame(() => setClientEffectsReady(true));
+    return () => window.cancelAnimationFrame(frameId);
+  }, []);
 
   useEffect(() => {
     if (isHome && forceHomeSection) {
@@ -169,8 +175,8 @@ export default function MainLayout({ children, appLocale }: MainLayoutProps) {
     : tCommon('decoding');
 
   useHudRouteVisibility(isStandalone);
-  useCursorTargetInvalidation(router.asPath, mainVisible);
-  useContentHashAlignment(router.pathname, router.asPath);
+  useCursorTargetInvalidation(asPath, mainVisible);
+  useContentHashAlignment(pathname, asPath);
 
   return (
     <div className={`${styles.container} ${isInverted ? styles.inverted : ''}`}>
@@ -178,10 +184,10 @@ export default function MainLayout({ children, appLocale }: MainLayoutProps) {
 
         <div className={styles.leftDotMatrix}></div>
         {mainVisible && <MusicPlayer powerLevel={powerLevel} />}
-        {isDesktop && allowCustomCursor && <CustomCursor />}
-        {webglReady && isDesktop && allowAmbientWebGL && <RainMorimeEffect />}
+        {clientEffectsReady && isDesktop && allowCustomCursor && <CustomCursor />}
+        {clientEffectsReady && webglReady && isDesktop && allowAmbientWebGL && <RainMorimeEffect />}
         <HomeLoadingScreen onComplete={handleLoadingComplete} />
-        {isTesseractActivated && allow3DTesseract && !isStandalone && (
+        {clientEffectsReady && isTesseractActivated && allow3DTesseract && !isStandalone && (
           <TesseractExperience
             chargeBattery={chargeBattery}
             isActivated={isTesseractActivated}
@@ -253,10 +259,14 @@ export default function MainLayout({ children, appLocale }: MainLayoutProps) {
              />
            </>
          )}
-        <div style={{
+        <div
+          ref={registerTransitionSurface}
+          className="pageTransitionLayer"
+          style={{
           opacity: mainVisible ? 1 : 0,
           pointerEvents: mainVisible ? 'auto' : 'none',
           transition: 'opacity 0.4s ease-out',
+          zIndex: isStandalone ? 15 : 2,
         }}>
           {children}
         </div>

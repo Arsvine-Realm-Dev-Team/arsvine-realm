@@ -1,8 +1,8 @@
+'use client';
+
 /* eslint-disable @next/next/no-img-element -- friend avatars are arbitrary remote URLs and should remain plain img elements */
-import Head from 'next/head';
 import { useTranslations } from 'next-intl';
 import SectionPageLayout from '../../../app/shell/SectionPageLayout';
-import HreflangLinks from '../../../shared/ui/HreflangLinks';
 import styles from '../styles/ProfileSections.module.scss';
 import type { Locale } from '@/shared/contracts/locale';
 import { resolveRawAssetUrl } from '@/shared/lib/cdn';
@@ -25,14 +25,7 @@ export default function FriendsPage({
 }: FriendsPageProps) {
   const t = useTranslations('pages.friends');
   return (
-    <>
-      <Head>
-        <title>{pageTitle || t('title')}</title>
-        <meta name="description" content={pageDescription || t('description')} />
-        <meta property="og:type" content="website" />
-        <HreflangLinks basePath="/friends" />
-      </Head>
-      <SectionPageLayout>
+    <SectionPageLayout>
         <div className={styles.friendLinkSection}>
           <h2>{t('heading')}</h2>
           <div className={styles.friendLinkGrid}>
@@ -82,7 +75,6 @@ export default function FriendsPage({
             </>
           )}
         </div>
-      </SectionPageLayout>
-    </>
+    </SectionPageLayout>
   );
 }

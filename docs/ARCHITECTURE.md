@@ -4,7 +4,7 @@ This document explains the current architecture of **ARSVINE REALM**. It is inte
 
 ## Technical baseline
 
-- Next.js 16 with **Pages Router**.
+- Next.js 16 with **App Router**.
 - React 19.
 - TypeScript.
 - SCSS Modules plus shared SCSS partials.
@@ -15,18 +15,18 @@ This document explains the current architecture of **ARSVINE REALM**. It is inte
 - Vitest with `jsdom` for core logic tests.
 - Local-development and optional self-hosted server through `server.js` (not used by the Vercel deployment).
 
-The project intentionally remains on Pages Router. Do not introduce App Router folders unless the project is explicitly migrated.
+The project uses App Router. Keep routes, layouts, metadata, and Route Handlers under `src/app/`; do not reintroduce a `src/pages/` tree.
 
 ## Route model
 
-All user-facing route adapters live under `src/pages/[locale]/...`. They parse route input and own SSG/ISR contracts; feature UI and server loaders live under `src/features/`.
+User-facing route adapters live under `src/app/[locale]/...`. Server Components own route parameters, metadata, and SSG/ISR contracts; feature UI and server loaders live under `src/features/`.
 
 | Route | Purpose |
 |---|---|
 | `/[locale]` | HUD home page with primary navigation columns. |
 | `/[locale]/content` | Content aggregation page with hash sections such as `#works`, `#experience`, `#blog`, `#life`. |
 | `/[locale]/{works,experience,life,friends,about,contact,tweets,copyright}` | Canonical section or standalone pages. |
-| `/[locale]/blog/[slug]` | Blog detail page; SSG with `fallback: 'blocking'` and ISR. |
+| `/[locale]/blog/[slug]` | Blog detail page; static params plus ISR. |
 | `/[locale]/web/[id]` | Work/project detail page. |
 | `/[locale]/life/[slug]` | Life detail page. |
 | `/[locale]/access/[group]` | Standalone TOTP gate. |
@@ -181,7 +181,7 @@ TOTP_GROUPS_JSON={"friends-a":{"current":"JBSWY3DPEHPK3PXP","period":30,"digits"
 
 Flow:
 
-1. `getStaticProps` returns sanitized metadata and `mdxSource: null` for protected posts.
+1. The App Router page returns sanitized metadata and `mdxSource: null` for protected posts without reading or serializing their body.
 2. The browser renders a loading shell and probes `/api/grant-check?group=...`.
 3. If already granted, the client requests `/api/post-variant?slug=&locale=`.
 4. If not granted, the TOTP gate posts to `/api/protected-verify`.
@@ -189,7 +189,7 @@ Flow:
 6. The client then fetches the gated MDX body through `/api/post-variant`.
 7. Direct unauthenticated protected-post variant fetches return `403`.
 
-Important invariant: `_next/data/.../<slug>.json` must not contain protected body content.
+Important invariant: neither the HTML nor the RSC payload may contain protected body content.
 
 ## API routes
 
