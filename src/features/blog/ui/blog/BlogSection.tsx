@@ -1,6 +1,6 @@
 import { type RefObject } from 'react';
 import { useTranslations } from 'next-intl';
-import styles from '../../../../app/styles/Shell.module.scss';
+import styles from '../../styles/BlogSection.module.scss';
 import cardStyles from '../../styles/BlogPostCard.module.scss';
 import { formatReadingTime } from '../../model/formatReadingTime';
 import type { Locale } from '@/shared/contracts/locale';
@@ -24,7 +24,7 @@ export default function BlogSection({
   return (
     <div ref={blogSectionRef} className={styles.contentSection}>
       <h2>{t('heading')}</h2>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%', marginTop: '20px' }}>
+      <div className={styles.postList}>
         {posts.map((post, i) => (
           <div
             key={post.slug}

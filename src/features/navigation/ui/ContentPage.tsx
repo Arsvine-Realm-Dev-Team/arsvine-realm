@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useTranslations } from 'next-intl';
 import styles from '../../../app/styles/Shell.module.scss';
+import contentStyles from '../styles/ContentPage.module.scss';
 import { useLayoutAnchors } from '../model/LayoutAnchorsContext';
 import { useTransition } from '../model/TransitionProvider';
 
@@ -277,7 +278,7 @@ export default function ContentPage({
           isClosing ? ` ${styles.detailClosing}` : ''
         }`}
       >
-        <div id="section-works" className={styles.sectionAnchor}>
+        <div id="section-works" className={contentStyles.sectionAnchor}>
           <WorksSection
             worksSectionRef={worksSectionRef}
             activeWorkTab={activeWorkTab}
@@ -293,7 +294,7 @@ export default function ContentPage({
           />
         </div>
 
-        <div id="section-experience" className={styles.sectionAnchor}>
+        <div id="section-experience" className={contentStyles.sectionAnchor}>
           <ExperienceSection
             experienceSectionRef={experienceSectionRef}
             experienceData={experienceData}
@@ -301,7 +302,7 @@ export default function ContentPage({
           />
         </div>
 
-        <div id="section-blog" className={styles.sectionAnchor}>
+        <div id="section-blog" className={contentStyles.sectionAnchor}>
           <BlogSection
             blogSectionRef={blogSectionRef}
             locale={locale}
@@ -310,7 +311,7 @@ export default function ContentPage({
           />
         </div>
 
-        <div id="section-life" className={styles.sectionAnchor}>
+        <div id="section-life" className={contentStyles.sectionAnchor}>
           <LifeSection
             lifeSectionRef={lifeSectionRef}
             activeSection="content"
@@ -330,7 +331,7 @@ export default function ContentPage({
           />
         </div>
 
-        <div id="section-contact" className={styles.sectionAnchor}>
+        <div id="section-contact" className={contentStyles.sectionAnchor}>
           <ContactSection
             contactSectionRef={contactSectionRef}
             handleCopyEmail={handleCopyEmail}
@@ -339,7 +340,7 @@ export default function ContentPage({
           />
         </div>
 
-        <div id="section-about" className={styles.sectionAnchor}>
+        <div id="section-about" className={contentStyles.sectionAnchor}>
           <AboutSection
             aboutSectionRef={aboutSectionRef}
             aboutContentRef={aboutContentRef}

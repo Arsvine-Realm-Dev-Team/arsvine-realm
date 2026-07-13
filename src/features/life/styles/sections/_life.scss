@@ -140,40 +140,6 @@
   cursor: none;
 }
 
-.detailViewWrapper {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  color: var(--ark-text);
-  overflow-y: auto;
-  z-index: 5;
-  contain: layout style;
-  padding: var(--spacing-section-top) var(--spacing-section-pad) clamp(40px, 5vw, 80px) var(--content-offset);
-  box-sizing: border-box;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-
-  &.entering {
-    animation: slideInFromRight 1.8s cubic-bezier(0.25, 0.8, 0.25, 1) both;
-    pointer-events: auto;
-  }
-
-  &.exiting {
-    animation: slideOutToRight 1.8s ease-out both;
-    pointer-events: none;
-  }
-
-  > div {
-    max-width: 100%;
-    padding: 0;
-  }
-}
-
 .subSectionTitle {
   font-family: var(--font-hud);
   font-size: var(--fs-caption);
@@ -213,6 +179,72 @@
     border-color: var(--ark-primary);
     transform: translateY(-3px);
     color: var(--ark-primary);
+  }
+}
+
+.earlySection {
+  margin-top: 40px;
+  border-top: 1px solid var(--ark-border);
+  padding-top: 20px;
+}
+
+.earlySectionToggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--ark-text-secondary);
+  font-family: var(--font-hud);
+  font-size: var(--fs-base);
+  letter-spacing: 1px;
+  text-align: left;
+  cursor: none;
+  opacity: 0.6;
+  transition: opacity 0.3s, color 0.3s, border-color 0.3s;
+
+  &:hover {
+    color: var(--ark-primary);
+    border-color: var(--ark-border);
+    opacity: 1;
+  }
+
+  &.expanded {
+    color: var(--ark-primary);
+    opacity: 0.9;
+  }
+}
+
+.earlySectionToggleIcon {
+  display: inline-block;
+  width: 12px;
+  font-size: 12px;
+  transition: transform 0.3s ease;
+}
+
+.earlySectionCount {
+  margin-left: auto;
+  padding: 2px 8px;
+  border: 1px solid var(--ark-border);
+  font-size: 11px;
+  opacity: 0.5;
+}
+
+.earlySectionContent {
+  max-height: 0;
+  margin-top: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.4s ease,
+    margin-top 0.4s ease;
+
+  &.expanded {
+    max-height: 1200px;
+    margin-top: 20px;
+    opacity: 1;
   }
 }
 
@@ -298,7 +330,4 @@
     color: var(--ark-text);
   }
 
-  .detailViewWrapper {
-    color: var(--ark-text);
-  }
 }

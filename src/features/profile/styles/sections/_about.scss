@@ -60,19 +60,33 @@
   }
 }
 
-.contentSection.contactSection {
+.contentSection.aboutSection {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 30px;
   position: relative;
-  min-height: 100vh;
-  padding-bottom: 12px;
-  background-image: var(--site-contour-map, url('/decor/contour-map.webp'));
-  background-size: cover;
-  background-position: center 70%;
-  background-repeat: no-repeat;
+  width: var(--content-width);
+  margin-left: var(--content-offset);
+  min-height: auto;
+  padding: 30px var(--spacing-section-pad) 100px;
+  background-color: rgba(50, 50, 50, 0.8);
+  border-radius: 0;
   margin-bottom: 0;
+  overflow: hidden;
+  z-index: 2;
+  transition: background-color 0.5s ease-in-out;
+
+  @media (min-width: 1024px) {
+    margin-left: calc(var(--content-offset) - 4vw);
+    width: calc(var(--content-width) + 4vw);
+  }
+
+  @media (max-width: 1023px) {
+    width: 100%;
+    margin-left: 0;
+    padding: 30px 20px 100px;
+  }
 }
 
 .siteStatsContainer {

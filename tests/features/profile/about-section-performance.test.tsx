@@ -33,6 +33,7 @@ vi.mock('@/features/hud/ui/effects/Noise', () => ({
 }));
 
 import AboutSection from '@/features/profile/ui/AboutSection';
+import styles from '@/features/profile/styles/ProfileSections.module.scss';
 
 describe('AboutSection adaptive performance', () => {
   beforeEach(() => {
@@ -48,8 +49,11 @@ describe('AboutSection adaptive performance', () => {
   });
 
   it('renders the noise layer in full mode', () => {
-    render(<AboutSection aboutSectionRef={{ current: null }} aboutContentRef={{ current: null }} />);
+    const { container } = render(<AboutSection aboutSectionRef={{ current: null }} aboutContentRef={{ current: null }} />);
     expect(screen.getByTestId('noise-effect')).toBeTruthy();
+    const aboutSection = container.querySelector('#about-section');
+    expect(aboutSection?.classList.contains(styles.contentSection)).toBe(true);
+    expect(aboutSection?.classList.contains(styles.aboutSection)).toBe(true);
   });
 
   it('skips the noise layer in reduced mode', () => {
