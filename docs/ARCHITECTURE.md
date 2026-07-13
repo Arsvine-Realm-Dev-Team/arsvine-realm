@@ -13,7 +13,7 @@ This document explains the current architecture of **ARSVINE REALM**. It is inte
 - Three.js / `@react-three/fiber` / `@react-three/drei` / `@react-three/cannon` for desktop effects.
 - GSAP and Web Animations API for interaction and transitions.
 - Vitest with `jsdom` for core logic tests.
-- Custom Node.js server through `server.js`.
+- Local-development and optional self-hosted server through `server.js` (not used by the Vercel deployment).
 
 The project intentionally remains on Pages Router. Do not introduce App Router folders unless the project is explicitly migrated.
 

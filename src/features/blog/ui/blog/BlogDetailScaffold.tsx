@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { useHud } from '../../../../features/hud/model/HudProvider';
+import { useHudPower } from '../../../../features/hud/model/HudProvider';
 import { useTransition } from '../../../navigation/model/TransitionProvider';
 import { buildBlogIndexHref, buildBlogPostHref } from '../../model/blogClient';
 import type { BlogContentLocale } from '../../server/blog';
@@ -33,7 +33,7 @@ export default function BlogDetailScaffold({
   headerEntered = false,
   scrollRootRef,
 }: BlogDetailScaffoldProps) {
-  const { isInverted } = useHud();
+  const { isInverted } = useHudPower();
   const { navigateTo } = useTransition();
   const tCommon = useTranslations('common');
   const tNav = useTranslations('nav');

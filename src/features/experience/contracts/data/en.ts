@@ -1,13 +1,12 @@
 import type { ExperienceItem } from '@/shared/types';
-import { gallery } from '@/shared/lib/cdn';
+import { experienceSourceFields } from '@/features/assets/contracts/source-manifest';
 
 // ============================================================
 // Timeline
 // ============================================================
 export const experienceData: ExperienceItem[] = [
   {
-    id: 'highschool',
-    type: 'education',
+    ...experienceSourceFields('highschool'),
     duration: '2019 - 2025',
     title: 'High School Years',
     location: 'Suqian No. 1 Senior High School',
@@ -16,14 +15,9 @@ export const experienceData: ExperienceItem[] = [
       'That period felt like building basic infrastructure: knowledge, habits, taste, and self-learning slowly took shape.',
     ],
     alignment: 'right',
-    galleryImages: [
-      { src: gallery('highschool-gallery-1.jpg') },
-      { src: gallery('highschool-gallery-2.jpg') },
-    ],
   },
   {
-    id: 'university',
-    type: 'education',
+    ...experienceSourceFields('university'),
     duration: '2025 - Present',
     title: 'University Life',
     location: 'Jiangsu University',
@@ -33,19 +27,9 @@ export const experienceData: ExperienceItem[] = [
       'Zhenjiang is my temporary home, and also the place where many records began settling into Arsvine Realm.',
     ],
     alignment: 'left',
-    galleryImages: [
-      { src: gallery('university-gallery-1.jpg') },
-      { src: gallery('university-gallery-2.jpg') },
-      { src: gallery('photo-ujs-1.webp') },
-      { src: gallery('photo-ujs-2.webp') },
-      { src: gallery('photo-ujs-3.webp') },
-      { src: gallery('photo-ujs-4.webp') },
-      { src: gallery('photo-ujs-5.webp') },
-    ],
   },
   {
-    id: 'rhodes-island',
-    type: 'work',
+    ...experienceSourceFields('rhodes-island'),
     duration: 'Long-term onboard',
     title: 'Rhodes Island Record',
     location: 'Arknights · Rhodes Island',
@@ -55,6 +39,5 @@ export const experienceData: ExperienceItem[] = [
       'To me, it works more like a spiritual coordinate: maintaining order, ideals, and a stubborn engineering spirit inside a chaotic world.',
     ],
     alignment: 'left',
-    galleryImages: [],
   },
 ];

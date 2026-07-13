@@ -6,7 +6,7 @@ import Noise from '../../hud/ui/effects/Noise';
 import { siteConfig } from '@/shared/config/site';
 import { defaultLocale, isLocale } from '@/shared/contracts/locale';
 import { useTransition } from '../../navigation/model/TransitionProvider';
-import { useHud } from '../../hud/model/HudProvider';
+import { useHudPerformance, useHudStats } from '../../hud/model/HudProvider';
 import { useSiteAssets } from '../../assets/model/SiteAssetsProvider';
 import useVisitorLanguageCode from '@/shared/hooks/useVisitorLanguageCode';
 import type { RefObject } from 'react';
@@ -23,7 +23,8 @@ export default function AboutSection({
   const t = useTranslations('sections.about');
   const router = useRouter();
   const { navigateTo } = useTransition();
-  const { runtime, currentVisitDuration, allowDecorativeMotion } = useHud();
+  const { runtime, currentVisitDuration } = useHudStats();
+  const { allowDecorativeMotion } = useHudPerformance();
   const { getSiteAssetUrl } = useSiteAssets();
   const visitorLanguageCode = useVisitorLanguageCode();
   const queryLocale = router.query.locale;

@@ -11,6 +11,7 @@ const originalHardwareConcurrencyDescriptor = Object.getOwnPropertyDescriptor(wi
 
 let nextRafId = 0;
 let rafCallbacks: Map<number, FrameRequestCallback>;
+let currentTimestamp = 0;
 
 class MockMediaQueryList {
   readonly media: string;
@@ -78,11 +79,26 @@ function flushNextAnimationFrame(timestamp: number) {
   });
 }
 
+function flushPoorWindow() {
+  for (let frame = 0; frame < 64; frame += 1) {
+    currentTimestamp += 40;
+    flushNextAnimationFrame(currentTimestamp);
+  }
+}
+
+function flushHealthyWindow() {
+  for (let frame = 0; frame < 121; frame += 1) {
+    currentTimestamp += 16;
+    flushNextAnimationFrame(currentTimestamp);
+  }
+}
+
 beforeEach(() => {
   matchesByQuery.clear();
   listenersByQuery.clear();
   rafCallbacks = new Map();
   nextRafId = 0;
+  currentTimestamp = 0;
 
   vi.stubGlobal('matchMedia', (query: string) => new MockMediaQueryList(query));
   vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
@@ -99,6 +115,8 @@ beforeEach(() => {
   setNavigatorProperty('deviceMemory', 8);
   setNavigatorProperty('hardwareConcurrency', 8);
   document.documentElement.removeAttribute('data-performance-tier');
+  document.documentElement.removeAttribute('data-logo-effects');
+  document.documentElement.removeAttribute('data-custom-cursor');
 });
 
 afterEach(() => {
@@ -107,6 +125,8 @@ afterEach(() => {
   restoreNavigatorProperty('deviceMemory', originalDeviceMemoryDescriptor);
   restoreNavigatorProperty('hardwareConcurrency', originalHardwareConcurrencyDescriptor);
   document.documentElement.removeAttribute('data-performance-tier');
+  document.documentElement.removeAttribute('data-logo-effects');
+  document.documentElement.removeAttribute('data-custom-cursor');
 });
 
 describe('useAdaptivePerformance', () => {
@@ -126,7 +146,7 @@ describe('useAdaptivePerformance', () => {
 
     const { result } = renderHook(() => useAdaptivePerformance(false));
 
-    expect(result.current.performanceTier).toBe('reduced');
+    expect(result.current.performanceTier).toBe('motion-reduced');
     expect(result.current.performanceReason).toBe('device-heuristic');
   });
 
@@ -135,7 +155,7 @@ describe('useAdaptivePerformance', () => {
 
     const { result } = renderHook(() => useAdaptivePerformance(false));
 
-    expect(result.current.performanceTier).toBe('reduced');
+    expect(result.current.performanceTier).toBe('motion-reduced');
     expect(result.current.performanceReason).toBe('device-heuristic');
   });
 
@@ -144,22 +164,76 @@ describe('useAdaptivePerformance', () => {
 
     const { result } = renderHook(() => useAdaptivePerformance(false));
 
-    expect(result.current.performanceTier).toBe('balanced');
+    expect(result.current.performanceTier).toBe('logo-reduced');
     expect(result.current.performanceReason).toBe('device-heuristic');
   });
 
-  it('reduces after runtime FPS sampling on weak frame pacing', () => {
+  it('uses the first poor window exclusively for logo effects', () => {
     const { result } = renderHook(() => useAdaptivePerformance(true));
 
     expect(result.current.performanceTier).toBe('full');
+    flushPoorWindow();
 
-    flushNextAnimationFrame(0);
-    for (let frame = 1; frame <= 127; frame += 1) {
-      flushNextAnimationFrame(frame * 40);
+    expect(result.current).toMatchObject({
+      performanceTier: 'logo-reduced',
+      performanceReason: 'runtime-fps',
+      allowLogoEffects: false,
+      allowAmbientWebGL: true,
+      allowHeavyCssEffects: true,
+      allowDecorativeMotion: true,
+      allowInteractiveWebGL: true,
+      allowCustomCursor: true,
+    });
+    expect(document.documentElement.getAttribute('data-performance-tier')).toBe('logo-reduced');
+    expect(document.documentElement.getAttribute('data-logo-effects')).toBe('off');
+    expect(document.documentElement.getAttribute('data-custom-cursor')).toBe('on');
+  });
+
+  it('degrades one capability group at a time after the logo stage', () => {
+    const { result } = renderHook(() => useAdaptivePerformance(true));
+
+    flushPoorWindow();
+    expect(result.current.performanceTier).toBe('logo-reduced');
+
+    const expectedStages = [
+      ['ambient-reduced', 'allowAmbientWebGL'],
+      ['css-reduced', 'allowHeavyCssEffects'],
+      ['motion-reduced', 'allowDecorativeMotion'],
+      ['webgl-reduced', 'allowInteractiveWebGL'],
+      ['minimal', 'allowCustomCursor'],
+    ] as const;
+
+    for (const [tier, disabledCapability] of expectedStages) {
+      flushPoorWindow();
+      flushPoorWindow();
+      expect(result.current.performanceTier).toBe(tier);
+      expect(result.current[disabledCapability]).toBe(false);
+      if (tier === 'webgl-reduced') expect(result.current.allowCustomCursor).toBe(true);
     }
+  });
 
-    expect(result.current.performanceTier).toBe('balanced');
+  it('recovers only to the session-level logo ceiling', () => {
+    const { result } = renderHook(() => useAdaptivePerformance(true));
+
+    flushPoorWindow();
+    flushPoorWindow();
+    flushPoorWindow();
+    expect(result.current.performanceTier).toBe('ambient-reduced');
+
+    for (let window = 0; window < 8; window += 1) flushHealthyWindow();
+    expect(result.current.performanceTier).toBe('logo-reduced');
     expect(result.current.performanceReason).toBe('runtime-fps');
+
+    for (let window = 0; window < 8; window += 1) flushHealthyWindow();
+    expect(result.current.performanceTier).toBe('logo-reduced');
+  });
+
+  it('cancels frame sampling on unmount', () => {
+    const { unmount } = renderHook(() => useAdaptivePerformance(true));
+    expect(rafCallbacks.size).toBe(1);
+    unmount();
+
+    expect(rafCallbacks.size).toBe(0);
   });
 
   it('stays reduced after the triggering condition goes away', () => {

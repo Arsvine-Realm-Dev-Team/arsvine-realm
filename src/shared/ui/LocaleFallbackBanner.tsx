@@ -6,6 +6,7 @@
  *  - status='source'      原文 locale，不渲染
  */
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import styles from './LocaleFallbackBanner.module.scss';
 import { localeNativeName, type Locale } from '@/shared/contracts/locale';
 import type { TranslationStatus } from '@/shared/types';
@@ -22,46 +23,6 @@ interface Props {
 const FALLBACK_AUTO_DISMISS_MS = 30000;
 const TRANSLATED_AUTO_DISMISS_MS = 5000;
 const EXIT_ANIMATION_MS = 240;
-
-const FALLBACK_TEXT: Record<Locale, (requested: string, actual: string) => string> = {
-  'zh-CN': (req, act) => `本页暂未提供 ${req} 译本，正在以 ${act} 显示。`,
-  'zh-TW': (req, act) => `本頁尚未提供 ${req} 譯本，目前以 ${act} 顯示。`,
-  en: (req, act) => `This page is not yet available in ${req}. Showing ${act} instead.`,
-};
-
-const TRANSLATED_TEXT: Record<Locale, (origin: string) => string> = {
-  'zh-CN': (origin) => `本页内容译自${origin}。`,
-  'zh-TW': (origin) => `本頁內容譯自${origin}。`,
-  en: (origin) => `This page is translated from ${origin}.`,
-};
-
-const CLOSE_LABEL: Record<Locale, string> = {
-  'zh-CN': '关闭提示',
-  'zh-TW': '關閉提示',
-  en: 'Dismiss notice',
-};
-
-export function resolveLocaleFallbackBannerText(
-  requestedLocale: Locale,
-  actualLocale: Locale,
-  originLocale: Locale,
-  status: Exclude<TranslationStatus, 'source'>,
-) {
-  switch (requestedLocale) {
-    case 'zh-CN':
-      return status === 'fallback'
-        ? FALLBACK_TEXT['zh-CN'](localeNativeName['zh-CN'], localeNativeName[actualLocale])
-        : TRANSLATED_TEXT['zh-CN'](localeNativeName[originLocale]);
-    case 'zh-TW':
-      return status === 'fallback'
-        ? FALLBACK_TEXT['zh-TW'](localeNativeName['zh-TW'], localeNativeName[actualLocale])
-        : TRANSLATED_TEXT['zh-TW'](localeNativeName[originLocale]);
-    case 'en':
-      return status === 'fallback'
-        ? FALLBACK_TEXT.en(localeNativeName.en, localeNativeName[actualLocale])
-        : TRANSLATED_TEXT.en(localeNativeName[originLocale]);
-  }
-}
 
 export default function LocaleFallbackBanner({ requestedLocale, actualLocale, originLocale, status }: Props) {
   // 显式 status 优先；缺省时按旧逻辑兼容（防止旧调用方一次性全断）。
@@ -90,6 +51,7 @@ interface ContentProps {
 }
 
 function LocaleFallbackBannerContent({ requestedLocale, actualLocale, originLocale, status }: ContentProps) {
+  const t = useTranslations('fallbackBanner');
   const [isVisible, setIsVisible] = useState(true);
   const [isClosing, setIsClosing] = useState(false);
 
@@ -112,7 +74,12 @@ function LocaleFallbackBannerContent({ requestedLocale, actualLocale, originLoca
 
   if (!isVisible) return null;
 
-  const text = resolveLocaleFallbackBannerText(requestedLocale, actualLocale, originLocale, status);
+  const text = status === 'fallback'
+    ? t('fallback', {
+        requested: localeNativeName[requestedLocale],
+        actual: localeNativeName[actualLocale],
+      })
+    : t('translated', { origin: localeNativeName[originLocale] });
 
   const variantClass = status === 'fallback' ? styles.fallback : styles.translated;
   const icon = status === 'fallback' ? '⚠' : 'ℹ';
@@ -127,7 +94,7 @@ function LocaleFallbackBannerContent({ requestedLocale, actualLocale, originLoca
         type="button"
         className={styles.closeButton}
         onClick={dismiss}
-        aria-label={CLOSE_LABEL[requestedLocale]}
+        aria-label={t('dismiss')}
       >
         ×
       </button>

@@ -8,7 +8,7 @@ ARSVINE REALM is a personal portfolio and blog site built around a post-apocalyp
 
 - **Project type:** personal site, not a generic template
 - **Owner:** Arsvine Zhu
-- **Stack:** Next.js 16 Pages Router, React 19, TypeScript, SCSS Modules, Three.js, GSAP, MDX, `next-intl` 4, Vitest, custom Node.js server
+- **Stack:** Next.js 16 Pages Router, React 19, TypeScript, SCSS Modules, Three.js, GSAP, MDX, `next-intl` 4, Vitest. Production runs on Vercel using the standard Next.js build output. `server.js` is the local-development and optional self-hosted entry.
 - **Runtime target:** Node.js `24.x`
 - **UI locales:** `zh-CN`, `zh-TW`, `en`
 - **Public route shape:** `/<locale>/...`
@@ -82,7 +82,7 @@ src/features/        # feature UI, state, server loaders/contracts/styles and pu
 public/              # static assets, icons, local music test folder
 scripts/             # image, font, favicon, and local-host helpers
 src/shared/          # cross-feature hooks, UI primitives, server adapters, types and styles
-server.js            # custom Next.js server
+server.js            # local-development / optional self-hosted entry; not used by Vercel
 ```
 
 ## Configuration entry points
@@ -97,9 +97,13 @@ Routine maintenance should start from data/config files rather than component lo
 
 ## Deployment
 
+The project is deployed on Vercel. Vercel builds with `next build` and runs the standard Next.js build output — `server.js` is **not** invoked in production. To deploy, push to the connected branch; Vercel handles the rest. Make sure the Vercel project's Node.js setting matches `package.json`'s `engines.node` (`24.x`).
+
+For self-hosted deployments, use `server.js`:
+
 ```bash
 pnpm build
-pnpm start
+pnpm start          # cross-env NODE_ENV=production node server.js
 ```
 
 Or with a process manager:
@@ -108,14 +112,12 @@ Or with a process manager:
 pm2 start server.js --name arsvine-realm
 ```
 
-Set at least:
+Set at minimum:
 
 ```env
 NODE_ENV=production
 NEXT_PUBLIC_SITE_URL=https://arsvine.com
 ```
-
-For Vercel, keep the Node.js setting aligned with `package.json`'s `engines.node` value: `24.x`.
 
 ## License and content policy
 

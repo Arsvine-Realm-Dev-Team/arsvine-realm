@@ -3,7 +3,7 @@ import Head from 'next/head';
 import { useTranslations } from 'next-intl';
 import styles from '../../../shared/ui/detail/StandaloneDetailView.module.scss';
 import hudStyles from '../../../app/styles/Shell.module.scss';
-import { useHud } from '../../../features/hud/model/HudProvider';
+import { useHudPower } from '../../../features/hud/model/HudProvider';
 import { useTransition } from '../../../features/navigation/model/TransitionProvider';
 import LazyImage from '../../../shared/ui/LazyImage';
 import Lightbox from '../../../shared/ui/Lightbox';
@@ -64,7 +64,7 @@ function LifeDetailContent({
   actualLocale,
   originLocale,
 }: Omit<LifeDetailPageProps, 'messages'>) {
-  const { isInverted } = useHud();
+  const { isInverted } = useHudPower();
   const { navigateTo } = useTransition();
   const tCommon = useTranslations('common');
   const tNav = useTranslations('nav');

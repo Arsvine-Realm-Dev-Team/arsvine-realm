@@ -4,7 +4,10 @@ import {
   classifyRoutePathname,
   createContentHashNavigationRequest,
   getContentSectionHashFromUrl,
+  isBlogDetailUrl,
+  isHomeUrl,
   resolveContentHashTransitionMode,
+  resolveNavigationTransitionPlan,
 } from '@/features/navigation/model/contentHashNavigation';
 
 describe('getContentSectionHashFromUrl', () => {
@@ -53,5 +56,27 @@ describe('createContentHashNavigationRequest', () => {
     const request = createContentHashNavigationRequest('life');
     expect(request.hash).toBe('life');
     expect(request.requestId).toMatch(/^content-hash-\d+$/);
+  });
+});
+
+describe('resolveNavigationTransitionPlan', () => {
+  it.each([
+    ['/[locale]/content', '/en/content#life', false, 'samePageHash'],
+    ['/[locale]', '/en/content#life', false, 'homeForwardDesktop'],
+    ['/[locale]', '/en/content#life', true, 'homeForwardMobile'],
+    ['/[locale]/friends', '/en/content#life', false, 'crossPageHash'],
+    ['/[locale]/friends', '/en', false, 'returnHomeDesktop'],
+    ['/[locale]/friends', '/en', true, 'returnHomeMobile'],
+    ['/[locale]/friends', '/en/blog/init', false, 'blogDetailFade'],
+    ['/[locale]/friends', '/en/tweets', false, 'standardSlide'],
+  ] as const)('maps %s -> %s to %s', (sourcePathname, targetUrl, mobile, expected) => {
+    expect(resolveNavigationTransitionPlan({ sourcePathname, targetUrl, mobile })).toBe(expected);
+  });
+
+  it('classifies target URLs without relying on regex fragments', () => {
+    expect(isHomeUrl('/zh-CN?ref=nav')).toBe(true);
+    expect(isHomeUrl('/zh-CN/content')).toBe(false);
+    expect(isBlogDetailUrl('/zh-CN/blog/init?locale=en')).toBe(true);
+    expect(isBlogDetailUrl('/zh-CN/blog')).toBe(false);
   });
 });

@@ -1,18 +1,16 @@
 import { createContext, useContext, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useHud } from '../../../features/hud/model/HudProvider';
+import { useHudAnimation } from '../../../features/hud/model/HudProvider';
 import { useResponsive } from '@/shared/hooks/useMediaQuery';
 import {
-  clearPendingContentHashNavigation,
-  CONTENT_HASH_SCROLL_COMPLETE_EVENT,
-  CONTENT_HASH_SCROLL_EVENT,
   createContentHashNavigationRequest,
   type ContentHashNavigationRequest,
-  classifyRoutePathname,
   getContentSectionHashFromUrl,
-  resolveContentHashTransitionMode,
-  setPendingContentHashNavigation,
+  isHomeUrl,
+  resolveNavigationTransitionPlan,
 } from './contentHashNavigation';
+import { AnimationRunController } from './animationRunController';
+import { useLayoutAnchors } from './LayoutAnchorsContext';
 
 interface TransitionContextValue {
   navigateTo: (url: string, options?: { scroll?: boolean }) => void;
@@ -81,41 +79,16 @@ const checkMobile = () => {
 
 export function TransitionProvider({ children, pageWrapperRef }: TransitionProviderProps) {
   const router = useRouter();
-  const { retractColumns, expandColumns } = useHud();
+  const { retractColumns, expandColumns } = useHudAnimation();
   const { isMobile: hookIsMobile } = useResponsive();
-  const isTransitioning = useRef(false);
-  const queuedNav = useRef<{ url: string; options?: { scroll?: boolean } } | null>(null);
+  const { align: alignContentHash, cancel: cancelContentHashAlignment } = useLayoutAnchors();
+  const runControllerRef = useRef(new AnimationRunController());
   const backOverrideRef = useRef<(() => void) | null>(null);
-  const activeAnim = useRef<Animation | null>(null);
   const navigateToRef = useRef<((url: string, options?: { scroll?: boolean }) => void) | null>(null);
-  // 收集所有"未完成的兜底 timeout / 一次性 transitionend 监听器"，
-  // 让 cleanup 与新一轮 navigateTo 都能取消上一次遗留的副作用，避免 setState-after-unmount
-  // 与"双闪烁"竞态。每一项都包括 clear/remove 自身的逻辑，即可调用即可清理。
-  const pendingCleanupsRef = useRef<Array<() => void>>([]);
-
-  const runPendingCleanups = useCallback(() => {
-    const cleanups = pendingCleanupsRef.current;
-    pendingCleanupsRef.current = [];
-    for (const cleanup of cleanups) {
-      try {
-        cleanup();
-      } catch {
-        // 单个清理失败不影响其他
-      }
-    }
-  }, []);
-
-  const cancelActiveAnim = () => {
-    if (activeAnim.current) {
-      activeAnim.current.cancel();
-      activeAnim.current = null;
-    }
-  };
 
   const processQueue = () => {
-    if (queuedNav.current && navigateToRef.current) {
-      const nextNav = queuedNav.current;
-      queuedNav.current = null;
+    const nextNav = runControllerRef.current.complete();
+    if (nextNav && navigateToRef.current) {
       // Use setTimeout to avoid synchronous nested calls
       setTimeout(() => {
         navigateToRef.current?.(nextNav.url, nextNav.options);
@@ -123,149 +96,95 @@ export function TransitionProvider({ children, pageWrapperRef }: TransitionProvi
     }
   };
 
-  const dispatchContentHashScroll = useCallback((request: ContentHashNavigationRequest | null) => {
-    if (!request || typeof window === 'undefined') {
-      return;
-    }
-
-    window.dispatchEvent(new CustomEvent(CONTENT_HASH_SCROLL_EVENT, {
-      detail: request,
-    }));
-  }, []);
-
   const revealAfterContentHashAligned = useCallback((
     request: ContentHashNavigationRequest,
     onAligned: () => void,
   ) => {
-    if (typeof window === 'undefined') {
-      clearPendingContentHashNavigation();
-      onAligned();
-      return;
-    }
-
-    let settled = false;
-    let fallbackId: number | null = null;
-
-    const cleanup = () => {
-      window.removeEventListener(CONTENT_HASH_SCROLL_COMPLETE_EVENT, handleAligned as EventListener);
-      if (fallbackId !== null) {
-        window.clearTimeout(fallbackId);
-        fallbackId = null;
-      }
-      pendingCleanupsRef.current = pendingCleanupsRef.current.filter((item) => item !== cleanup);
-    };
-
-    const settle = () => {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      cleanup();
-      clearPendingContentHashNavigation();
-      onAligned();
-    };
-
-    const handleAligned = (event: Event) => {
-      const detail = (event as CustomEvent<ContentHashNavigationRequest>).detail;
-      if (detail?.hash !== request.hash || detail?.requestId !== request.requestId) {
-        return;
-      }
-      settle();
-    };
-
-    window.addEventListener(CONTENT_HASH_SCROLL_COMPLETE_EVENT, handleAligned as EventListener);
-    fallbackId = window.setTimeout(settle, 900);
-    pendingCleanupsRef.current.push(cleanup);
-    dispatchContentHashScroll(request);
-  }, [dispatchContentHashScroll]);
+    void alignContentHash(request).then((result) => {
+      if (result !== 'cancelled') onAligned();
+    });
+  }, [alignContentHash]);
 
   const navigateTo = useCallback((url: string, options?: { scroll?: boolean }) => {
-    const contentHashTransitionMode = resolveContentHashTransitionMode(router.pathname, url);
-    if (contentHashTransitionMode === 'same-page') {
+    const mobile = hookIsMobile || checkMobile();
+    const transitionPlan = resolveNavigationTransitionPlan({
+      sourcePathname: router.pathname,
+      targetUrl: url,
+      mobile,
+    });
+    if (transitionPlan === 'samePageHash') {
       router.push(url, undefined, { scroll: false, ...options });
       return;
     }
 
-    if (isTransitioning.current) {
-      // If returning to the same URL we are currently transitioning to, ignore.
-      queuedNav.current = { url, options };
+    if (!runControllerRef.current.startOrQueue({ url, options })) {
       return;
     }
 
     const wrapper = pageWrapperRef.current;
     if (!wrapper) {
+      runControllerRef.current.cancel();
       router.push(url, undefined, { scroll: false, ...options });
       return;
     }
 
-    isTransitioning.current = true;
-    queuedNav.current = null;
-    cancelActiveAnim();
     const targetContentHash = getContentSectionHashFromUrl(url);
     const contentHashRequest = targetContentHash
       ? createContentHashNavigationRequest(targetContentHash)
       : null;
-    setPendingContentHashNavigation(contentHashRequest);
-    // 新一轮转场开始前，清掉上一轮遗留的兜底 timer / 监听（理论上应已自清，
-    // 这里是防御性保险），避免上一轮 onFadeIn 在新 wrapper 状态上误触发。
-    runPendingCleanups();
-    const currentRouteKind = classifyRoutePathname(router.pathname);
-    const goingContentHashCrossPage = contentHashTransitionMode === 'cross-page';
-    // 目标是 home 的判定：URL 形如 /<locale> 或 /<locale>/
-    const goingHome = /^\/[A-Za-z-]+\/?$/.test(url);
-    // 目标是博客详情页：URL 形如 /<locale>/blog/<slug>
-    const goingBlogDetail = /^\/[A-Za-z-]+\/blog\/[^/]+/.test(url);
 
     const pushThen = (target: string, cb: () => void, pushOpts?: { scroll?: boolean }) => {
-      const onComplete = () => {
+      let removeCleanup = () => false;
+      const cleanup = () => {
         router.events.off('routeChangeComplete', onComplete);
+        removeCleanup();
+      };
+      const onComplete = () => {
+        cleanup();
         cb();
       };
       router.events.on('routeChangeComplete', onComplete);
-      router.push(target, undefined, { scroll: false, ...pushOpts });
+      removeCleanup = runControllerRef.current.addCleanup(cleanup);
+      void Promise.resolve(router.push(target, undefined, { scroll: false, ...pushOpts })).catch(() => {
+        cleanup();
+        processQueue();
+      });
     };
 
     const wapiSlideIn = () => {
       const anim = wrapper.animate(SLIDE_IN_KF, SLIDE_IN_OPTS);
-      activeAnim.current = anim;
+      runControllerRef.current.setAnimation(anim);
       anim.finished.then(() => {
         wrapper.style.opacity = '';
         wrapper.style.transform = '';
         anim.cancel();
-        activeAnim.current = null;
-        isTransitioning.current = false;
         processQueue();
       }).catch(() => {});
     };
-
-    const mobile = hookIsMobile || checkMobile();
 
     const wapiDiagExpand = () => {
       wrapper.style.opacity = '';
       const anim = wrapper.animate(DIAG_EXPAND_KF, DIAG_EXPAND_OPTS);
-      activeAnim.current = anim;
+      runControllerRef.current.setAnimation(anim);
       anim.finished.then(() => {
         wrapper.style.clipPath = '';
         wrapper.style.transform = '';
         anim.cancel();
-        activeAnim.current = null;
-        isTransitioning.current = false;
         processQueue();
       }).catch(() => {});
     };
 
-    if (currentRouteKind === 'home' && !goingHome) {
-      if (mobile) {
+    if (transitionPlan === 'homeForwardMobile' || transitionPlan === 'homeForwardDesktop') {
+      if (transitionPlan === 'homeForwardMobile') {
         // Mobile forward: diagonal collapse home → push → diagonal expand content
         retractColumns(() => {});
         const anim = wrapper.animate(DIAG_COLLAPSE_KF, DIAG_COLLAPSE_OPTS);
-        activeAnim.current = anim;
+        runControllerRef.current.setAnimation(anim);
         anim.finished.then(() => {
           anim.cancel();
-          activeAnim.current = null;
           wrapper.style.clipPath = 'inset(100%)';
           pushThen(url, () => {
-            if (goingContentHashCrossPage && contentHashRequest) {
+            if (contentHashRequest) {
               revealAfterContentHashAligned(contentHashRequest, wapiDiagExpand);
               return;
             }
@@ -278,7 +197,7 @@ export function TransitionProvider({ children, pageWrapperRef }: TransitionProvi
         retractColumns(() => {
           wrapper.style.opacity = '0';
           pushThen(url, () => {
-            if (goingContentHashCrossPage && contentHashRequest) {
+            if (contentHashRequest) {
               revealAfterContentHashAligned(contentHashRequest, wapiSlideIn);
               return;
             }
@@ -287,12 +206,11 @@ export function TransitionProvider({ children, pageWrapperRef }: TransitionProvi
           }, options);
         });
       }
-    } else if (currentRouteKind !== 'home' && goingContentHashCrossPage) {
+    } else if (transitionPlan === 'crossPageHash') {
       const outAnim = wrapper.animate(SLIDE_OUT_KF, SLIDE_OUT_OPTS);
-      activeAnim.current = outAnim;
+      runControllerRef.current.setAnimation(outAnim);
       outAnim.finished.then(() => {
         outAnim.cancel();
-        activeAnim.current = null;
         wrapper.style.opacity = '0';
         pushThen(url, () => {
           if (contentHashRequest) {
@@ -303,14 +221,13 @@ export function TransitionProvider({ children, pageWrapperRef }: TransitionProvi
           wapiSlideIn();
         }, options);
       }).catch(() => {});
-    } else if (currentRouteKind !== 'home' && goingHome) {
-      if (mobile) {
+    } else if (transitionPlan === 'returnHomeMobile' || transitionPlan === 'returnHomeDesktop') {
+      if (transitionPlan === 'returnHomeMobile') {
         // Mobile back: diagonal collapse content → push home → diagonal expand home
         const anim = wrapper.animate(DIAG_COLLAPSE_KF, DIAG_COLLAPSE_OPTS);
-        activeAnim.current = anim;
+        runControllerRef.current.setAnimation(anim);
         anim.finished.then(() => {
           anim.cancel();
-          activeAnim.current = null;
           wrapper.style.clipPath = 'inset(100%)';
           pushThen(url, () => {
             expandColumns();
@@ -320,21 +237,19 @@ export function TransitionProvider({ children, pageWrapperRef }: TransitionProvi
       } else {
         // Desktop back: slide out → push home → expand columns
         const anim = wrapper.animate(SLIDE_OUT_KF, SLIDE_OUT_OPTS);
-        activeAnim.current = anim;
+        runControllerRef.current.setAnimation(anim);
         anim.finished.then(() => {
           anim.cancel();
-          activeAnim.current = null;
           wrapper.style.opacity = '0';
           pushThen(url, () => {
             wrapper.style.opacity = '';
             expandColumns(() => {
-              isTransitioning.current = false;
               processQueue();
             });
           });
         }).catch(() => {});
       }
-    } else if (goingBlogDetail) {
+    } else if (transitionPlan === 'blogDetailFade') {
       // Blog detail: push immediately so the URL changes first, then fade once the target is ready.
       wrapper.style.transition = 'opacity 0.3s ease-out';
       wrapper.style.opacity = '0';
@@ -342,39 +257,19 @@ export function TransitionProvider({ children, pageWrapperRef }: TransitionProvi
         wrapper.style.transition = 'opacity 0.4s ease-in';
         wrapper.style.opacity = '1';
 
-        // transitionend + 500ms 兜底 timer 双保险，但只能跑一次；
-        // 哪一边先到，就把另一边连带这个清理项一起从 pending 队列里摘掉，
-        // 避免组件卸载或新一轮 navigateTo 来时旧 timer/listener 仍在飞。
-        let fired = false;
-        let fallbackId: number | null = null;
-        const cleanup = () => {
-          wrapper.removeEventListener('transitionend', onFadeIn);
-          if (fallbackId !== null) {
-            window.clearTimeout(fallbackId);
-            fallbackId = null;
-          }
-          pendingCleanupsRef.current = pendingCleanupsRef.current.filter((c) => c !== cleanup);
-        };
         const onFadeIn = () => {
-          if (fired) return;
-          fired = true;
-          cleanup();
           wrapper.style.transition = '';
           wrapper.style.opacity = '';
-          isTransitioning.current = false;
           processQueue();
         };
-        wrapper.addEventListener('transitionend', onFadeIn, { once: true });
-        fallbackId = window.setTimeout(onFadeIn, 500);
-        pendingCleanupsRef.current.push(cleanup);
+        runControllerRef.current.waitForTransition(wrapper, 500, onFadeIn);
       }, options);
     } else {
       // Other: WAAPI slide out → push → WAAPI slide in
       const outAnim = wrapper.animate(SLIDE_OUT_KF, SLIDE_OUT_OPTS);
-      activeAnim.current = outAnim;
+      runControllerRef.current.setAnimation(outAnim);
       outAnim.finished.then(() => {
         outAnim.cancel();
-        activeAnim.current = null;
         wrapper.style.opacity = '0';
         pushThen(url, wapiSlideIn, options);
       }).catch(() => {});
@@ -384,7 +279,6 @@ export function TransitionProvider({ children, pageWrapperRef }: TransitionProvi
     pageWrapperRef,
     retractColumns,
     expandColumns,
-    runPendingCleanups,
     hookIsMobile,
     revealAfterContentHashAligned,
   ]);
@@ -397,18 +291,18 @@ export function TransitionProvider({ children, pageWrapperRef }: TransitionProvi
   // 卸载时清理任何未完成的兜底 timer / transitionend 监听，避免在已 stale 的
   // wrapper / state 上触发副作用（"导航卡死 / 双闪烁"竞态来源之一）。
   useEffect(() => {
+    const runController = runControllerRef.current;
     return () => {
-      clearPendingContentHashNavigation();
-      runPendingCleanups();
-      cancelActiveAnim();
+      cancelContentHashAlignment();
+      runController.cancel();
     };
-  }, [runPendingCleanups]);
+  }, [cancelContentHashAlignment]);
 
   // Handle browser back/forward navigation (popstate) that bypasses navigateTo
   useEffect(() => {
     const handleRouteChange = (url: string) => {
       // 任何形如 /<locale> 的 URL 都视为 home，触发列展开
-      if (/^\/[A-Za-z-]+\/?$/.test(url) && !isTransitioning.current) {
+      if (isHomeUrl(url) && !runControllerRef.current.isRunning()) {
         expandColumns();
       }
     };

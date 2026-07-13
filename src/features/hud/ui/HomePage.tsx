@@ -3,7 +3,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import type { GetStaticPaths, GetStaticProps } from 'next';
 import { useTranslations } from 'next-intl';
-import { useHud } from '../model/HudProvider';
+import { useHudAnimation, useHudColumnHover, useHudPower } from '../model/HudProvider';
 import { useTransition } from '../../navigation/model/TransitionProvider';
 import NavigationColumns from './layout/NavigationColumns';
 import HreflangLinks from '../../../shared/ui/HreflangLinks';
@@ -22,10 +22,13 @@ export default function Home({ locale }: HomeProps) {
   const tSite = useTranslations('pages.site');
   const {
     linesAnimated, pulsingNormalIndices, pulsingReverseIndices,
-    textVisible, animationsComplete, isInverted, columnPhase,
+    textVisible, animationsComplete, columnPhase,
+  } = useHudAnimation();
+  const { isInverted } = useHudPower();
+  const {
     randomHudTexts, branchText1, branchText2, branchText3, branchText4,
     handleColumnMouseEnter, handleColumnMouseLeave,
-  } = useHud();
+  } = useHudColumnHover();
 
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production') {

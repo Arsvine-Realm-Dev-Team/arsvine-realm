@@ -1,5 +1,5 @@
 import type { FriendLink } from '@/shared/types';
-import { avatar } from '@/shared/lib/cdn';
+import { friendLinkSourceFields } from '@/features/assets/contracts/source-manifest';
 
 export const friendLinksData: FriendLink[] = [
   {
@@ -31,18 +31,14 @@ export const friendLinksData: FriendLink[] = [
     avatar: 'https://avatars.fastly.steamstatic.com/3e5e7c5da4fe573703b5edc1ea27f85e0687371c_full.jpg',
   },
   {
-    id: '小宁arning',
+    ...friendLinkSourceFields('arning'),
     name: '小宁arning',
     description: 'Shared a lot of photography material with me. Respect.',
-    url: 'https://space.bilibili.com/22792017',
-    avatar: avatar('avatar-arning-1.webp'),
   },
   {
-    id: 'may_rain',
+    ...friendLinkSourceFields('may-rain'),
     name: '梅莉薇尔·伊芙利特',
     description: 'Maybe I can leave this blank',
-    url: 'https://space.bilibili.com/168753059',
-    avatar: avatar('avatar-may-rain-1.webp'),
   },
   {
     id: 'Lyric_Epic',

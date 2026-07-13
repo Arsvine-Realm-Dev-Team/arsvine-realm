@@ -1,10 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { createActor, fromPromise } from 'xstate';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
-  blogPostStateReducer,
-  createInitialBlogPostState,
+  blogPostMachine,
   shouldSuppressFallbackBanner,
+  type BlogPostArticleInput,
 } from '@/features/blog/model/blogPostState';
+import type { BlogVariantPayload } from '@/features/blog/model/blogClient';
+import type { BlogContentLocale } from '@/features/blog/server/blog';
 
 const variantPayload = {
   meta: {
@@ -19,84 +22,139 @@ const variantPayload = {
   mdxSource: { compiledSource: 'test', frontmatter: {}, scope: {} },
 };
 
-describe('blogPostStateReducer', () => {
-  it('resets article state when slug or route context changes', () => {
-    const initial = createInitialBlogPostState({
-      requestedContentLocale: 'en',
-      actualContentLocale: 'en',
-      requiresAuth: false,
-    });
-    const loading = blogPostStateReducer(initial, {
-      type: 'startVariantRequest',
-      requestKey: 'init:ja:granted',
-      locale: 'ja',
+function input(overrides: Partial<BlogPostArticleInput> = {}): BlogPostArticleInput {
+  return {
+    slug: 'init',
+    requestedContentLocale: 'en',
+    actualContentLocale: 'en',
+    requiresAuth: false,
+    hydrationReady: true,
+    variants: { en: variantPayload },
+    ...overrides,
+  };
+}
+
+describe('blogPostMachine', () => {
+  it('resets article state and enters auth checking for a protected article', () => {
+    const actor = createActor(blogPostMachine, { input: input() }).start();
+    expect(actor.getSnapshot().matches('ready')).toBe(true);
+
+    actor.send({
+      type: 'ARTICLE_CHANGED',
+      ...input({
+        slug: 'protected',
+        requestedContentLocale: 'zh-CN',
+        actualContentLocale: 'zh-CN',
+        requiresAuth: true,
+        accessGroup: 'friends',
+        variants: {},
+      }),
     });
 
-    const reset = blogPostStateReducer(loading, {
-      type: 'resetArticle',
-      requestedContentLocale: 'zh-CN',
-      actualContentLocale: 'zh-CN',
-      requiresAuth: true,
-    });
-
-    expect(reset.requestedContentLocale).toBe('zh-CN');
-    expect(reset.displayedContentLocale).toBe('zh-CN');
-    expect(reset.viewState).toBe('authChecking');
-    expect(reset.lazyVariants).toEqual({});
+    expect(actor.getSnapshot().matches('authChecking')).toBe(true);
+    expect(actor.getSnapshot().context.displayedContentLocale).toBe('zh-CN');
+    actor.stop();
   });
 
-  it('drops stale request results after a newer request becomes active', () => {
-    const initial = createInitialBlogPostState({
-      requestedContentLocale: 'en',
-      actualContentLocale: 'en',
-      requiresAuth: false,
+  it('cancels a stale variant actor when another locale is selected', async () => {
+    const aborted = vi.fn();
+    const machine = blogPostMachine.provide({
+      actors: {
+        loadVariant: fromPromise(async ({ input: actorInput, signal }) => {
+          signal.addEventListener('abort', aborted);
+          await new Promise(() => {});
+          return { ...variantPayload, meta: { ...variantPayload.meta, slug: actorInput.slug } };
+        }),
+      },
     });
+    const actor = createActor(machine, {
+      input: input({ requestedContentLocale: 'ja', variants: { en: variantPayload } }),
+    }).start();
 
-    const firstRequest = blogPostStateReducer(initial, {
-      type: 'startVariantRequest',
-      requestKey: 'init:ja:granted',
-      locale: 'ja',
-    });
-    const secondRequest = blogPostStateReducer(firstRequest, {
-      type: 'startVariantRequest',
-      requestKey: 'init:fr:granted',
-      locale: 'fr',
-    });
-    const staleResult = blogPostStateReducer(secondRequest, {
-      type: 'variantLoaded',
-      requestKey: 'init:ja:granted',
-      locale: 'ja',
-      payload: variantPayload,
-    });
+    expect(actor.getSnapshot().matches('loadingVariant')).toBe(true);
+    actor.send({ type: 'SELECT_LOCALE', locale: 'fr' });
+    await Promise.resolve();
 
-    expect(staleResult.activeRequestKey).toBe('init:fr:granted');
-    expect(staleResult.displayedContentLocale).toBe('en');
-    expect(staleResult.lazyVariants.ja).toBeUndefined();
+    expect(aborted).toHaveBeenCalledTimes(1);
+    expect(actor.getSnapshot().context.requestedContentLocale).toBe('fr');
+    actor.stop();
   });
 
-  it('falls back to authRequired on forbidden variant response', () => {
-    const initial = createInitialBlogPostState({
-      requestedContentLocale: 'en',
-      actualContentLocale: 'en',
-      requiresAuth: false,
+  it('returns to authRequired when the variant actor rejects with FORBIDDEN', async () => {
+    const machine = blogPostMachine.provide({
+      actors: {
+        loadVariant: fromPromise<BlogVariantPayload, { slug: string; locale: BlogContentLocale }>(async () => {
+          throw { code: 'FORBIDDEN', message: 'Access grant required.' };
+        }),
+      },
     });
-    const loading = blogPostStateReducer(initial, {
-      type: 'startVariantRequest',
-      requestKey: 'init:ja:granted',
-      locale: 'ja',
-    });
+    const actor = createActor(machine, {
+      input: input({ requestedContentLocale: 'ja', variants: { en: variantPayload } }),
+    }).start();
 
-    const forbidden = blogPostStateReducer(loading, {
-      type: 'variantFailed',
-      requestKey: 'init:ja:granted',
-      locale: 'ja',
-      code: 'FORBIDDEN',
-      message: 'Access grant required.',
-    });
+    await vi.waitFor(() => expect(actor.getSnapshot().matches('authRequired')).toBe(true));
+    expect(actor.getSnapshot().context.authState).toBe('required');
+    actor.stop();
+  });
 
-    expect(forbidden.authState).toBe('required');
-    expect(forbidden.viewState).toBe('authRequired');
-    expect(forbidden.loadingLocale).toBeNull();
+  it('uses a cached locale immediately without starting a loader', () => {
+    const loader = vi.fn();
+    const machine = blogPostMachine.provide({
+      actors: { loadVariant: fromPromise(loader) },
+    });
+    const actor = createActor(machine, {
+      input: input({ variants: { en: variantPayload, 'zh-CN': variantPayload } }),
+    }).start();
+
+    actor.send({ type: 'SELECT_LOCALE', locale: 'zh-CN' });
+
+    expect(actor.getSnapshot().matches('ready')).toBe(true);
+    expect(actor.getSnapshot().context.displayedContentLocale).toBe('zh-CN');
+    expect(loader).not.toHaveBeenCalled();
+    actor.stop();
+  });
+
+  it('retries a failed locale load and caches the successful response', async () => {
+    let attempt = 0;
+    const machine = blogPostMachine.provide({
+      actors: {
+        loadVariant: fromPromise<BlogVariantPayload, { slug: string; locale: BlogContentLocale }>(async () => {
+          attempt += 1;
+          if (attempt === 1) throw { code: 'INTERNAL_ERROR', message: 'Temporary failure' };
+          return variantPayload;
+        }),
+      },
+    });
+    const actor = createActor(machine, {
+      input: input({ requestedContentLocale: 'ja', variants: { en: variantPayload } }),
+    }).start();
+    await vi.waitFor(() => expect(actor.getSnapshot().matches('loadFailed')).toBe(true));
+
+    actor.send({ type: 'RETRY' });
+    await vi.waitFor(() => expect(actor.getSnapshot().matches('ready')).toBe(true));
+
+    expect(attempt).toBe(2);
+    expect(actor.getSnapshot().context.variants.ja).toEqual(variantPayload);
+    actor.stop();
+  });
+
+  it('continues a protected load after an explicit auth grant', async () => {
+    const machine = blogPostMachine.provide({
+      actors: {
+        checkGrant: fromPromise<{ granted: boolean }, { group: string }>(async () => ({ granted: false })),
+        loadVariant: fromPromise<BlogVariantPayload, { slug: string; locale: BlogContentLocale }>(async () => variantPayload),
+      },
+    });
+    const actor = createActor(machine, {
+      input: input({ requiresAuth: true, accessGroup: 'friends', variants: {} }),
+    }).start();
+    await vi.waitFor(() => expect(actor.getSnapshot().matches('authRequired')).toBe(true));
+
+    actor.send({ type: 'AUTH_GRANTED' });
+    await vi.waitFor(() => expect(actor.getSnapshot().matches('ready')).toBe(true));
+
+    expect(actor.getSnapshot().context.authState).toBe('granted');
+    actor.stop();
   });
 });
 

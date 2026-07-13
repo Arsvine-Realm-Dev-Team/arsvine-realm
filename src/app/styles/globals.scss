@@ -66,6 +66,8 @@
   --ark-highlight: rgba(255, 255, 255, 0.85);
   --ark-highlight-green: #b2f2bb;
   --ark-highlight-green-rgb: 178, 242, 187;
+  --logo-aberration-cyan-rgb: 0, 220, 255;
+  --logo-aberration-magenta-rgb: 255, 50, 180;
 
   // --- 响应式布局变量 ---
   --font-size-base: clamp(13px, 0.5vw + 11px, 18px);
@@ -127,9 +129,9 @@ body {
   }
 }
 
-html[data-performance-tier='minimal'],
-html[data-performance-tier='minimal'] body,
-html[data-performance-tier='minimal'] body * {
+html[data-custom-cursor='off'],
+html[data-custom-cursor='off'] body,
+html[data-custom-cursor='off'] body * {
   cursor: auto !important;
 }
 

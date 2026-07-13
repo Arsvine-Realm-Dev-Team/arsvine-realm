@@ -21,7 +21,8 @@ vi.mock('@/features/navigation/model/TransitionProvider', () => ({
 }));
 
 vi.mock('@/features/hud/model/HudProvider', () => ({
-  useHud: () => useAppMock(),
+  useHudStats: () => useAppMock(),
+  useHudPerformance: () => useAppMock(),
 }));
 
 vi.mock('@/shared/hooks/useVisitorLanguageCode', () => ({

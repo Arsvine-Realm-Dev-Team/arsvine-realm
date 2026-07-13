@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { useReducedMotion } from '@/shared/hooks/useMediaQuery';
+import {
+  applyPerformanceAttributes,
+  buildPerformanceState,
+  PERFORMANCE_TIERS,
+  performanceTierIndex,
+} from '@/shared/lib/performance-tiers';
 import type { AdaptivePerformanceState, PerformanceReason, PerformanceTier } from '../../../shared/types';
 
 const MAX_SAMPLE_FRAMES = 120;
@@ -15,28 +21,8 @@ const GOOD_WINDOWS_TO_RECOVER = 3;
 const DEGRADE_COOLDOWN_MS = 5000;
 const RECOVER_COOLDOWN_MS = 10000;
 
-const TIERS: PerformanceTier[] = ['full', 'balanced', 'reduced', 'minimal'];
-
 interface NetworkInformationLike { saveData?: boolean; effectiveType?: string }
 interface NavigatorPerformanceLike extends Navigator { connection?: NetworkInformationLike; deviceMemory?: number }
-
-function tierIndex(tier: PerformanceTier) { return TIERS.indexOf(tier); }
-
-export function buildPerformanceState(
-  performanceTier: PerformanceTier,
-  performanceReason: PerformanceReason,
-): AdaptivePerformanceState {
-  return {
-    performanceTier,
-    performanceReason,
-    allowLogoMotion: performanceTier === 'full',
-    allowAmbientWebGL: performanceTier === 'full' || performanceTier === 'balanced',
-    allowInteractiveWebGL: performanceTier !== 'minimal',
-    allowHeavyCssEffects: performanceTier === 'full' || performanceTier === 'balanced',
-    allowCustomCursor: performanceTier !== 'minimal',
-    allowDecorativeMotion: performanceTier === 'full' || performanceTier === 'balanced',
-  };
-}
 
 function resolveHeuristic(reducedMotion: boolean): { maxTier: PerformanceTier; reason: PerformanceReason } {
   if (reducedMotion) return { maxTier: 'minimal', reason: 'reduced-motion' };
@@ -45,13 +31,24 @@ function resolveHeuristic(reducedMotion: boolean): { maxTier: PerformanceTier; r
   const nav = navigator as NavigatorPerformanceLike;
   const connection = nav.connection;
   if (connection?.saveData || ['slow-2g', '2g', '3g'].includes(connection?.effectiveType || '')) {
-    return { maxTier: 'reduced', reason: 'device-heuristic' };
+    return { maxTier: 'motion-reduced', reason: 'device-heuristic' };
   }
   if ((typeof nav.deviceMemory === 'number' && nav.deviceMemory <= 4)
     || (typeof navigator.hardwareConcurrency === 'number' && navigator.hardwareConcurrency <= 4)) {
-    return { maxTier: 'balanced', reason: 'device-heuristic' };
+    return { maxTier: 'logo-reduced', reason: 'device-heuristic' };
   }
   return { maxTier: 'full', reason: null };
+}
+
+function resolveRecoveryCeiling(
+  heuristicTier: PerformanceTier,
+  heuristicReason: PerformanceReason,
+  runtimeTier: PerformanceTier,
+): { tier: PerformanceTier; reason: PerformanceReason } {
+  if (performanceTierIndex(runtimeTier) > performanceTierIndex(heuristicTier)) {
+    return { tier: runtimeTier, reason: 'runtime-fps' };
+  }
+  return { tier: heuristicTier, reason: heuristicReason };
 }
 
 export default function useAdaptivePerformance(animationsComplete: boolean): AdaptivePerformanceState {
@@ -59,7 +56,9 @@ export default function useAdaptivePerformance(animationsComplete: boolean): Ada
   const [state, setState] = useState(() => buildPerformanceState('full', null));
   const [isPageVisible, setIsPageVisible] = useState(() => typeof document === 'undefined' || !document.hidden);
   const [heuristicsReady, setHeuristicsReady] = useState(false);
-  const maxTierRef = useRef<PerformanceTier>('full');
+  const heuristicTierRef = useRef<PerformanceTier>('full');
+  const heuristicReasonRef = useRef<PerformanceReason>(null);
+  const runtimeCeilingRef = useRef<PerformanceTier>('full');
   const lastTierChangeRef = useRef(0);
 
   useEffect(() => {
@@ -70,19 +69,25 @@ export default function useAdaptivePerformance(animationsComplete: boolean): Ada
 
   useEffect(() => {
     const heuristic = resolveHeuristic(reducedMotion);
-    maxTierRef.current = heuristic.maxTier;
+    heuristicTierRef.current = heuristic.maxTier;
+    heuristicReasonRef.current = heuristic.reason;
+    const ceiling = resolveRecoveryCeiling(
+      heuristicTierRef.current,
+      heuristicReasonRef.current,
+      runtimeCeilingRef.current,
+    );
     // Client-only device signals are unavailable during SSR; reconcile them after hydration.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setHeuristicsReady(true);
-    setState((current) => tierIndex(current.performanceTier) < tierIndex(heuristic.maxTier)
-      ? buildPerformanceState(heuristic.maxTier, heuristic.reason)
+    setState((current) => performanceTierIndex(current.performanceTier) < performanceTierIndex(ceiling.tier)
+      ? buildPerformanceState(ceiling.tier, ceiling.reason)
       : current);
   }, [reducedMotion]);
 
   useEffect(() => {
     if (!heuristicsReady) return;
-    document.documentElement.setAttribute('data-performance-tier', state.performanceTier);
-  }, [heuristicsReady, state.performanceTier]);
+    applyPerformanceAttributes(document.documentElement, state);
+  }, [heuristicsReady, state]);
 
   useEffect(() => {
     if (!heuristicsReady || !animationsComplete || !isPageVisible || reducedMotion) return;
@@ -114,18 +119,36 @@ export default function useAdaptivePerformance(animationsComplete: boolean): Ada
       else { badWindows = 0; goodWindows = 0; }
 
       setState((current) => {
-        const index = tierIndex(current.performanceTier);
+        const index = performanceTierIndex(current.performanceTier);
         const sinceChange = timestamp - lastTierChangeRef.current;
-        if (badWindows >= BAD_WINDOWS_TO_DEGRADE && index < TIERS.length - 1 && sinceChange >= DEGRADE_COOLDOWN_MS) {
+        if (poor && current.performanceTier === 'full') {
+          badWindows = 0;
+          runtimeCeilingRef.current = 'logo-reduced';
+          lastTierChangeRef.current = timestamp;
+          return buildPerformanceState('logo-reduced', 'runtime-fps');
+        }
+        if (badWindows >= BAD_WINDOWS_TO_DEGRADE
+          && index < PERFORMANCE_TIERS.length - 1
+          && sinceChange >= DEGRADE_COOLDOWN_MS) {
           badWindows = 0;
           lastTierChangeRef.current = timestamp;
-          return buildPerformanceState(TIERS[index + 1], 'runtime-fps');
+          const nextTier = PERFORMANCE_TIERS[index + 1];
+          return buildPerformanceState(nextTier, 'runtime-fps');
         }
-        const maxIndex = tierIndex(maxTierRef.current);
+        const ceiling = resolveRecoveryCeiling(
+          heuristicTierRef.current,
+          heuristicReasonRef.current,
+          runtimeCeilingRef.current,
+        );
+        const maxIndex = performanceTierIndex(ceiling.tier);
         if (goodWindows >= GOOD_WINDOWS_TO_RECOVER && index > maxIndex && sinceChange >= RECOVER_COOLDOWN_MS) {
           goodWindows = 0;
           lastTierChangeRef.current = timestamp;
-          return buildPerformanceState(TIERS[index - 1], index - 1 === maxIndex ? null : 'runtime-fps');
+          const previousTier = PERFORMANCE_TIERS[index - 1];
+          return buildPerformanceState(
+            previousTier,
+            index - 1 === maxIndex ? ceiling.reason : 'runtime-fps',
+          );
         }
         return current;
       });

@@ -1,0 +1,23 @@
+[
+  {
+    "id": "highschool",
+    "title": "高中时期",
+    "location": "宿迁市第一高级中学",
+    "type": "education",
+    "gallery": ["gallery/highschool-gallery-1.jpg", "gallery/highschool-gallery-2.jpg"]
+  },
+  {
+    "id": "university",
+    "title": "大学时光",
+    "location": "江苏大学",
+    "type": "education",
+    "gallery": ["gallery/university-gallery-1.jpg", "gallery/university-gallery-2.jpg", "gallery/photo-ujs-1.webp", "gallery/photo-ujs-2.webp", "gallery/photo-ujs-3.webp", "gallery/photo-ujs-4.webp", "gallery/photo-ujs-5.webp"]
+  },
+  {
+    "id": "rhodes-island",
+    "title": "罗德岛记录",
+    "location": "《明日方舟》 · 罗德岛",
+    "type": "work",
+    "gallery": []
+  }
+]

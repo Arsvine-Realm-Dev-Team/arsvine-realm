@@ -8,9 +8,9 @@ This document is the day-to-day development guide for **ARSVINE REALM**. Keep th
 - Local compatibility: Node `20.9+` may work, but `24.x` is the documented target.
 - Package manager: pnpm is the documented package manager.
 - Framework mode: Next.js Pages Router, not App Router.
-- Server entry: `server.js` is used in both development and production.
+- Local/self-hosted server entry: `server.js` runs local development and optional self-hosted deployments. **It is not used in Vercel deployments** — Vercel runs the standard Next.js build output.
 
-Do not replace the project scripts with `next dev` or `next start`. The custom server loads `.env.local`, prepares Next.js, respects `PORT`, and includes graceful shutdown handling.
+Do not replace the project scripts with `next dev` or `next start`. The custom server loads `.env.local`, prepares Next.js, respects `PORT`, and includes graceful shutdown handling for local development and self-hosting.
 
 ## Quick start
 

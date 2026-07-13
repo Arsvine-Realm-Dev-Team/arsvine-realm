@@ -1,0 +1,35 @@
+[
+  {
+    "id": "arsvine-realm",
+    "runtimeId": 1,
+    "title": "Arsvine Realm",
+    "description": "一个以个人档案、作品展示与写作入口为核心的 Next.js 个人站。",
+    "tech": ["Next.js", "UI/UX", "Vercel", "i18n", "DevOps"],
+    "collection": "web-projects",
+    "date": "2026-01-01",
+    "cover": "covers/arsvine-realm-preview.webp",
+    "gallery": ["posts/arsvine-realm-screenshot-1.png", "posts/arsvine-realm-screenshot-2.png"]
+  },
+  {
+    "id": "endfield-planner",
+    "runtimeId": 2,
+    "title": "终末地卡池模拟及规划器",
+    "description": "面向《明日方舟：终末地》的抽卡模拟与资源规划工具。",
+    "tech": ["JavaScript", "HTML", "Python", "Flask", "Monte Carlo"],
+    "collection": "web-projects",
+    "date": "2026-01-01",
+    "cover": "covers/endfield-planner-preview.png",
+    "gallery": ["posts/endfield-planner-screenshot-1.png"]
+  },
+  {
+    "id": "early-projects",
+    "runtimeId": 3,
+    "title": "早期项目",
+    "description": "学习过程中留下的各种实验、半成品和遗产。",
+    "tech": ["HTML", "CSS", "JavaScript", "Python", "C++", "C#", "Scratch", "Unity"],
+    "collection": "early-projects",
+    "date": "2019-01-01",
+    "cover": "covers/gitblock-cover.png",
+    "gallery": ["gallery/gitblock-allindo.png"]
+  }
+]

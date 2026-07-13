@@ -1,15 +1,20 @@
-export const CONTENT_HASH_SCROLL_EVENT = 'arsvine:scroll-content-hash';
-export const CONTENT_HASH_SCROLL_COMPLETE_EVENT = 'arsvine:scroll-content-hash-complete';
-
 export type RouteKind = 'home' | 'content' | 'standalone' | 'auxiliary';
 export type ContentHashTransitionMode = 'same-page' | 'cross-page' | 'not-content-hash';
+export type NavigationTransitionPlan =
+  | 'samePageHash'
+  | 'homeForwardDesktop'
+  | 'homeForwardMobile'
+  | 'crossPageHash'
+  | 'returnHomeDesktop'
+  | 'returnHomeMobile'
+  | 'blogDetailFade'
+  | 'standardSlide';
 
 export interface ContentHashNavigationRequest {
   hash: string;
   requestId: string;
 }
 
-let pendingContentHashNavigation: ContentHashNavigationRequest | null = null;
 let contentHashNavigationRequestCounter = 0;
 
 export function getContentSectionHashFromUrl(url: string): string | null {
@@ -61,22 +66,47 @@ export function resolveContentHashTransitionMode(
     : 'cross-page';
 }
 
+function getTargetSegments(url: string) {
+  try {
+    return new URL(url, 'https://arsvine.local').pathname.split('/').filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+export function isHomeUrl(url: string) {
+  return getTargetSegments(url).length === 1;
+}
+
+export function isBlogDetailUrl(url: string) {
+  const segments = getTargetSegments(url);
+  return segments.length === 3 && segments[1] === 'blog' && segments[2].length > 0;
+}
+
+export function resolveNavigationTransitionPlan({
+  sourcePathname,
+  targetUrl,
+  mobile,
+}: {
+  sourcePathname: string;
+  targetUrl: string;
+  mobile: boolean;
+}): NavigationTransitionPlan {
+  const contentHashMode = resolveContentHashTransitionMode(sourcePathname, targetUrl);
+  if (contentHashMode === 'same-page') return 'samePageHash';
+  const sourceKind = classifyRoutePathname(sourcePathname);
+  const goingHome = isHomeUrl(targetUrl);
+  if (sourceKind === 'home' && !goingHome) return mobile ? 'homeForwardMobile' : 'homeForwardDesktop';
+  if (sourceKind !== 'home' && contentHashMode === 'cross-page') return 'crossPageHash';
+  if (sourceKind !== 'home' && goingHome) return mobile ? 'returnHomeMobile' : 'returnHomeDesktop';
+  if (isBlogDetailUrl(targetUrl)) return 'blogDetailFade';
+  return 'standardSlide';
+}
+
 export function createContentHashNavigationRequest(hash: string): ContentHashNavigationRequest {
   contentHashNavigationRequestCounter += 1;
   return {
     hash,
     requestId: `content-hash-${contentHashNavigationRequestCounter}`,
   };
-}
-
-export function setPendingContentHashNavigation(request: ContentHashNavigationRequest | null) {
-  pendingContentHashNavigation = request;
-}
-
-export function hasPendingContentHashNavigation(hash: string) {
-  return pendingContentHashNavigation?.hash === hash;
-}
-
-export function clearPendingContentHashNavigation() {
-  pendingContentHashNavigation = null;
 }

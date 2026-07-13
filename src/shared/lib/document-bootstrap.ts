@@ -1,4 +1,8 @@
 import { BILIBILI_FRIENDLY_COUNTRIES, HIDE_X_COUNTRIES } from './region-visibility';
+import {
+  PERFORMANCE_CAPABILITIES,
+  PERFORMANCE_CAPABILITY_ATTRIBUTES,
+} from './performance-tiers';
 
 export const POWER_SYSTEM_STORAGE_KEY = 'arsvine:power-system';
 export const THEME_MODE_STORAGE_KEY = 'arsvine:theme-mode';
@@ -6,6 +10,8 @@ export const THEME_MODE_STORAGE_KEY = 'arsvine:theme-mode';
 const LOW_EFFECTIVE_TYPES = new Set(['slow-2g', '2g', '3g']);
 
 function buildPerformanceTierBootstrap() {
+  const capabilitiesByTier = JSON.stringify(PERFORMANCE_CAPABILITIES);
+  const capabilityAttributes = JSON.stringify(PERFORMANCE_CAPABILITY_ATTRIBUTES);
   return `(() => {
     try {
       const html = document.documentElement;
@@ -19,14 +25,19 @@ function buildPerformanceTierBootstrap() {
       const lowMemory = typeof navigator.deviceMemory === 'number' && navigator.deviceMemory <= 4;
       const lowConcurrency = typeof navigator.hardwareConcurrency === 'number' && navigator.hardwareConcurrency <= 4;
 
-      if (reduceMotion) {
-        html.setAttribute('data-performance-tier', 'minimal');
-      } else if (lowNetwork) {
-        html.setAttribute('data-performance-tier', 'reduced');
-      } else if (lowMemory || lowConcurrency) {
-        html.setAttribute('data-performance-tier', 'balanced');
-      } else {
-        html.setAttribute('data-performance-tier', 'full');
+      const tier = reduceMotion
+        ? 'minimal'
+        : lowNetwork
+          ? 'motion-reduced'
+          : lowMemory || lowConcurrency
+            ? 'logo-reduced'
+            : 'full';
+      const capabilities = ${capabilitiesByTier}[tier];
+      const capabilityAttributes = ${capabilityAttributes};
+
+      html.setAttribute('data-performance-tier', tier);
+      for (const [capability, attribute] of Object.entries(capabilityAttributes)) {
+        html.setAttribute(attribute, capabilities[capability] ? 'on' : 'off');
       }
     } catch (error) {
       console.error('[document-bootstrap] failed to resolve performance tier', error);

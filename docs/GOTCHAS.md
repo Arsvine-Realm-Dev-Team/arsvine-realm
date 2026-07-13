@@ -108,17 +108,11 @@ For protected posts:
 
 Do not place ciphertext or hidden MDX payloads in `_next/data` JSON as an alternative. The invariant is no protected body in static data.
 
-## 11. Avatar parallax transform needs `!important`
+## 11. Keep avatar reveal and parallax on separate layers
 
-The avatar entry animation uses a keyframe with `forwards`, leaving a final `transform` value cached on the element.
+The square reveal wrapper owns the `revealLogo` keyframe and its final transform. The nested motion layer owns pointer parallax, while two masked pseudo-elements own chromatic separation.
 
-The mousemove rAF must write transform through:
-
-```ts
-style.setProperty('transform', value, 'important')
-```
-
-Using `style.transform = value` may silently lose to the keyframe fill state.
+Do not merge these responsibilities back onto the full left-panel container. That recreates a viewport-sized filter layer and forces inline `!important` transform overrides. Runtime logo effects may use only the bounded motion layer's transform and the mask layers' transform/opacity.
 
 ## 12. CustomCursor hover state must be reset through the helper
 

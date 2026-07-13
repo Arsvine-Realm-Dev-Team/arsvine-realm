@@ -1,6 +1,6 @@
 import { startTransition, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useHud } from '../../hud/model/HudProvider';
+import { useHudPower } from '../../hud/model/HudProvider';
 import type { Locale } from '@/shared/contracts/locale';
 import {
   getTweetPlainText,
@@ -259,7 +259,7 @@ export default function TweetsSection({
 }: TweetsSectionProps) {
   const t = useTranslations('pages.tweets');
   const tCommon = useTranslations('common');
-  const { isInverted } = useHud();
+  const { isInverted } = useHudPower();
   const [loadedGroups, setLoadedGroups] = useState(monthGroups);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState('');
