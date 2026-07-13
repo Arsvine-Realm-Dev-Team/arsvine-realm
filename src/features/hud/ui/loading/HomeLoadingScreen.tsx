@@ -1,7 +1,11 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import styles from './HomeLoadingScreen.module.scss';
 import gsap from 'gsap';
 import { useLoadingSystem } from '@/features/hud/model/useLoadingSystem';
+import {
+  completeInitialBootSequence,
+  isInitialBootSequencePending,
+} from '@/features/hud/model/homeLoadingSession';
 import { useReducedMotion, useResponsive } from '@/shared/hooks/useMediaQuery';
 import { useHudPerformance } from '../../model/HudProvider';
 import TerminalConsole, { TerminalConsoleRef } from './parts/TerminalConsole';
@@ -16,7 +20,7 @@ export function collectGsapTargets<T>(targets: Array<T | null | undefined>): T[]
 }
 
 const HomeLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(isInitialBootSequencePending);
   const [bootReducedMode, setBootReducedMode] = useState(false);
   const [loadingUiReady, setLoadingUiReady] = useState(false);
   const { progress, logLines, showSplitLines, loading } = useLoadingSystem(loadingUiReady && !bootReducedMode);
@@ -29,6 +33,11 @@ const HomeLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   useEffect(() => {
     onCompleteRef.current = onComplete;
   }, [onComplete]);
+
+  const completeBootSequence = useCallback(() => {
+    completeInitialBootSequence();
+    onCompleteRef.current?.();
+  }, []);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the bootstrap script resolves performance tier before hydration; this effect copies that external DOM snapshot into React after mount
@@ -52,7 +61,7 @@ const HomeLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
 
     if (bootReducedMode) {
       const settleTimer = window.setTimeout(() => {
-        onCompleteRef.current?.();
+        completeBootSequence();
         setVisible(false);
       }, 0);
       return () => window.clearTimeout(settleTimer);
@@ -113,7 +122,7 @@ const HomeLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
     return () => {
       timelines.forEach(tl => tl.kill());
     };
-  }, [bootReducedMode, isMobile, reducedVisualMode, visible]);
+  }, [bootReducedMode, completeBootSequence, isMobile, reducedVisualMode, visible]);
 
   // ===================== Split lines animation =====================
   useEffect(() => {
@@ -126,7 +135,7 @@ const HomeLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   useEffect(() => {
     if (loading) return;
 
-    if (onCompleteRef.current) onCompleteRef.current();
+    completeBootSequence();
 
     const wipeDur = reducedVisualMode ? 0.6 : 1.2;
     const subDur = reducedVisualMode ? 0.3 : 0.5;
@@ -161,7 +170,7 @@ const HomeLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
     if (extraElements.length > 0) exitTl.to(extraElements, { opacity: 0, duration: subDur * 0.7 }, 0);
 
     return () => { exitTl.kill(); };
-  }, [loading, reducedVisualMode]);
+  }, [completeBootSequence, loading, reducedVisualMode]);
 
   return visible ? (
     <>
