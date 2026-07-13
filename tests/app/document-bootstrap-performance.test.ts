@@ -47,26 +47,30 @@ function evaluateBootstrap(script: string, env: {
 }
 
 describe('buildDocumentBootstrapScript performance tier', () => {
-  it('writes motion-reduced tier and matching capabilities for low network signals', () => {
+  it('does not lower visual effects for the browser network estimate alone', () => {
     const script = buildDocumentBootstrapScript();
     const { attrs } = evaluateBootstrap(script, { effectiveType: '3g' });
-    expect(attrs.get('data-performance-tier')).toBe('motion-reduced');
-    expect(attrs.get('data-logo-effects')).toBe('off');
-    expect(attrs.get('data-ambient-webgl')).toBe('off');
-    expect(attrs.get('data-heavy-css-effects')).toBe('off');
-    expect(attrs.get('data-decorative-motion')).toBe('off');
-    expect(attrs.get('data-interactive-webgl')).toBe('on');
-    expect(attrs.get('data-custom-cursor')).toBe('on');
+    expect(attrs.get('data-performance-tier')).toBe('full');
+    expect(attrs.get('data-performance-reason')).toBe('none');
+    expect(attrs.get('data-decorative-motion')).toBe('on');
   });
 
-  it('writes logo-reduced tier for low device memory or hardware concurrency', () => {
+  it('does not lower visual effects for coarse hardware hints', () => {
     const script = buildDocumentBootstrapScript();
-    expect(evaluateBootstrap(script, { deviceMemory: 4 }).attrs.get('data-performance-tier')).toBe('logo-reduced');
-    expect(evaluateBootstrap(script, { hardwareConcurrency: 4 }).attrs.get('data-performance-tier')).toBe('logo-reduced');
+    expect(evaluateBootstrap(script, { deviceMemory: 4 }).attrs.get('data-performance-tier')).toBe('full');
+    expect(evaluateBootstrap(script, { hardwareConcurrency: 4 }).attrs.get('data-performance-tier')).toBe('full');
   });
 
   it('writes minimal tier for reduced motion', () => {
-    expect(evaluateBootstrap(buildDocumentBootstrapScript(), { reduceMotion: true }).attrs.get('data-performance-tier')).toBe('minimal');
+    const { attrs } = evaluateBootstrap(buildDocumentBootstrapScript(), { reduceMotion: true });
+    expect(attrs.get('data-performance-tier')).toBe('minimal');
+    expect(attrs.get('data-performance-reason')).toBe('reduced-motion');
+  });
+
+  it('honors the explicit Save-Data preference', () => {
+    const { attrs } = evaluateBootstrap(buildDocumentBootstrapScript(), { saveData: true });
+    expect(attrs.get('data-performance-tier')).toBe('motion-reduced');
+    expect(attrs.get('data-performance-reason')).toBe('save-data');
   });
 
   it('keeps full tier when no low-power signals are present', () => {

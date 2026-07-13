@@ -107,6 +107,7 @@ export function applyPerformanceAttributes(
   state: AdaptivePerformanceState,
 ): void {
   root.setAttribute('data-performance-tier', state.performanceTier);
+  root.setAttribute('data-performance-reason', state.performanceReason ?? 'none');
   for (const [capability, attribute] of Object.entries(PERFORMANCE_CAPABILITY_ATTRIBUTES)) {
     root.setAttribute(
       attribute,
