@@ -200,3 +200,19 @@
   filter: invert(1);
   transition: opacity 0.5s ease-in-out;
 }
+
+@media (max-width: 1023px) {
+  .aboutNewImageWrapper {
+    position: relative;
+    top: auto;
+    right: auto;
+    width: min(200px, 50%);
+    margin: 20px 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .contentSection.aboutSection {
+    padding: 20px 16px 80px;
+  }
+}
