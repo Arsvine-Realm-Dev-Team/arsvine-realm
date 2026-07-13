@@ -10,6 +10,13 @@
   position: relative;
   color: var(--ark-text);
 
+  @media (max-width: 767px) {
+    width: 100%;
+    margin-left: 0;
+    scroll-margin-top: var(--mobile-section-scroll-offset);
+    padding: 20px 16px 80px;
+  }
+
   h2 {
     font-family: var(--font-display);
     font-size: clamp(2rem, 2.5vw + 1rem, 3.5rem);

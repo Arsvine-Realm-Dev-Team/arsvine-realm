@@ -11,15 +11,6 @@
   }
 }
 
-@keyframes scanMove {
-  0% {
-    background-position: 0 0;
-  }
-  100% {
-    background-position: 0 100px;
-  }
-}
-
 // 动画关键帧
 @keyframes slideUpOutSkew {
   from {
@@ -40,28 +31,6 @@
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes slideInFromRight {
-  from {
-    opacity: 0;
-    transform: translateX(100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideOutToRight {
-  from {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateX(100%);
   }
 }
 
@@ -394,99 +363,6 @@
   }
   100% {
     opacity: 0.8;
-  }
-}
-
-// --- ADD: Keyframe for Copy Feedback ---
-@keyframes floatUpFadeOut {
-  0% {
-    transform: translate(-50%, 5px); // Start slightly below and visible
-    opacity: 0.8;
-  }
-  80% { // Hold visibility while floating up
-    transform: translate(-50%, -15px); // Float upwards
-    opacity: 0.8;
-  }
-  100% {
-    transform: translate(-50%, -20px); // Continue slight float
-    opacity: 0; // Fade out completely
-  }
-}
-
-// --- ADD: Keyframe for Grid Movement ---
-@keyframes moveGrid {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: 20px 20px; // Move right and down by the grid spacing
-  }
-}
-
-// --- RE-ADD Keyframe for Scanner Rotation ---
-@keyframes rotateScanner {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-// --- ADD: Keyframe for Smaller Ripples ---
-@keyframes contactRippleExpandShadowSmall {
-  0% {
-    border: 1px solid rgba(178, 242, 187, 0.9); // 保持样式一致
-    box-shadow: 0 0 0 0px rgba(178, 242, 187, 0.5); 
-    opacity: 0.9;
-    transform: translate(-50%, -50%) scale(0.1);
-  }
-  100% {
-    border: 1px solid rgba(178, 242, 187, 0); 
-    box-shadow: 0 0 0 20px rgba(178, 242, 187, 0); // 阴影范围也略小
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(1.2); // 修改: 减小最终缩放
-  }
-}
-
-// --- Keyframes for Ripples (Original Green) ---
-@keyframes contactRippleExpandShadow {
-  0% {
-    // --- MODIFY: Make start more prominent and brighter ---
-    border: 2px solid rgba(178, 242, 187, 1); // Keep border
-    box-shadow: 0 0 6px 2px rgba(178, 242, 187, 0.9); // Increase shadow size, spread, and opacity
-    opacity: 1; // Keep fully opaque
-    transform: translate(-50%, -50%) scale(0.1);
-  }
-  100% {
-    // --- Keep end state the same --- 
-    border: 1px solid rgba(178, 242, 187, 0); 
-    box-shadow: 0 0 0 25px rgba(178, 242, 187, 0); // Keep shadow removed at end if intended
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(2.2); // Expand even larger
-  }
-}
-
-// --- Keyframes for Ripples (Inverted Pink/Purple) ---
-@keyframes contactRippleExpandShadowInverted {
-  0% {
-    // --- MODIFY: Make start more prominent and brighter (inverted) ---
-    border: 2px solid rgba(var(--ark-primary-rgb), 1); // Keep border
-    box-shadow: 0 0 6px 2px rgba(var(--ark-primary-rgb), 0.9); // Increase shadow size, spread, and opacity
-    opacity: 1; // Keep fully opaque
-    transform: translate(-50%, -50%) scale(0.1);
-  }
-  100% {
-    // --- Keep end state the same (inverted) --- 
-    border: 1px solid rgba(var(--ark-primary-rgb), 0); // Use inverted color
-    box-shadow: 0 0 0 25px rgba(var(--ark-primary-rgb), 0); // Keep shadow removed at end
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(2.2); // Same scale as original
-  }
-}
-
-@keyframes scrollArrows {
-  0% {
-    transform: translateY(-30px);
-  }
-  100% {
-    transform: translateY(0);
   }
 }
 

@@ -25,4 +25,13 @@ describe('responsive style migration', () => {
     expect(source).toMatch(/@media \(max-width: 1023px\)[\s\S]*\.aboutNewImageWrapper[\s\S]*position: relative/);
     expect(source).toMatch(/@media \(max-width: 767px\)[\s\S]*\.contentSection\.aboutSection[\s\S]*padding: 20px 16px 80px/);
   });
+
+  it('keeps Friends full-width mobile section overrides with the profile feature', async () => {
+    const source = await readStyle('src/features/profile/styles/sections/_friends.scss');
+
+    expect(source).toMatch(/\.friendLinkSection[\s\S]*@media \(max-width: 767px\)[\s\S]*width: 100%/);
+    expect(source).toMatch(/\.friendLinkSection[\s\S]*@media \(max-width: 767px\)[\s\S]*margin-left: 0/);
+    expect(source).toMatch(/\.friendLinkSection[\s\S]*@media \(max-width: 767px\)[\s\S]*scroll-margin-top: var\(--mobile-section-scroll-offset\)/);
+    expect(source).toMatch(/\.friendLinkSection[\s\S]*@media \(max-width: 767px\)[\s\S]*padding: 20px 16px 80px/);
+  });
 });

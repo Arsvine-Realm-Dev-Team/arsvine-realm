@@ -1,0 +1,37 @@
+// Motion primitives that are shared across CSS Modules. Each consumer must
+// compose this partial so Sass gives references and keyframes the same local
+// CSS Modules scope.
+
+@keyframes scanMove {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 0 100px;
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutToRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}

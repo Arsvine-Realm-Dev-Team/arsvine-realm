@@ -1,5 +1,7 @@
 /* features/life/styles/LifeDetailView.module.scss */
 
+@use '../../../shared/styles/motion-keyframes';
+
 .detailContainer {
   width: 100%;
   padding: 20px 0;
