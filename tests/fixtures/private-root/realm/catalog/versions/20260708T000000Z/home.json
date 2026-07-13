@@ -1,0 +1,31 @@
+{
+  "items": [
+    {
+      "id": "home-published",
+      "status": "published",
+      "title": "Published Home",
+      "objectKey": "realm/images/home/home-published.a1b2c3d4.webp",
+      "order": 1,
+      "date": "2026-07-01"
+    },
+    {
+      "id": "home-default",
+      "objectKey": "realm/images/home/home-default.a1b2c3d4.webp",
+      "order": 1,
+      "date": "2026-07-02"
+    },
+    {
+      "id": "home-draft",
+      "status": "draft",
+      "objectKey": "realm/images/home/home-draft.a1b2c3d4.webp",
+      "order": 0,
+      "date": "2026-07-03"
+    },
+    {
+      "id": "home-missing-key",
+      "status": "published",
+      "order": 0,
+      "date": "2026-07-03"
+    }
+  ]
+}

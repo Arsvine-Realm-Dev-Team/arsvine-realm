@@ -73,6 +73,3 @@ rainmorime-template/
 cos-workspace/*
 !cos-workspace/AGENTS.md
 coscli_output/
-
-# Tests Fixture Versions
-tests/fixtures/private-root/realm/catalog/versions/*
