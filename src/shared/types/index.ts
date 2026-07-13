@@ -289,13 +289,20 @@ export interface RealtimeStatsState {
   currentVisitDuration: string;
 }
 
-export type PerformanceTier = 'full' | 'balanced' | 'reduced' | 'minimal';
+export type PerformanceTier =
+  | 'full'
+  | 'logo-reduced'
+  | 'ambient-reduced'
+  | 'css-reduced'
+  | 'motion-reduced'
+  | 'webgl-reduced'
+  | 'minimal';
 export type PerformanceReason = 'reduced-motion' | 'device-heuristic' | 'runtime-fps' | null;
 
 export interface AdaptivePerformanceState {
   performanceTier: PerformanceTier;
   performanceReason: PerformanceReason;
-  allowLogoMotion: boolean;
+  allowLogoEffects: boolean;
   allowAmbientWebGL: boolean;
   allowInteractiveWebGL: boolean;
   allowHeavyCssEffects: boolean;

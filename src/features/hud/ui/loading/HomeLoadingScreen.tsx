@@ -32,7 +32,7 @@ const HomeLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the bootstrap script resolves performance tier before hydration; this effect copies that external DOM snapshot into React after mount
-    setBootReducedMode(document.documentElement.getAttribute('data-performance-tier') === 'reduced');
+    setBootReducedMode(document.documentElement.getAttribute('data-decorative-motion') === 'off');
   }, []);
 
   // DOM refs

@@ -422,8 +422,7 @@
   50% { opacity: 0.8; }
 }
 
-:global(html[data-performance-tier='reduced']) .gridBackground,
-:global(html[data-performance-tier='minimal']) .gridBackground {
+:global(html[data-heavy-css-effects='off']) .gridBackground {
   opacity: 0.28;
 
   &::after {
@@ -431,28 +430,22 @@
   }
 }
 
-:global(html[data-performance-tier='reduced']) .glowEffect,
-:global(html[data-performance-tier='reduced']) .rightStripeGradient,
-:global(html[data-performance-tier='reduced']) .scanLines,
-:global(html[data-performance-tier='minimal']) .glowEffect,
-:global(html[data-performance-tier='minimal']) .rightStripeGradient,
-:global(html[data-performance-tier='minimal']) .scanLines {
+:global(html[data-heavy-css-effects='off']) .glowEffect,
+:global(html[data-heavy-css-effects='off']) .rightStripeGradient,
+:global(html[data-heavy-css-effects='off']) .scanLines {
   display: none;
 }
 
-:global(html[data-performance-tier='reduced']) .leftDotMatrix,
-:global(html[data-performance-tier='minimal']) .leftDotMatrix {
+:global(html[data-heavy-css-effects='off']) .leftDotMatrix {
   opacity: 0.28;
 }
 
-:global(html[data-performance-tier='reduced']) .routeLoadingCard,
-:global(html[data-performance-tier='minimal']) .routeLoadingCard {
+:global(html[data-heavy-css-effects='off']) .routeLoadingCard {
   backdrop-filter: none;
   background-color: rgba(var(--ark-border-rgb), 0.04);
 }
 
-:global(html[data-performance-tier='reduced']) .routeLoadingText,
-:global(html[data-performance-tier='minimal']) .routeLoadingText {
+:global(html[data-decorative-motion='off']) .routeLoadingText {
   animation: none;
 }
 

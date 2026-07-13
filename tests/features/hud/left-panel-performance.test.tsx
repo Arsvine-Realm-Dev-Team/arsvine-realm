@@ -3,7 +3,7 @@ import { cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const useAppMock = vi.fn();
-const useResponsiveMock = vi.fn();
+const finePointerMock = vi.fn();
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
@@ -14,7 +14,7 @@ vi.mock('@/features/hud/model/HudProvider', () => ({
 }));
 
 vi.mock('@/shared/hooks/useMediaQuery', () => ({
-  useResponsive: () => useResponsiveMock(),
+  default: () => finePointerMock(),
 }));
 
 vi.mock('@/features/hud/ui/ActivationLever', () => ({
@@ -56,8 +56,8 @@ function buildProps(overrides: Record<string, unknown> = {}) {
 
 describe('LeftPanel adaptive performance', () => {
   beforeEach(() => {
-    useResponsiveMock.mockReturnValue({ isMobile: false, isTablet: false, isDesktop: true });
-    useAppMock.mockReturnValue({ allowLogoMotion: true, performanceTier: 'full' });
+    finePointerMock.mockReturnValue(true);
+    useAppMock.mockReturnValue({ allowLogoEffects: true, performanceTier: 'full' });
   });
 
   afterEach(() => {
@@ -69,17 +69,47 @@ describe('LeftPanel adaptive performance', () => {
     const addSpy = vi.spyOn(window, 'addEventListener');
     render(<LeftPanel {...buildProps()} />);
 
-    expect(addSpy).toHaveBeenCalledWith('mousemove', expect.any(Function), { passive: true });
+    expect(addSpy).toHaveBeenCalledWith('pointermove', expect.any(Function), { passive: true });
   });
 
-  it('skips logo color dispersion in reduced mode', () => {
+  it('skips logo effects in logo-reduced mode', () => {
     const addSpy = vi.spyOn(window, 'addEventListener');
-    useAppMock.mockReturnValue({ allowLogoMotion: false, performanceTier: 'reduced' });
+    useAppMock.mockReturnValue({ allowLogoEffects: false, performanceTier: 'logo-reduced' });
 
     const { container } = render(<LeftPanel {...buildProps()} />);
 
-    expect(addSpy).not.toHaveBeenCalledWith('mousemove', expect.any(Function), { passive: true });
+    expect(addSpy).not.toHaveBeenCalledWith('pointermove', expect.any(Function), { passive: true });
     expect(container.querySelector('[class*="logoContainer"]')).not.toBeNull();
+  });
+
+  it('atomically clears active logo work when the capability is disabled', () => {
+    const requestSpy = vi.spyOn(window, 'requestAnimationFrame').mockReturnValue(41);
+    const cancelSpy = vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
+    const view = render(<LeftPanel {...buildProps()} />);
+    const motion = view.container.querySelector('[class*="logoMotion"]') as HTMLElement;
+
+    window.dispatchEvent(new MouseEvent('pointermove', { clientX: 1200, clientY: 600 }));
+    expect(requestSpy).toHaveBeenCalledTimes(1);
+    expect(motion.getAttribute('data-logo-motion')).toBe('active');
+
+    useAppMock.mockReturnValue({ allowLogoEffects: false, performanceTier: 'logo-reduced' });
+    view.rerender(<LeftPanel {...buildProps()} />);
+
+    expect(cancelSpy).toHaveBeenCalledWith(41);
+    expect(motion.getAttribute('data-logo-motion')).toBeNull();
+    expect(motion.style.getPropertyValue('--avatar-split')).toBe('');
+    expect(motion.style.transform).toBe('');
+  });
+
+  it('does not attach logo effects for coarse pointers or hidden standalone panels', () => {
+    const addSpy = vi.spyOn(window, 'addEventListener');
+    finePointerMock.mockReturnValue(false);
+    const view = render(<LeftPanel {...buildProps()} />);
+    expect(addSpy).not.toHaveBeenCalledWith('pointermove', expect.any(Function), { passive: true });
+
+    finePointerMock.mockReturnValue(true);
+    view.rerender(<LeftPanel {...buildProps({ isStandalone: true })} />);
+    expect(addSpy).not.toHaveBeenCalledWith('pointermove', expect.any(Function), { passive: true });
   });
 
   it('keeps one accessible Travelling link with desktop and compact mobile content', () => {

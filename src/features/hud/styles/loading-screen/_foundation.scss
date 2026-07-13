@@ -98,8 +98,7 @@
   padding: 0;
 }
 
-:global(html[data-performance-tier='reduced']) .loading_screen,
-:global(html[data-performance-tier='minimal']) .loading_screen {
+:global(html[data-decorative-motion='off']) .loading_screen {
   top: 12px;
   left: 12px;
   width: auto;
@@ -115,23 +114,16 @@
   pointer-events: none;
 }
 
-:global(html[data-performance-tier='reduced']) .wasteland_background,
-:global(html[data-performance-tier='reduced']) .grid_overlay,
-:global(html[data-performance-tier='reduced']) .loading_content,
-:global(html[data-performance-tier='reduced']) .progress_area,
-:global(html[data-performance-tier='reduced']) .background_hud_layer,
-:global(html[data-performance-tier='reduced']) .hud_elements,
-:global(html[data-performance-tier='minimal']) .wasteland_background,
-:global(html[data-performance-tier='minimal']) .grid_overlay,
-:global(html[data-performance-tier='minimal']) .loading_content,
-:global(html[data-performance-tier='minimal']) .progress_area,
-:global(html[data-performance-tier='minimal']) .background_hud_layer,
-:global(html[data-performance-tier='minimal']) .hud_elements {
+:global(html[data-decorative-motion='off']) .wasteland_background,
+:global(html[data-decorative-motion='off']) .grid_overlay,
+:global(html[data-decorative-motion='off']) .loading_content,
+:global(html[data-decorative-motion='off']) .progress_area,
+:global(html[data-decorative-motion='off']) .background_hud_layer,
+:global(html[data-decorative-motion='off']) .hud_elements {
   display: none;
 }
 
-:global(html[data-performance-tier='reduced']) .reduced_status,
-:global(html[data-performance-tier='minimal']) .reduced_status {
+:global(html[data-decorative-motion='off']) .reduced_status {
   display: inline-flex;
   align-items: center;
   justify-content: center;

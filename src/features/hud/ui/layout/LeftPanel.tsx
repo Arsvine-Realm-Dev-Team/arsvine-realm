@@ -1,13 +1,13 @@
 /* eslint-disable @next/next/no-img-element -- decorative SVG badge is local, non-critical, and sized by existing HUD CSS */
-import { Fragment, useEffect, useRef, type Ref } from 'react';
+import { Fragment, useRef, type Ref } from 'react';
 import { useTranslations } from 'next-intl';
 import styles from '../../../../app/styles/Shell.module.scss';
 import { useHudPerformance } from '../../model/HudProvider';
 import { useSiteAssets } from '../../../assets/model/SiteAssetsProvider';
 import ActivationLever from '../ActivationLever';
-import { useResponsive } from '@/shared/hooks/useMediaQuery';
 import type { Locale } from '@/shared/contracts/locale';
 import type { EnvData } from '../../../../shared/types';
+import useLogoEffects from './useLogoEffects';
 
 interface DrawerNavLink {
   label: string;
@@ -151,91 +151,9 @@ export default function LeftPanel({
       activeSection === 'friendLinkDetail'
     );
 
-  // Avatar 鼠标视差 + 色散：仅桌面（≥1024px）启用；移动端早返回不挂监听。
-  // 与 CustomCursor / GlobalHud 一致，refs + rAF + 直接写 DOM style，避免 setState
-  // 引入的 react-hooks/* 警告与重渲染开销。
-  const { allowLogoMotion } = useHudPerformance();
+  const { allowLogoEffects } = useHudPerformance();
   const logoRef = useRef<HTMLDivElement | null>(null);
-  const { isDesktop } = useResponsive();
-  useEffect(() => {
-    if (!isDesktop || !allowLogoMotion) return;
-    const el = logoRef.current;
-    if (!el) return;
-
-    const MAX_OFFSET = 8;        // px，最大位移量
-    const LERP = 0.12;           // 越大越跟手；越小越"轻飘"
-    const targetXY = { x: 0, y: 0 };
-    const currentXY = { x: 0, y: 0 };
-    let splitCurrent = 0;        // 色散强度（运动中→1，静止→0）
-    let rafId = 0;
-    let active = false;
-
-    const onMove = (event: MouseEvent) => {
-      const w = window.innerWidth || 1;
-      const h = window.innerHeight || 1;
-      const nx = (event.clientX - w / 2) / (w / 2);
-      const ny = (event.clientY - h / 2) / (h / 2);
-      targetXY.x = Math.max(-1, Math.min(1, nx)) * MAX_OFFSET;
-      targetXY.y = Math.max(-1, Math.min(1, ny)) * MAX_OFFSET;
-      if (!active) {
-        active = true;
-        rafId = window.requestAnimationFrame(tick);
-      }
-    };
-
-    const tick = () => {
-      const prevX = currentXY.x;
-      const prevY = currentXY.y;
-      currentXY.x += (targetXY.x - currentXY.x) * LERP;
-      currentXY.y += (targetXY.y - currentXY.y) * LERP;
-      const dx = currentXY.x;
-      const dy = currentXY.y;
-
-      // 色散基于"本帧实际位移大小"（速度）的低通滤波：
-      // 鼠标停下后 lerp 步长很快趋零 → splitTarget→0 → splitCurrent 平滑衰减到 0。
-      // 上升用大 alpha 让 glitch 感跟手，下降用小 alpha 形成尾迹。
-      const stepX = dx - prevX;
-      const stepY = dy - prevY;
-      const speed = Math.hypot(stepX, stepY);          // px/帧
-      const splitTarget = Math.min(1, speed * 3);      // 1/3 px/帧 = 满色散
-      const splitLerp = splitTarget > splitCurrent ? 0.5 : 0.12;
-      splitCurrent += (splitTarget - splitCurrent) * splitLerp;
-
-      el.style.setProperty('--avatar-dx', `${dx.toFixed(2)}px`);
-      el.style.setProperty('--avatar-dy', `${dy.toFixed(2)}px`);
-      el.style.setProperty('--avatar-split', splitCurrent.toFixed(3));
-      // revealLogo keyframe 的 forwards 终态会锁住 transform: scale(1)，
-      // 用 !important 让我们的 inline 视差合成（translate × scale）反超它。
-      el.style.setProperty(
-        'transform',
-        `translate3d(${dx.toFixed(2)}px, ${dy.toFixed(2)}px, 0) scale(1)`,
-        'important',
-      );
-
-      const stillMoving =
-        Math.abs(targetXY.x - currentXY.x) > 0.05 ||
-        Math.abs(targetXY.y - currentXY.y) > 0.05 ||
-        splitCurrent > 0.005;
-      if (stillMoving) {
-        rafId = window.requestAnimationFrame(tick);
-      } else {
-        // 收尾：把 split 钉到 0，避免亚阈值残值
-        splitCurrent = 0;
-        el.style.setProperty('--avatar-split', '0');
-        active = false;
-      }
-    };
-
-    window.addEventListener('mousemove', onMove, { passive: true });
-    return () => {
-      window.removeEventListener('mousemove', onMove);
-      if (rafId) window.cancelAnimationFrame(rafId);
-      el.style.removeProperty('--avatar-dx');
-      el.style.removeProperty('--avatar-dy');
-      el.style.removeProperty('--avatar-split');
-      el.style.removeProperty('transform');
-    };
-  }, [allowLogoMotion, isDesktop]);
+  useLogoEffects(logoRef, allowLogoEffects && leftPanelAnimated && !isStandalone);
 
   return (
     <div className={`${styles.leftPanel} ${leftPanelAnimated ? styles.animated : ''} ${drawerOpen ? styles.drawerOpen : ''} ${isStandalone ? styles.standaloneHide : ''}`}>
@@ -316,7 +234,13 @@ export default function LeftPanel({
         </div>
         <span className={styles.powerText}>{powerLevel}%</span>
       </div>
-      <div ref={logoRef} className={styles.logoContainer} aria-hidden="true"></div>
+      <div className={styles.logoContainer} aria-hidden="true">
+        <div className={styles.logoReveal}>
+          <div ref={logoRef} className={styles.logoMotion}>
+            <span className={styles.logoBase}></span>
+          </div>
+        </div>
+      </div>
       <div className={`${styles.fateTextContainer} ${isFateTypingActive ? styles.typingActive : ''}`}>
         <span className={styles.fateText}>{displayedFateText}</span>
         <div className={styles.fateLine}></div>

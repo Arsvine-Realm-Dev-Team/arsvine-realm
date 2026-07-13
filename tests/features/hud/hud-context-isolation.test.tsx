@@ -22,7 +22,7 @@ vi.mock('@/features/hud/model/useAnimationSequence', () => ({
 vi.mock('@/features/hud/model/useAdaptivePerformance', () => ({
   default: () => ({
     performanceTier: 'full', performanceReason: 'default', allowHeavyCssEffects: true,
-    allowDecorativeMotion: true, allowLogoMotion: true, allowAmbientWebGL: true,
+    allowDecorativeMotion: true, allowLogoEffects: true, allowAmbientWebGL: true,
     allowInteractiveWebGL: true, allowCustomCursor: true,
   }),
 }));

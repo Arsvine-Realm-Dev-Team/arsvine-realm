@@ -83,7 +83,7 @@ export function HudProvider({ children }: { children: ReactNode }) {
     performanceReason: performance.performanceReason,
     allowHeavyCssEffects: performance.allowHeavyCssEffects,
     allowDecorativeMotion: performance.allowDecorativeMotion,
-    allowLogoMotion: performance.allowLogoMotion,
+    allowLogoEffects: performance.allowLogoEffects,
     allowAmbientWebGL: performance.allowAmbientWebGL,
     allowInteractiveWebGL: performance.allowInteractiveWebGL,
     allowCustomCursor: performance.allowCustomCursor,
@@ -93,7 +93,7 @@ export function HudProvider({ children }: { children: ReactNode }) {
     performance.allowDecorativeMotion,
     performance.allowHeavyCssEffects,
     performance.allowInteractiveWebGL,
-    performance.allowLogoMotion,
+    performance.allowLogoEffects,
     performance.performanceReason,
     performance.performanceTier,
   ]);

@@ -47,16 +47,22 @@ function evaluateBootstrap(script: string, env: {
 }
 
 describe('buildDocumentBootstrapScript performance tier', () => {
-  it('writes reduced tier for low network signals', () => {
+  it('writes motion-reduced tier and matching capabilities for low network signals', () => {
     const script = buildDocumentBootstrapScript();
     const { attrs } = evaluateBootstrap(script, { effectiveType: '3g' });
-    expect(attrs.get('data-performance-tier')).toBe('reduced');
+    expect(attrs.get('data-performance-tier')).toBe('motion-reduced');
+    expect(attrs.get('data-logo-effects')).toBe('off');
+    expect(attrs.get('data-ambient-webgl')).toBe('off');
+    expect(attrs.get('data-heavy-css-effects')).toBe('off');
+    expect(attrs.get('data-decorative-motion')).toBe('off');
+    expect(attrs.get('data-interactive-webgl')).toBe('on');
+    expect(attrs.get('data-custom-cursor')).toBe('on');
   });
 
-  it('writes balanced tier for low device memory or hardware concurrency', () => {
+  it('writes logo-reduced tier for low device memory or hardware concurrency', () => {
     const script = buildDocumentBootstrapScript();
-    expect(evaluateBootstrap(script, { deviceMemory: 4 }).attrs.get('data-performance-tier')).toBe('balanced');
-    expect(evaluateBootstrap(script, { hardwareConcurrency: 4 }).attrs.get('data-performance-tier')).toBe('balanced');
+    expect(evaluateBootstrap(script, { deviceMemory: 4 }).attrs.get('data-performance-tier')).toBe('logo-reduced');
+    expect(evaluateBootstrap(script, { hardwareConcurrency: 4 }).attrs.get('data-performance-tier')).toBe('logo-reduced');
   });
 
   it('writes minimal tier for reduced motion', () => {
@@ -67,5 +73,7 @@ describe('buildDocumentBootstrapScript performance tier', () => {
     const script = buildDocumentBootstrapScript();
     const { attrs } = evaluateBootstrap(script);
     expect(attrs.get('data-performance-tier')).toBe('full');
+    expect(attrs.get('data-logo-effects')).toBe('on');
+    expect(attrs.get('data-custom-cursor')).toBe('on');
   });
 });
