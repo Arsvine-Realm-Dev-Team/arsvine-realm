@@ -1,9 +1,10 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { useResponsive } from '@/shared/hooks/useMediaQuery';
 import type { ContentHashNavigationRequest } from './contentHashNavigation';
+import { syncContentHashFromScroll } from './contentHashUrlSync';
 
 export type ContentHashAlignmentResult = 'aligned' | 'timeout' | 'cancelled';
 
@@ -20,6 +21,7 @@ const LayoutAnchorsContext = createContext<LayoutAnchorsContextValue | null>(nul
 export function LayoutAnchorsProvider({ children }: { children: ReactNode }) {
   const { isMobile } = useResponsive();
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const [scrollContainer, setScrollContainer] = useState<HTMLDivElement | null>(null);
   const pendingHashRef = useRef<string | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
 
@@ -32,11 +34,32 @@ export function LayoutAnchorsProvider({ children }: { children: ReactNode }) {
   useEffect(() => cancel, [cancel]);
 
   const registerScrollContainer = useCallback((element: HTMLDivElement | null) => {
+    if (scrollContainerRef.current === element) return;
     scrollContainerRef.current = element;
+    setScrollContainer(element);
   }, []);
 
   const getScrollContainer = useCallback(() => scrollContainerRef.current, []);
   const isPending = useCallback((hash: string) => pendingHashRef.current === hash, []);
+
+  useEffect(() => {
+    if (!scrollContainer) return;
+
+    let frameId = 0;
+    const onScroll = () => {
+      if (frameId || pendingHashRef.current) return;
+      frameId = window.requestAnimationFrame(() => {
+        frameId = 0;
+        if (!pendingHashRef.current) syncContentHashFromScroll(scrollContainer);
+      });
+    };
+
+    scrollContainer.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      scrollContainer.removeEventListener('scroll', onScroll);
+      if (frameId) window.cancelAnimationFrame(frameId);
+    };
+  }, [scrollContainer]);
 
   const align = useCallback((request: string | ContentHashNavigationRequest) => {
     cancel();

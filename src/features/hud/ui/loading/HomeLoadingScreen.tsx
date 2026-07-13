@@ -30,14 +30,24 @@ const HomeLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   const reducedVisualMode = reducedMotion || !allowDecorativeMotion || bootReducedMode;
   
   const onCompleteRef = useRef(onComplete);
+  const completionNotifiedRef = useRef(false);
   useEffect(() => {
     onCompleteRef.current = onComplete;
   }, [onComplete]);
 
   const completeBootSequence = useCallback(() => {
     completeInitialBootSequence();
+    if (completionNotifiedRef.current) return;
+    completionNotifiedRef.current = true;
     onCompleteRef.current?.();
   }, []);
+
+  // A locale change remounts the HUD tree. The document-scoped opening
+  // sequence is intentionally skipped, but the new animation state still
+  // needs its completion signal to reveal the content layer.
+  useEffect(() => {
+    if (!visible) completeBootSequence();
+  }, [completeBootSequence, visible]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the bootstrap script resolves performance tier before hydration; this effect copies that external DOM snapshot into React after mount
