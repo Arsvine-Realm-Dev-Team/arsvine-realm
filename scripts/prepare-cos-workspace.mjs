@@ -1,169 +1,41 @@
 import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadSourceManifests } from './lib/source-manifests.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, '..');
-const WORKSPACE_ROOT = path.join(REPO_ROOT, 'cos-workspace');
+
+function parseArgs(args) {
+  const options = { workspace: path.join(REPO_ROOT, 'cos-workspace'), date: '2026-07-09' };
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    const [name, inlineValue] = arg.split('=', 2);
+    if (name !== '--workspace' && name !== '--date') throw new Error(`Unknown argument: ${arg}`);
+    const value = inlineValue || args[++index];
+    if (!value || value.startsWith('--')) throw new Error(`Missing value for ${name}`);
+    if (name === '--workspace') options.workspace = path.resolve(process.cwd(), value);
+    if (name === '--date') options.date = value;
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(options.date)) throw new Error(`Invalid --date: ${options.date}`);
+  return options;
+}
+
+const options = parseArgs(process.argv.slice(2));
+const WORKSPACE_ROOT = options.workspace;
 const LEGACY_ROOT = path.join(WORKSPACE_ROOT, 'public-root-legacy');
 const PUBLIC_ROOT = path.join(WORKSPACE_ROOT, 'public-root');
 const META_ROOT = path.join(WORKSPACE_ROOT, '_meta', 'realm');
-const CANONICAL_DATE = ['2026', '07', '09'];
-
-const PROJECT_ITEMS = [
-  {
-    id: 'arsvine-realm',
-    title: 'Arsvine Realm',
-    description: '一个以个人档案、作品展示与写作入口为核心的 Next.js 个人站。',
-    tech: ['Next.js', 'UI/UX', 'Vercel', 'i18n', 'DevOps'],
-    collection: 'web-projects',
-    date: '2026-01-01',
-    cover: 'covers/arsvine-realm-preview.webp',
-    gallery: ['posts/arsvine-realm-screenshot-1.png', 'posts/arsvine-realm-screenshot-2.png'],
-  },
-  {
-    id: 'endfield-planner',
-    title: '终末地卡池模拟及规划器',
-    description: '面向《明日方舟：终末地》的抽卡模拟与资源规划工具。',
-    tech: ['JavaScript', 'HTML', 'Python', 'Flask', 'Monte Carlo'],
-    collection: 'web-projects',
-    date: '2026-01-01',
-    cover: 'covers/endfield-planner-preview.png',
-    gallery: ['posts/endfield-planner-screenshot-1.png'],
-  },
-  {
-    id: 'early-projects',
-    title: '早期项目',
-    description: '学习过程中留下的各种实验、半成品和遗产。',
-    tech: ['HTML', 'CSS', 'JavaScript', 'Python', 'C++', 'C#', 'Scratch', 'Unity'],
-    collection: 'early-projects',
-    date: '2019-01-01',
-    cover: 'covers/gitblock-cover.png',
-    gallery: ['gallery/gitblock-allindo.png'],
-  },
-];
-
-const LIFE_ITEMS = [
-  {
-    id: 'arknights',
-    title: '明日方舟',
-    description: '不只是策略塔防，而是一套关于秩序、灾难、理想与系统设计的长期样本。',
-    tech: ['策略', '塔防', '移动端', '官方'],
-    collection: 'life-games',
-    cover: 'covers/arknights-cover.png',
-    gallery: ['gallery/arknights-screenshot-1.png', 'gallery/arknights-screenshot-2.png'],
-  },
-  {
-    id: 'arknights-endfield',
-    title: '明日方舟：终末地',
-    description: '我期待的不是简单的 3D 化，而是开拓、生产、战斗与秩序重建。',
-    tech: ['3D RPG', '策略', '动作', '工厂建设', '跨平台'],
-    collection: 'life-games',
-    cover: 'covers/endfield-cover.webp',
-    gallery: ['gallery/endfield-screenshot-1.webp'],
-  },
-  {
-    id: 'death-stranding',
-    title: '死亡搁浅',
-    description: '它把行走、负重、孤独和连接做成了可被体验的东西。',
-    tech: ['动作', '开放世界', '绳系游戏', 'PS4/PS5'],
-    collection: 'life-games',
-    cover: 'covers/death-stranding-cover.jpg',
-    gallery: ['gallery/death-stranding-screenshot-1.jpg', 'gallery/death-stranding-screenshot-2.jpg'],
-  },
-  {
-    id: 'zhenjiang',
-    title: '镇江',
-    description: '一座没有强行证明自己的江南老城，安静、松弛，也有自己的褶皱。',
-    tech: ['暂居', '旅行'],
-    collection: 'life-travel',
-    cover: 'covers/zhenjiang-cover.jpg',
-    gallery: [
-      'gallery/zhenjiang-gallery-1.jpg',
-      'gallery/zhenjiang-gallery-2.jpg',
-      'gallery/zhenjiang-gallery-3.webp',
-      'gallery/zhenjiang-gallery-4.webp',
-      'gallery/zhenjiang-gallery-5.webp',
-    ],
-  },
-  {
-    id: 'game-dev',
-    title: '游戏开发与设计',
-    description: '创造自己脑海中的世界，也研究系统、界面、规则和叙事如何共同支撑一个世界。',
-    tech: ['编程', '设计'],
-    collection: 'life-other',
-    cover: 'covers/game-dev-cover.webp',
-    gallery: ['gallery/game-dev-gallery-1.png'],
-  },
-];
-
-const EXPERIENCE_ITEMS = [
-  {
-    id: 'highschool',
-    title: '高中时期',
-    location: '宿迁市第一高级中学',
-    type: 'education',
-    gallery: ['gallery/highschool-gallery-1.jpg', 'gallery/highschool-gallery-2.jpg'],
-  },
-  {
-    id: 'university',
-    title: '大学时光',
-    location: '江苏大学',
-    type: 'education',
-    gallery: [
-      'gallery/university-gallery-1.jpg',
-      'gallery/university-gallery-2.jpg',
-      'gallery/photo-ujs-1.webp',
-      'gallery/photo-ujs-2.webp',
-      'gallery/photo-ujs-3.webp',
-      'gallery/photo-ujs-4.webp',
-      'gallery/photo-ujs-5.webp',
-    ],
-  },
-];
-
-const LOCAL_LINK_ITEMS = [
-  {
-    id: 'arning',
-    title: '小宁arning',
-    description: '给我提供了许多摄影素材，Respect！',
-    avatar: 'avatar/avatar-arning-1.webp',
-  },
-  {
-    id: 'may-rain',
-    title: '梅莉薇尔·伊芙利特',
-    description: '可以留白嘛',
-    avatar: 'avatar/avatar-may-rain-1.webp',
-  },
-];
-
-const AUDIO_ITEMS = [
-  {
-    file: 'dont-be-so-serious.m4a',
-    id: 'dont-be-so-serious',
-    title: "Don't Be So Serious",
-    artist: 'Low Roar',
-  },
-  {
-    file: 'jane-doe.m4a',
-    id: 'jane-doe',
-    title: 'Jane Doe',
-    artist: 'Unknown Artist',
-  },
-  {
-    file: 'never-feat-evil-neuro.m4a',
-    id: 'never-feat-evil-neuro',
-    title: 'NEVER (feat. Evil Neuro)',
-    artist: 'Neuro-sama',
-  },
-  {
-    file: 'somniomancer-null-set.m4a',
-    id: 'somniomancer-null-set',
-    title: 'Somniomancer (Null Set)',
-    artist: 'Monster Siren Records, Crywolf',
-  },
-];
+const CANONICAL_DATE = options.date.split('-');
+const CATALOG_DATE = options.date;
+const {
+  projectItems: PROJECT_ITEMS,
+  lifeItems: LIFE_ITEMS,
+  experienceItems: EXPERIENCE_ITEMS,
+  localLinkItems: LOCAL_LINK_ITEMS,
+  audioItems: AUDIO_ITEMS,
+} = loadSourceManifests();
 
 function toPosix(value) {
   return value.split(path.sep).join('/');
@@ -303,7 +175,7 @@ async function stageStructuredAssets(legacyFiles) {
         tags: normalizeTags(item.tech),
         collection: item.collection,
       order: index + 1,
-      date: '2026-07-09',
+      date: item.date || CATALOG_DATE,
     };
     lifeCollections.push({ cover: coverRecord });
 
@@ -323,7 +195,7 @@ async function stageStructuredAssets(legacyFiles) {
         tags: normalizeTags(item.tech),
         collection: item.collection,
         order: galleryIndex + 1,
-        date: '2026-07-09',
+        date: item.date || CATALOG_DATE,
       });
     }
   }
@@ -346,7 +218,7 @@ async function stageStructuredAssets(legacyFiles) {
         tags: [slugify(entry.type), slugify(entry.location)].filter(Boolean),
         collection: 'experience',
         order: index + 1,
-        date: '2026-07-09',
+        date: CATALOG_DATE,
       });
     }
   }
@@ -368,7 +240,7 @@ async function stageStructuredAssets(legacyFiles) {
       tags: ['friend-link'],
       collection: 'links',
       order: index + 1,
-      date: '2026-07-09',
+      date: CATALOG_DATE,
     });
   }
 
@@ -463,7 +335,7 @@ async function stageStructuredAssets(legacyFiles) {
     artist: item.artist,
     source: makeSource(toPosix(path.join('realm', 'audio', ...CANONICAL_DATE, `${item.id}${path.extname(item.file)}`))),
     order: index + 1,
-    date: '2026-07-09',
+    date: CATALOG_DATE,
   }));
 
   return {

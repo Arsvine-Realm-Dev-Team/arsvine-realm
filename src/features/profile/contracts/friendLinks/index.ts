@@ -1,5 +1,8 @@
 import type { FriendLink } from '@/shared/types';
-import { avatar } from '@/shared/lib/cdn';
+import { findSourceItem, legacyAssetReference, sourceManifests } from '@/features/assets/contracts/source-manifest';
+
+const arningSource = findSourceItem(sourceManifests.friendLinks, 'arning');
+const mayRainSource = findSourceItem(sourceManifests.friendLinks, 'may-rain');
 
 // ============================================================
 // Friend Links
@@ -34,18 +37,18 @@ export const friendLinksData: FriendLink[] = [
     avatar: 'https://avatars.fastly.steamstatic.com/3e5e7c5da4fe573703b5edc1ea27f85e0687371c_full.jpg',
   },
   {
-    id: '小宁arning',
-    name: '小宁arning',
-    description: '给我提供了许多摄影素材，Respect！',
-    url: 'https://space.bilibili.com/22792017',
-    avatar: avatar('avatar-arning-1.webp'),
+    id: arningSource.runtimeId,
+    name: arningSource.title,
+    description: arningSource.description,
+    url: arningSource.url,
+    avatar: legacyAssetReference(arningSource.avatar),
   },
   {
-    id: 'may_rain',
-    name: '梅莉薇尔·伊芙利特',
-    description: '可以留白嘛',
-    url: 'https://space.bilibili.com/168753059',
-    avatar: avatar('avatar-may-rain-1.webp'),
+    id: mayRainSource.runtimeId,
+    name: mayRainSource.title,
+    description: mayRainSource.description,
+    url: mayRainSource.url,
+    avatar: legacyAssetReference(mayRainSource.avatar),
   },
   {
     id: 'Lyric_Epic',

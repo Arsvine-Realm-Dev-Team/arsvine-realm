@@ -1,4 +1,12 @@
-export { HudProvider, useHud } from './model/HudProvider';
+export {
+  HudProvider,
+  useHudAnimation,
+  useHudColumnHover,
+  useHudPerformance,
+  useHudPower,
+  useHudStats,
+  useHudTyping,
+} from './model/HudProvider';
 export { default as GlobalHud } from './ui/layout/GlobalHud';
 export { default as LeftPanel } from './ui/layout/LeftPanel';
 export { default as NavigationColumns } from './ui/layout/NavigationColumns';

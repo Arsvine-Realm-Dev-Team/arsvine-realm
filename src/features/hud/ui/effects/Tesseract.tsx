@@ -10,6 +10,7 @@ import { useBox } from '@react-three/cannon';
 import * as THREE from 'three';
 
 import {
+  createTesseractLineGeometry,
   resolveBatteryWorldPosition,
   type BatteryPosition3D,
 } from '@/shared/lib/tesseract-geometry';
@@ -63,7 +64,6 @@ function Tesseract({
   const outerSize = 0.4;
   const innerSize = 0.2;
   const halfOuter = outerSize / 2;
-  const halfInner = innerSize / 2;
   const ndcMargin = 0.1;
   const dragMinY = -3 + halfOuter + 0.05;
 
@@ -79,46 +79,12 @@ function Tesseract({
     },
   }), groupRef);
 
-  const vertices = useMemo(() => {
-    const nextVertices: THREE.Vector3[] = [];
-    for (let index = 0; index < 8; index += 1) {
-      nextVertices.push(new THREE.Vector3(
-        (index & 1 ? 1 : -1) * halfOuter,
-        (index & 2 ? 1 : -1) * halfOuter,
-        (index & 4 ? 1 : -1) * halfOuter,
-      ));
-    }
-    for (let index = 0; index < 8; index += 1) {
-      nextVertices.push(new THREE.Vector3(
-        (index & 1 ? 1 : -1) * halfInner,
-        (index & 2 ? 1 : -1) * halfInner,
-        (index & 4 ? 1 : -1) * halfInner,
-      ));
-    }
-    return nextVertices;
-  }, [halfInner, halfOuter]);
+  const lineGeometry = useMemo(
+    () => createTesseractLineGeometry(outerSize, innerSize),
+    [innerSize, outerSize],
+  );
 
-  const edges = useMemo(() => {
-    const outerEdges = [
-      [0, 1], [1, 3], [3, 2], [2, 0],
-      [4, 5], [5, 7], [7, 6], [6, 4],
-      [0, 4], [1, 5], [2, 6], [3, 7],
-    ] as const;
-    const innerEdges = outerEdges.map(([start, end]) => [start + 8, end + 8] as const);
-    const connectingEdges = Array.from({ length: 8 }, (_, index) => [index, index + 8] as const);
-    return [...outerEdges, ...innerEdges, ...connectingEdges];
-  }, []);
-
-  const lineGeometry = useMemo(() => {
-    const geometry = new THREE.BufferGeometry();
-    const points: number[] = [];
-    edges.forEach(([startIndex, endIndex]) => {
-      points.push(vertices[startIndex].x, vertices[startIndex].y, vertices[startIndex].z);
-      points.push(vertices[endIndex].x, vertices[endIndex].y, vertices[endIndex].z);
-    });
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
-    return geometry;
-  }, [edges, vertices]);
+  useEffect(() => () => lineGeometry.dispose(), [lineGeometry]);
 
   const handlePointerDown = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();

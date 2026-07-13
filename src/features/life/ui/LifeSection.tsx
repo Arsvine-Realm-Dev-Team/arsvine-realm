@@ -3,7 +3,7 @@ import { useTranslations } from 'next-intl';
 import styles from '../styles/LifeSection.module.scss';
 import ProjectCard from '../../../shared/ui/ProjectCard';
 import type { LifeItem } from '../../../shared/types';
-import { useHud } from '../../hud/model/HudProvider';
+import { useHudPower } from '../../hud/model/HudProvider';
 
 interface LifeSectionProps {
   lifeSectionRef: RefObject<HTMLDivElement | null>;
@@ -40,7 +40,7 @@ export default function LifeSection({
   artPlaceholderText,
   handleLifeItemClick,
 }: LifeSectionProps) {
-  const { isInverted } = useHud();
+  const { isInverted } = useHudPower();
   const [alsoPlayExpanded, setAlsoPlayExpanded] = useState(false);
   const t = useTranslations('sections.life');
 

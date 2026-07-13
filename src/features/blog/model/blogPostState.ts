@@ -1,7 +1,12 @@
-import type { BlogContentLocale } from '../server/blog';
-import type { BlogVariantPayload } from './blogClient';
+import { assign, fromPromise, setup } from 'xstate';
 
-export type BlogPostAuthState = 'checking' | 'required' | 'granted';
+import type { GrantCheckResponse } from '@/shared/lib/content/access-api';
+import type { BlogContentLocale } from '../server/blog';
+import {
+  buildPostVariantApiPath,
+  type BlogVariantPayload,
+} from './blogClient';
+
 export type BlogPostViewState =
   | 'authChecking'
   | 'authRequired'
@@ -9,107 +14,224 @@ export type BlogPostViewState =
   | 'loadingVariant'
   | 'loadFailed';
 
-export interface BlogPostReducerState {
+export interface BlogPostArticleInput {
+  slug: string;
   requestedContentLocale: BlogContentLocale;
+  actualContentLocale: BlogContentLocale;
+  requiresAuth: boolean;
+  accessGroup?: string;
+  hydrationReady: boolean;
+  variants: Partial<Record<BlogContentLocale, BlogVariantPayload>>;
+}
+
+interface BlogPostMachineContext extends BlogPostArticleInput {
   displayedContentLocale: BlogContentLocale;
-  authState: BlogPostAuthState;
-  viewState: BlogPostViewState;
-  lazyVariants: Partial<Record<BlogContentLocale, BlogVariantPayload>>;
-  activeRequestKey: string | null;
-  loadingLocale: BlogContentLocale | null;
+  authState: 'checking' | 'required' | 'granted';
   errorCode: string | null;
   errorMessage: string;
 }
 
-type ResetArticleAction = {
-  type: 'resetArticle';
-  requestedContentLocale: BlogContentLocale;
-  actualContentLocale: BlogContentLocale;
-  requiresAuth: boolean;
-};
+type BlogPostMachineEvent =
+  | ({ type: 'ARTICLE_CHANGED' } & BlogPostArticleInput)
+  | { type: 'SELECT_LOCALE'; locale: BlogContentLocale }
+  | { type: 'AUTH_GRANTED' }
+  | { type: 'RETRY' };
 
-type SetRequestedLocaleAction = {
-  type: 'setRequestedLocale';
-  locale: BlogContentLocale;
-};
-
-type RetryRequestedLocaleAction = {
-  type: 'retryRequestedLocale';
-};
-
-type AuthResolvedAction = {
-  type: 'authResolved';
-  granted: boolean;
-};
-
-type DisplayCachedLocaleAction = {
-  type: 'displayCachedLocale';
-  locale: BlogContentLocale;
-};
-
-type StartVariantRequestAction = {
-  type: 'startVariantRequest';
-  requestKey: string;
-  locale: BlogContentLocale;
-};
-
-type VariantLoadedAction = {
-  type: 'variantLoaded';
-  requestKey: string;
-  locale: BlogContentLocale;
-  payload: BlogVariantPayload;
-};
-
-type VariantFailedAction = {
-  type: 'variantFailed';
-  requestKey: string;
-  locale: BlogContentLocale;
+interface VariantLoadError {
   code: string;
   message: string;
-};
-
-export type BlogPostReducerAction =
-  | ResetArticleAction
-  | SetRequestedLocaleAction
-  | RetryRequestedLocaleAction
-  | AuthResolvedAction
-  | DisplayCachedLocaleAction
-  | StartVariantRequestAction
-  | VariantLoadedAction
-  | VariantFailedAction;
-
-function resolveViewState(authState: BlogPostAuthState): BlogPostViewState {
-  if (authState === 'checking') {
-    return 'authChecking';
-  }
-  if (authState === 'required') {
-    return 'authRequired';
-  }
-  return 'ready';
 }
 
-export function createInitialBlogPostState({
-  requestedContentLocale,
-  actualContentLocale,
-  requiresAuth,
-}: {
-  requestedContentLocale: BlogContentLocale;
-  actualContentLocale: BlogContentLocale;
-  requiresAuth: boolean;
-}): BlogPostReducerState {
-  const authState: BlogPostAuthState = requiresAuth ? 'checking' : 'granted';
+interface PostVariantErrorResponse {
+  ok: false;
+  code: 'METHOD_NOT_ALLOWED' | 'VALIDATION_FAILED' | 'FORBIDDEN' | 'NOT_FOUND' | 'INTERNAL_ERROR';
+  message: string;
+}
 
-  return {
-    requestedContentLocale,
-    displayedContentLocale: actualContentLocale,
-    authState,
-    viewState: resolveViewState(authState),
-    lazyVariants: {},
-    activeRequestKey: null,
-    loadingLocale: null,
+interface PostVariantSuccessResponse extends BlogVariantPayload {
+  ok: true;
+}
+
+type PostVariantResponse = PostVariantSuccessResponse | PostVariantErrorResponse;
+
+function getVariantLoadErrorMessage(response: PostVariantErrorResponse | null) {
+  if (!response) return 'Unable to load article content.';
+  if (response.code === 'NOT_FOUND') return 'Requested article locale is unavailable.';
+  if (response.code === 'VALIDATION_FAILED') return 'Requested article locale is invalid.';
+  return response.message || 'Unable to load article content.';
+}
+
+const checkGrant = fromPromise<{ granted: boolean }, { group: string }>(async ({ input, signal }) => {
+  const response = await fetch(`/api/grant-check?group=${encodeURIComponent(input.group)}`, { signal });
+  const data = (await response.json()) as GrantCheckResponse;
+  return { granted: response.ok && data.ok && data.granted };
+});
+
+const loadVariant = fromPromise<
+  BlogVariantPayload,
+  { slug: string; locale: BlogContentLocale }
+>(async ({ input, signal }) => {
+  const response = await fetch(buildPostVariantApiPath(input.locale, input.slug), {
+    signal,
+    cache: 'no-store',
+  });
+  const data = (await response.json()) as PostVariantResponse;
+
+  if (!response.ok || !data.ok) {
+    const errorResponse = data && !data.ok ? data : null;
+    throw {
+      code: errorResponse?.code ?? 'INTERNAL_ERROR',
+      message: getVariantLoadErrorMessage(errorResponse),
+    } satisfies VariantLoadError;
+  }
+
+  return data;
+});
+
+function initialAuthState(input: BlogPostArticleInput): BlogPostMachineContext['authState'] {
+  return input.requiresAuth && input.accessGroup ? 'checking' : 'granted';
+}
+
+export const blogPostMachine = setup({
+  types: {
+    context: {} as BlogPostMachineContext,
+    input: {} as BlogPostArticleInput,
+    events: {} as BlogPostMachineEvent,
+  },
+  actors: { checkGrant, loadVariant },
+  guards: {
+    hydrationReady: ({ context }) => context.hydrationReady,
+    needsAuthCheck: ({ context }) => context.authState === 'checking',
+    needsAuth: ({ context }) => context.authState === 'required',
+    requestedVariantCached: ({ context }) => Boolean(context.variants[context.requestedContentLocale]),
+    grantResolved: ({ event }) => (
+      (event as unknown as { output?: { granted?: boolean } }).output?.granted === true
+    ),
+    forbiddenVariant: ({ event }) => (
+      (event as unknown as { error?: VariantLoadError }).error?.code === 'FORBIDDEN'
+    ),
+  },
+  actions: {
+    replaceArticle: assign(({ event }) => {
+      if (event.type !== 'ARTICLE_CHANGED') return {};
+      return {
+        slug: event.slug,
+        requestedContentLocale: event.requestedContentLocale,
+        actualContentLocale: event.actualContentLocale,
+        requiresAuth: event.requiresAuth,
+        accessGroup: event.accessGroup,
+        hydrationReady: event.hydrationReady,
+        variants: event.variants,
+        displayedContentLocale: event.actualContentLocale,
+        authState: initialAuthState(event),
+        errorCode: null,
+        errorMessage: '',
+      };
+    }),
+    selectLocale: assign(({ event }) => event.type === 'SELECT_LOCALE'
+      ? { requestedContentLocale: event.locale, errorCode: null, errorMessage: '' }
+      : {}),
+    grantAccess: assign({ authState: 'granted', errorCode: null, errorMessage: '' }),
+    requireAccess: assign({ authState: 'required', errorCode: null, errorMessage: '' }),
+    displayRequestedVariant: assign(({ context }) => ({
+      displayedContentLocale: context.requestedContentLocale,
+      errorCode: null,
+      errorMessage: '',
+    })),
+    cacheLoadedVariant: assign(({ context, event }) => {
+      const output = (event as unknown as { output?: BlogVariantPayload }).output;
+      if (!output) return {};
+      return {
+        displayedContentLocale: context.requestedContentLocale,
+        variants: {
+          ...context.variants,
+          [context.requestedContentLocale]: output,
+        },
+        errorCode: null,
+        errorMessage: '',
+      };
+    }),
+    recordVariantError: assign(({ event }) => {
+      const error = (event as unknown as { error?: VariantLoadError }).error;
+      return {
+        errorCode: error?.code ?? 'INTERNAL_ERROR',
+        errorMessage: error?.message ?? 'Unable to load article content.',
+      };
+    }),
+    clearError: assign({ errorCode: null, errorMessage: '' }),
+  },
+}).createMachine({
+  id: 'blogPost',
+  initial: 'resolving',
+  context: ({ input }) => ({
+    ...input,
+    displayedContentLocale: input.actualContentLocale,
+    authState: initialAuthState(input),
     errorCode: null,
     errorMessage: '',
-  };
+  }),
+  on: {
+    ARTICLE_CHANGED: { target: '.resolving', actions: 'replaceArticle', reenter: true },
+    SELECT_LOCALE: { target: '.resolving', actions: 'selectLocale', reenter: true },
+    AUTH_GRANTED: { target: '.resolving', actions: 'grantAccess', reenter: true },
+    RETRY: { target: '.resolving', actions: 'clearError', reenter: true },
+  },
+  states: {
+    resolving: {
+      always: [
+        { guard: ({ context }) => context.hydrationReady && context.authState === 'checking', target: 'authChecking' },
+        { guard: ({ context }) => context.hydrationReady && context.authState === 'required', target: 'authRequired' },
+        {
+          guard: ({ context }) => context.hydrationReady && Boolean(context.variants[context.requestedContentLocale]),
+          target: 'ready',
+          actions: 'displayRequestedVariant',
+        },
+        { guard: 'hydrationReady', target: 'loadingVariant' },
+      ],
+    },
+    authChecking: {
+      invoke: {
+        id: 'checkGrant',
+        src: 'checkGrant',
+        input: ({ context }) => ({ group: context.accessGroup ?? '' }),
+        onDone: [
+          { guard: 'grantResolved', target: 'resolving', actions: 'grantAccess' },
+          { target: 'authRequired', actions: 'requireAccess' },
+        ],
+        onError: { target: 'authRequired', actions: 'requireAccess' },
+      },
+    },
+    authRequired: {},
+    loadingVariant: {
+      invoke: {
+        id: 'loadVariant',
+        src: 'loadVariant',
+        input: ({ context }) => ({ slug: context.slug, locale: context.requestedContentLocale }),
+        onDone: { target: 'ready', actions: 'cacheLoadedVariant' },
+        onError: [
+          { guard: 'forbiddenVariant', target: 'authRequired', actions: 'requireAccess' },
+          { target: 'loadFailed', actions: 'recordVariantError' },
+        ],
+      },
+    },
+    ready: {},
+    loadFailed: {},
+  },
+});
+
+export function getBlogPostViewState(
+  snapshot: {
+    matches: (value: 'resolving' | 'authChecking' | 'authRequired' | 'ready' | 'loadingVariant' | 'loadFailed') => boolean;
+  },
+  context: BlogPostMachineContext,
+): BlogPostViewState {
+  if (snapshot.matches('authChecking')) return 'authChecking';
+  if (snapshot.matches('authRequired')) return 'authRequired';
+  if (snapshot.matches('loadingVariant')) return 'loadingVariant';
+  if (snapshot.matches('loadFailed')) return 'loadFailed';
+  if (snapshot.matches('ready')) return 'ready';
+  if (context.authState === 'checking') return 'authChecking';
+  return context.variants[context.requestedContentLocale] ? 'ready' : 'loadingVariant';
 }
 
 export function shouldSuppressFallbackBanner({
@@ -121,127 +243,5 @@ export function shouldSuppressFallbackBanner({
   displayedContentLocale: BlogContentLocale;
   actualContentLocale: BlogContentLocale;
 }) {
-  return (
-    displayedContentLocale !== actualContentLocale
-    || requestedContentLocale !== actualContentLocale
-  );
-}
-
-export function blogPostStateReducer(
-  state: BlogPostReducerState,
-  action: BlogPostReducerAction,
-): BlogPostReducerState {
-  switch (action.type) {
-    case 'resetArticle':
-      return createInitialBlogPostState({
-        requestedContentLocale: action.requestedContentLocale,
-        actualContentLocale: action.actualContentLocale,
-        requiresAuth: action.requiresAuth,
-      });
-    case 'setRequestedLocale':
-      return {
-        ...state,
-        requestedContentLocale: action.locale,
-        errorCode: null,
-        errorMessage: '',
-        viewState:
-          state.authState === 'granted'
-            ? state.displayedContentLocale === action.locale
-              ? 'ready'
-              : 'loadingVariant'
-            : resolveViewState(state.authState),
-      };
-    case 'retryRequestedLocale':
-      return {
-        ...state,
-        errorCode: null,
-        errorMessage: '',
-        viewState: state.authState === 'granted' ? 'loadingVariant' : resolveViewState(state.authState),
-      };
-    case 'authResolved':
-      // 鉴权状态翻转视为「请求簿记的边界事件」：清掉 activeRequestKey / loadingLocale。
-      // 否则在「public → 已授权 protected」跳转中会出现：stale render 里 state.authState
-      // 还是 'granted'（旧文章遗留），variant-fetch effect 立刻发起 post-variant 并把
-      // activeRequestKey 写成 X；下一帧 resetArticle 把 authState 拉回 'checking' 并
-      // abort 该请求，但 X 留在 state 里；grant-check 完成后这里若仍保留 X，effect 会
-      // 因 dedup 命中而 early-return，永远不再发请求 —— 页面卡在「正在解码」。
-      return {
-        ...state,
-        authState: action.granted ? 'granted' : 'required',
-        viewState:
-          action.granted && state.displayedContentLocale === state.requestedContentLocale
-            ? 'ready'
-            : action.granted
-              ? 'loadingVariant'
-              : 'authRequired',
-        activeRequestKey: null,
-        loadingLocale: null,
-        errorCode: null,
-        errorMessage: '',
-      };
-    case 'displayCachedLocale':
-      return {
-        ...state,
-        displayedContentLocale: action.locale,
-        viewState: 'ready',
-        activeRequestKey: null,
-        loadingLocale: null,
-        errorCode: null,
-        errorMessage: '',
-      };
-    case 'startVariantRequest':
-      return {
-        ...state,
-        viewState: 'loadingVariant',
-        activeRequestKey: action.requestKey,
-        loadingLocale: action.locale,
-        errorCode: null,
-        errorMessage: '',
-      };
-    case 'variantLoaded':
-      if (state.activeRequestKey !== action.requestKey) {
-        return state;
-      }
-
-      return {
-        ...state,
-        displayedContentLocale: action.locale,
-        viewState: 'ready',
-        lazyVariants: {
-          ...state.lazyVariants,
-          [action.locale]: action.payload,
-        },
-        activeRequestKey: null,
-        loadingLocale: null,
-        errorCode: null,
-        errorMessage: '',
-      };
-    case 'variantFailed':
-      if (state.activeRequestKey !== action.requestKey) {
-        return state;
-      }
-
-      if (action.code === 'FORBIDDEN') {
-        return {
-          ...state,
-          authState: 'required',
-          viewState: 'authRequired',
-          activeRequestKey: null,
-          loadingLocale: null,
-          errorCode: null,
-          errorMessage: '',
-        };
-      }
-
-      return {
-        ...state,
-        viewState: 'loadFailed',
-        activeRequestKey: null,
-        loadingLocale: null,
-        errorCode: action.code,
-        errorMessage: action.message,
-      };
-    default:
-      return state;
-  }
+  return displayedContentLocale !== actualContentLocale || requestedContentLocale !== actualContentLocale;
 }

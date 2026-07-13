@@ -3,7 +3,7 @@ import styles from './HomeLoadingScreen.module.scss';
 import gsap from 'gsap';
 import { useLoadingSystem } from '@/features/hud/model/useLoadingSystem';
 import { useReducedMotion, useResponsive } from '@/shared/hooks/useMediaQuery';
-import { useHud } from '../../model/HudProvider';
+import { useHudPerformance } from '../../model/HudProvider';
 import TerminalConsole, { TerminalConsoleRef } from './parts/TerminalConsole';
 import IndustrialHud, { IndustrialHudRef } from './parts/IndustrialHud';
 import LogoTitle, { LogoTitleRef } from './parts/LogoTitle';
@@ -22,7 +22,7 @@ const HomeLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   const { progress, logLines, showSplitLines, loading } = useLoadingSystem(loadingUiReady && !bootReducedMode);
   const { isMobile } = useResponsive();
   const reducedMotion = useReducedMotion();
-  const { allowDecorativeMotion } = useHud();
+  const { allowDecorativeMotion } = useHudPerformance();
   const reducedVisualMode = reducedMotion || !allowDecorativeMotion || bootReducedMode;
   
   const onCompleteRef = useRef(onComplete);

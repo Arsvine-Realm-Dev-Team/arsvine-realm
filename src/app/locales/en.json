@@ -99,7 +99,9 @@
     "confidential": "CONFIDENTIAL"
   },
   "fallbackBanner": {
-    "message": "This page is not yet available in {locale}. Showing the Simplified Chinese version."
+    "fallback": "This page is not yet available in {requested}. Showing {actual} instead.",
+    "translated": "This page is translated from {origin}.",
+    "dismiss": "Dismiss notice"
   },
   "pages": {
     "site": {

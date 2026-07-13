@@ -55,7 +55,7 @@ vi.mock('next-intl', () => ({
 }));
 
 vi.mock('@/features/hud/model/HudProvider', () => ({
-  useHud: () => ({ isInverted: false }),
+  useHudPower: () => ({ isInverted: false }),
 }));
 
 const navigateTo = vi.fn();

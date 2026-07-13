@@ -1,0 +1,52 @@
+[
+  {
+    "id": "arknights",
+    "title": "明日方舟",
+    "description": "不只是策略塔防，而是一套关于秩序、灾难、理想与系统设计的长期样本。",
+    "tech": ["策略", "塔防", "移动端", "官方"],
+    "collection": "life-games",
+    "date": "2026-07-09",
+    "cover": "covers/arknights-cover.png",
+    "gallery": ["gallery/arknights-screenshot-1.png", "gallery/arknights-screenshot-2.png"]
+  },
+  {
+    "id": "arknights-endfield",
+    "title": "明日方舟：终末地",
+    "description": "我期待的不是简单的 3D 化，而是开拓、生产、战斗与秩序重建。",
+    "tech": ["3D RPG", "策略", "动作", "工厂建设", "跨平台"],
+    "collection": "life-games",
+    "date": "2026-07-09",
+    "cover": "covers/endfield-cover.webp",
+    "gallery": ["gallery/endfield-screenshot-1.webp"]
+  },
+  {
+    "id": "death-stranding",
+    "title": "死亡搁浅",
+    "description": "它把行走、负重、孤独和连接做成了可被体验的东西。",
+    "tech": ["动作", "开放世界", "绳系游戏", "PS4/PS5"],
+    "collection": "life-games",
+    "date": "2026-07-09",
+    "cover": "covers/death-stranding-cover.jpg",
+    "gallery": ["gallery/death-stranding-screenshot-1.jpg", "gallery/death-stranding-screenshot-2.jpg"]
+  },
+  {
+    "id": "zhenjiang",
+    "title": "镇江",
+    "description": "一座没有强行证明自己的江南老城，安静、松弛，也有自己的褶皱。",
+    "tech": ["暂居", "旅行"],
+    "collection": "life-travel",
+    "date": "2026-07-09",
+    "cover": "covers/zhenjiang-cover.jpg",
+    "gallery": ["gallery/zhenjiang-gallery-1.jpg", "gallery/zhenjiang-gallery-2.jpg", "gallery/zhenjiang-gallery-3.webp", "gallery/zhenjiang-gallery-4.webp", "gallery/zhenjiang-gallery-5.webp"]
+  },
+  {
+    "id": "game-dev",
+    "title": "游戏开发与设计",
+    "description": "创造自己脑海中的世界，也研究系统、界面、规则和叙事如何共同支撑一个世界。",
+    "tech": ["编程", "设计"],
+    "collection": "life-other",
+    "date": "2026-07-09",
+    "cover": "covers/game-dev-cover.webp",
+    "gallery": ["gallery/game-dev-gallery-1.png"]
+  }
+]

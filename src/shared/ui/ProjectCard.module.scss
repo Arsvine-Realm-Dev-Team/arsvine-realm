@@ -19,7 +19,13 @@
   position: relative;
   transition: all 0.3s ease;
   overflow: hidden;
-  cursor: default;
+  // Desktop is fully owned by CustomCursor. A local `default` here used to
+  // re-enable the OS cursor over the cover image and expose two cursors.
+  cursor: none;
+
+  @media (max-width: 1023px) {
+    cursor: default;
+  }
 
   &:hover {
     background-color: rgba(var(--ark-secondary-rgb), 0.18);

@@ -2,34 +2,36 @@
 
 This document covers deployment, external services, environment variables, CDN/COS handling, analytics, ISR, and operational checks for **ARSVINE REALM**.
 
-## Build and run
+## Deployment
+
+This project deploys in two distinct modes. **Do not conflate them** — they have different entry points and different `server.js` semantics.
+
+### Vercel (current production)
+
+The project is deployed on Vercel. Vercel does **not** run `server.js`. It builds the project with `next build` and runs:
+
+- `src/proxy.ts` as **Edge Middleware**;
+- `src/pages/api/**` as **Serverless Functions**;
+- Pages under `src/pages/**` via Next.js's standard Pages Router build output (SSG / ISR / SSR).
+
+Environment variables are configured in the Vercel project settings. The Vercel build does not execute `pnpm start`.
+
+### Self-hosted
+
+For non-Vercel deployments (VPS, Docker, on-prem), `server.js` is the production entry. The flow is:
 
 ```bash
 pnpm build
-pnpm start
+pnpm start          # cross-env NODE_ENV=production node server.js
 ```
 
-`pnpm start` runs:
-
-```bash
-cross-env NODE_ENV=production node server.js
-```
-
-The server entry is `server.js`, not `next start`.
-
-For a traditional server deployment:
+Or under a process manager:
 
 ```bash
 pm2 start server.js --name arsvine-realm
 ```
 
-For Vercel, keep the project Node.js runtime aligned with `package.json`:
-
-```json
-"engines": {
-  "node": "24.x"
-}
-```
+In this mode, `server.js` uses `toParsedUrl()` to supplement `query.locale` from the path segment before handing the request to Next.js. This path is specific to local development and optional self-hosting; Vercel routing does not execute it.
 
 ## Required production variables
 

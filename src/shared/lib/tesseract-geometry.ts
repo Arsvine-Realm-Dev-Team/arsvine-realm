@@ -11,6 +11,45 @@ export interface Point2D {
   y: number;
 }
 
+const CUBE_EDGES = [
+  [0, 1], [1, 3], [3, 2], [2, 0],
+  [4, 5], [5, 7], [7, 6], [6, 4],
+  [0, 4], [1, 5], [2, 6], [3, 7],
+] as const;
+
+export const TESSERACT_EDGES: ReadonlyArray<readonly [number, number]> = [
+  ...CUBE_EDGES,
+  ...CUBE_EDGES.map(([start, end]) => [start + 8, end + 8] as const),
+  ...Array.from({ length: 8 }, (_, index) => [index, index + 8] as const),
+];
+
+export function createTesseractVertices(outerSize = 0.4, innerSize = 0.2) {
+  const vertices: THREE.Vector3[] = [];
+  for (const size of [outerSize, innerSize]) {
+    const half = size / 2;
+    for (let index = 0; index < 8; index += 1) {
+      vertices.push(new THREE.Vector3(
+        (index & 1 ? 1 : -1) * half,
+        (index & 2 ? 1 : -1) * half,
+        (index & 4 ? 1 : -1) * half,
+      ));
+    }
+  }
+  return vertices;
+}
+
+export function createTesseractLineGeometry(outerSize = 0.4, innerSize = 0.2) {
+  const vertices = createTesseractVertices(outerSize, innerSize);
+  const points: number[] = [];
+  for (const [startIndex, endIndex] of TESSERACT_EDGES) {
+    points.push(vertices[startIndex].x, vertices[startIndex].y, vertices[startIndex].z);
+    points.push(vertices[endIndex].x, vertices[endIndex].y, vertices[endIndex].z);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+  return geometry;
+}
+
 export function resolveBatteryAnchorPosition(
   canvasRect: DOMRect,
   iconRect: DOMRect,

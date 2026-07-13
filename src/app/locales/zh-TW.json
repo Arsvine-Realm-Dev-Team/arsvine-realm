@@ -99,7 +99,9 @@
     "confidential": "CONFIDENTIAL"
   },
   "fallbackBanner": {
-    "message": "本頁尚未提供 {locale} 譯本，目前以簡體中文顯示。"
+    "fallback": "本頁尚未提供 {requested} 譯本，目前以 {actual} 顯示。",
+    "translated": "本頁內容譯自{origin}。",
+    "dismiss": "關閉提示"
   },
   "pages": {
     "site": {

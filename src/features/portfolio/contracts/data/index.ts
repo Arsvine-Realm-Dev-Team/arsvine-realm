@@ -1,18 +1,22 @@
 import type { Project } from '@/shared/types';
-import { cover, gallery, post } from '@/shared/lib/cdn';
+import { findSourceItem, galleryReferences, legacyAssetReference, sourceManifests } from '@/features/assets/contracts/source-manifest';
+
+const realmSource = findSourceItem(sourceManifests.portfolio, 'arsvine-realm');
+const plannerSource = findSourceItem(sourceManifests.portfolio, 'endfield-planner');
+const earlySource = findSourceItem(sourceManifests.portfolio, 'early-projects');
 
 // ============================================================
 // Web / Frontend Projects
 // ============================================================
 export const webProjects: Project[] = [
   {
-    id: 1,
-    title: 'Arsvine Realm',
+    id: realmSource.runtimeId,
+    title: realmSource.title,
     description: '一个以个人档案、作品展示与写作入口为核心的 Next.js 个人站。',
     role: 'Design / Development / Content Architecture',
     year: '2026',
     status: 'shipped',
-    tech: ['Next.js', 'UI/UX', 'Vercel', 'i18n', 'DevOps'],
+    tech: realmSource.tech,
     highlights: [
       '科幻 HUD 与鹰角式信息密度',
       '超 42 种动画与交互动效',
@@ -22,11 +26,8 @@ export const webProjects: Project[] = [
     ],
     link: '#',
     liveUrl: '',
-    imageUrl: cover('arsvine-realm-preview.webp'),
-    galleryImages: [
-      { src: post('arsvine-realm-screenshot-1.png') },
-      { src: post('arsvine-realm-screenshot-2.png') },
-    ],
+    imageUrl: legacyAssetReference(realmSource.cover),
+    galleryImages: galleryReferences(realmSource.gallery),
     articleContent: `Arsvine Realm，即本站。它不是单纯的作品集页面，而是一个逐渐成型的个人档案系统：项目、文章、兴趣、旅行、艺术与一些还在发酵的设定，都被收束到同一个界面秩序里。技术上使用 Next.js 构建，部署在 Vercel 上，并通过一套相对轻量的内容结构维护多语言页面、图片资源与详情页正文。
 
 这个项目最开始基于 RainMorime 个人作品集模板再开发，但后续已经加入了大量自定义修改。视觉方向上，我希望它有一点科幻 HUD 的冷峻感，也有鹰角式界面那种“信息很多，但不是乱堆”的秩序感：线条、卡片、动效、标签和留白都服务于同一个目标——让页面像一个可以继续扩展的档案终端。
@@ -36,13 +37,13 @@ export const webProjects: Project[] = [
 对我来说，Arsvine Realm 的意义不只是“把东西放到网上”。它更像是一个长期基地：记录我正在做什么、相信什么、怎样设计系统，以及怎样把一些零散的灵感变成可见的结构。`,
   },
   {
-    id: 2,
-    title: '终末地卡池模拟及规划器',
+    id: plannerSource.runtimeId,
+    title: plannerSource.title,
     description: '面向《明日方舟：终末地》的抽卡模拟与资源规划工具，尝试把玩家直觉转化为可计算的策略。',
     role: 'Full Stack Developer / System Designer',
     year: '2026',
     status: 'wip',
-    tech: ['JavaScript', 'HTML', 'Python', 'Flask', 'Monte Carlo'],
+    tech: plannerSource.tech,
     highlights: [
       '卡池模拟与资源规划分离',
       '基于蒙特卡洛模拟给出策略评分',
@@ -52,10 +53,8 @@ export const webProjects: Project[] = [
     ],
     link: '#',
     liveUrl: '',
-    imageUrl: cover('endfield-planner-preview.png'),
-    galleryImages: [
-      { src: post('endfield-planner-screenshot-1.png') },
-    ],
+    imageUrl: legacyAssetReference(plannerSource.cover),
+    galleryImages: galleryReferences(plannerSource.gallery),
     articleContent: `这是一个为《明日方舟：终末地》准备的卡池模拟与规划工具。它的核心目标不是简单复刻“抽一次、十连、出货”的娱乐模拟，而是帮助玩家回答一个更实际的问题：在资源有限、目标不同、卡池不断轮换的情况下，怎样抽才更接近自己的最优策略？
 
 项目分为两个主要页面。模拟器页面负责还原卡池抽取过程，支持配置往期、当期以及未来可能出现的卡池；规划器页面则更偏策略分析，玩家可以输入资源、目标角色、期望保留量等条件，系统通过蒙特卡洛模拟估算不同方案的风险与收益，并给出评分和建议。
@@ -76,18 +75,16 @@ export const gameProjects: Project[] = [];
 // ============================================================
 export const earlyProjects: Project[] = [
   {
-    id: 3,
-    title: '早期项目',
+    id: earlySource.runtimeId,
+    title: earlySource.title,
     description: '学习过程中留下的各种实验、半成品和遗产。它们不一定成熟，但构成了最早的技术轨迹。',
     role: 'Student / Explorer',
     year: '201x',
     status: 'archived',
-    tech: ['HTML', 'CSS', 'JavaScript', 'Python', 'C++', 'C#', 'Scratch', 'Unity'],
+    tech: earlySource.tech,
     link: '#',
-    imageUrl: cover('gitblock-cover.png'),
-    galleryImages: [
-      { src: gallery('gitblock-allindo.png') },
-    ],
+    imageUrl: legacyAssetReference(earlySource.cover),
+    galleryImages: galleryReferences(earlySource.gallery),
     articleContent: `早期项目已经很难完整整理了。它们有的是课程作业，有的是一时兴起的网页，有的是游戏原型、脚本、小工具，也有一些只留下截图或文件名的半成品。现在回头看，它们当然粗糙，甚至很多地方称不上“工程”，但正是这些不稳定的尝试，把我一步步推向了编程、游戏设计和系统构建。
 
 这些项目横跨 HTML、CSS、JavaScript、Python、C++、C#、Scratch 和 Unity。那时候更多是在摸索：一个按钮怎样响应，一段逻辑怎样跑起来，一个界面怎样不那么难看，一个游戏机制怎样从想法变成可操作的东西。

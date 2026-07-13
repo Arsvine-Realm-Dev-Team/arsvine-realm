@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import COS from 'cos-nodejs-sdk-v5';
+import { parseCatalogSection } from './catalog-validator';
 
 const PROJECT_NAMESPACE = 'realm';
 const DEFAULT_PRIVATE_ROOT = path.join(/* turbopackIgnore: true */ process.cwd(), 'dist', 'cos-upload', 'private-root');
@@ -146,20 +147,6 @@ async function readLocalObjectText(key: string) {
   return readFile(fullPath, 'utf-8');
 }
 
-async function readObjectText(relativeKey: string) {
-  const key = buildCatalogKey(relativeKey);
-  try {
-    const remote = await readCosObjectText(key);
-    if (remote != null) {
-      return remote;
-    }
-  } catch (error) {
-    console.warn(`[catalog] remote read failed for ${key}:`, (error as Error).message);
-  }
-
-  return readLocalObjectText(key);
-}
-
 function extractCurrentVersion(pointer: CatalogCurrentPointer | string) {
   if (typeof pointer === 'string') {
     return pointer.replace(/\/+$/, '').split('/').pop() || pointer;
@@ -167,8 +154,9 @@ function extractCurrentVersion(pointer: CatalogCurrentPointer | string) {
   return pointer.version || pointer.current || pointer.path?.replace(/\/+$/, '').split('/').pop() || null;
 }
 
-async function loadCurrentVersion() {
-  const currentRaw = await readObjectText(`${PROJECT_NAMESPACE}/catalog/current.json`);
+async function loadCurrentVersion(read: (relativeKey: string) => Promise<string | null>) {
+  const currentRaw = await read(`${PROJECT_NAMESPACE}/catalog/current.json`);
+  if (currentRaw == null) return null;
   const current = readJson<CatalogCurrentPointer | string>(currentRaw);
   const version = extractCurrentVersion(current);
   if (!version) {
@@ -178,9 +166,26 @@ async function loadCurrentVersion() {
 }
 
 async function loadSection(section: CatalogSectionName) {
-  const version = await loadCurrentVersion();
-  const sectionRaw = await readObjectText(`${PROJECT_NAMESPACE}/catalog/versions/${version}/${section}.json`);
-  return readJson<unknown>(sectionRaw);
+  const readRemote = (relativeKey: string) => readCosObjectText(buildCatalogKey(relativeKey));
+  const readLocal = (relativeKey: string) => readLocalObjectText(buildCatalogKey(relativeKey));
+  const loadFrom = async (read: (relativeKey: string) => Promise<string | null>) => {
+    const version = await loadCurrentVersion(read);
+    if (!version) return null;
+    const raw = await read(`${PROJECT_NAMESPACE}/catalog/versions/${version}/${section}.json`);
+    if (raw == null) return null;
+    return parseCatalogSection(section, raw);
+  };
+
+  try {
+    const remote = await loadFrom(readRemote);
+    if (remote != null) return remote;
+  } catch (error) {
+    console.warn(`[catalog] remote ${section} is invalid; using local fallback:`, (error as Error).message);
+  }
+
+  const local = await loadFrom(readLocal);
+  if (local == null) throw new Error(`[catalog] ${section} is unavailable remotely and locally`);
+  return local;
 }
 
 function isPublished(status?: CatalogStatus) {

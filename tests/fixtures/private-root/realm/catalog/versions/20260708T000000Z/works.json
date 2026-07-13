@@ -12,6 +12,5 @@
   { "id": "work-11", "status": "published", "objectKey": "realm/images/works/work-11.a1b2c3d4.webp", "order": 11, "date": "2026-07-11" },
   { "id": "work-12", "status": "published", "objectKey": "realm/images/works/work-12.a1b2c3d4.webp", "order": 12, "date": "2026-07-12" },
   { "id": "work-13", "status": "published", "objectKey": "realm/images/works/work-13.a1b2c3d4.webp", "order": 13, "date": "2026-07-13" },
-  { "id": "work-draft", "status": "draft", "objectKey": "realm/images/works/work-draft.a1b2c3d4.webp", "order": 0, "date": "2026-07-14" },
-  { "id": "work-missing-key", "status": "published", "order": 0, "date": "2026-07-14" }
+  { "id": "work-draft", "status": "draft", "objectKey": "realm/images/works/work-draft.a1b2c3d4.webp", "order": 0, "date": "2026-07-14" }
 ]

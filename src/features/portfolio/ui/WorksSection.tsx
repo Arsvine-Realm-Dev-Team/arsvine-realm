@@ -5,7 +5,7 @@ import { useSafeTimeouts } from '../../../shared/hooks/useSafeTimeouts';
 import ProjectCard from '../../../shared/ui/ProjectCard';
 import SkillTree from '../../../shared/ui/SkillTree';
 import type { Project, SkillCategory } from '../../../shared/types';
-import { useHud } from '../../hud/model/HudProvider';
+import { useHudPower } from '../../hud/model/HudProvider';
 
 const WORK_TAB_TRANSITION_MS = 180;
 
@@ -36,7 +36,7 @@ function WorksSection({
   handleWorkItemClick,
   skillCategories,
 }: WorksSectionProps) {
-  const { isInverted } = useHud();
+  const { isInverted } = useHudPower();
   const [earlyExpanded, setEarlyExpanded] = useState(false);
   const [skillsExpanded, setSkillsExpanded] = useState(false);
   const [displayedWorkTab, setDisplayedWorkTab] = useState(activeWorkTab);

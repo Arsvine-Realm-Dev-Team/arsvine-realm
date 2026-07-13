@@ -1,17 +1,23 @@
 import type { LifeItem } from '@/shared/types';
-import { cover, gallery } from '@/shared/lib/cdn';
+import { findSourceItem, galleryReferences, legacyAssetReference, sourceManifests } from '@/features/assets/contracts/source-manifest';
+
+const arknightsSource = findSourceItem(sourceManifests.life, 'arknights');
+const endfieldSource = findSourceItem(sourceManifests.life, 'arknights-endfield');
+const deathStrandingSource = findSourceItem(sourceManifests.life, 'death-stranding');
+const zhenjiangSource = findSourceItem(sourceManifests.life, 'zhenjiang');
+const gameDevSource = findSourceItem(sourceManifests.life, 'game-dev');
 
 // ============================================================
 // Games
 // ============================================================
 export const gameData: LifeItem[] = [
   {
-    id: 'arknights',
-    title: '明日方舟',
+    id: arknightsSource.id,
+    title: arknightsSource.title,
     description: '不只是策略塔防，而是一套关于秩序、灾难、理想与系统设计的长期样本。泰拉像一份冷峻的档案，也像一个仍在运转的文明切片。',
-    tech: ['策略', '塔防', '移动端', '官方'],
+    tech: arknightsSource.tech,
     link: '#',
-    imageUrl: cover('arknights-cover.png'),
+    imageUrl: legacyAssetReference(arknightsSource.cover),
     articleContent: `《明日方舟》对我来说，不只是一款策略塔防手游。它真正吸引我的地方，是它用冷峻、克制又极具设计感的方式，构建了一个复杂而残酷的世界：感染者、移动城邦、天灾、国家冲突、企业与组织，每一个设定都不是单纯为了“酷”，而是在共同支撑泰拉大陆那种沉重而真实的秩序。
 
 我喜欢它的玩法，因为它不是把胜利简单交给数值。干员部署、费用管理、路线判断、技能轴和关卡机制，让每一次作战都像是在解一道动态的系统题。一个敌人为什么从这里来，一条路线为什么会被打开，一个技能为什么必须晚两秒放，这些细节会慢慢组合成关卡的真实结构。失败不是单纯的失败，而是系统在提醒我：再观察一次，再推演一次。
@@ -25,18 +31,15 @@ export const gameData: LifeItem[] = [
 我尤其喜欢《明日方舟》的档案感。它的 UI、活动视觉、术语、阵营文案、音乐标题和角色记录，都像是从某个庞大系统里截取出来的碎片。它不急着把一切解释清楚，而是让信息带着缺口存在。正是这些缺口，让泰拉不像一张设定表，而像一个仍在运转、仍在积累矛盾的世界。
 
 对我来说，《明日方舟》特别之处在于，它把策略游戏、视觉设计、音乐审美和架空叙事结合得非常完整。它让我记住的不只是某一次通关，也包括第一次被它的美术风格吸引、被剧情里的沉重感击中、被某个角色的立场打动的时刻。它像一个长期陪伴我的世界，让我在游玩之外，也不断思考设计、叙事、系统和创作本身。`,
-    galleryImages: [
-      { src: gallery('arknights-screenshot-1.png') },
-      { src: gallery('arknights-screenshot-2.png') },
-    ],
+    galleryImages: galleryReferences(arknightsSource.gallery),
   },
   {
-    id: 'arknights-endfield',
-    title: '明日方舟：终末地',
+    id: endfieldSource.id,
+    title: endfieldSource.title,
     description: '我期待的不是简单的“明日方舟 3D 化”，而是一个世界观如何从战术地图走向开拓现场：在荒原上布线、生产、战斗，并重新建立秩序。',
-    tech: ['3D RPG', '策略', '动作', '工厂建设', '跨平台'],
+    tech: endfieldSource.tech,
     link: '#',
-    imageUrl: cover('endfield-cover.webp'),
+    imageUrl: legacyAssetReference(endfieldSource.cover),
     articleContent: `《明日方舟：终末地》对我来说，最有吸引力的地方并不只是它继承了“明日方舟”这个名字，而是它把原本属于泰拉大陆的世界观气质，延伸到了一个更加辽阔、陌生，也更接近“开拓叙事”的空间之中。它不再只是罗德岛在移动城邦与感染者问题之间周旋，而是把视角推向塔卫二，推向终末地工业，推向一个需要被探索、建设和重新理解的边疆世界。
 
 相比《明日方舟》偏向关卡、路线与技能轴的策略塔防，《终末地》更像是另一种维度上的尝试：3D 场景、即时战斗、队伍协作、资源调度，以及带有工业建设意味的系统，共同构成了一种“在未知世界中建立秩序”的体验。它吸引我的地方，正是这种从战术判断到宏观规划的转变。玩家不只是完成一次作战，而是在一个陌生星球上不断铺设路径、组织生产、拓展据点，让文明的边界一点点向外推进。
@@ -50,17 +53,15 @@ export const gameData: LifeItem[] = [
 也正因为如此，我期待它的不只是剧情会讲到哪里、角色会出现谁，而是它能不能真正让我感受到：人类如何在一个陌生而危险的世界里，凭借技术、组织和信念，建立新的立足之地。
 
 当然，最后还是要说一句：大葱小葱？我全都要！`,
-    galleryImages: [
-      { src: gallery('endfield-screenshot-1.webp') },
-    ],
+    galleryImages: galleryReferences(endfieldSource.gallery),
   },
   {
-    id: 'death-stranding',
-    title: '死亡搁浅',
+    id: deathStrandingSource.id,
+    title: deathStrandingSource.title,
     description: '它把行走、负重、孤独和连接做成了可被体验的东西。不是拯救世界的豪言壮语，而是在破碎世界里替后来者铺一小段路。',
-    tech: ['动作', '开放世界', '绳系游戏', 'PS4/PS5'],
+    tech: deathStrandingSource.tech,
     link: '#',
-    imageUrl: cover('death-stranding-cover.jpg'),
+    imageUrl: legacyAssetReference(deathStrandingSource.cover),
     articleContent: `我玩《死亡搁浅》的经历，很难简单归类为“通关了一款游戏”。它特别的地方不在于战斗有多刺激，而在于它把行走、运送、孤独和连接变成了一种真实的情绪体验。很多时候，我只是背着货物穿过荒原、翻过雪山、避开时间雨，在漫长而安静的路途中感受到一种奇妙的重量：不是任务的重量，而是“把某样东西送到别人手里”的意义。
 
 这款游戏很慢，甚至故意让人感觉麻烦。它让你弯腰、失衡、摔倒，让货物受损，让一段路变得漫长。可也正因为如此，抵达才有了重量。很多游戏把“到达目的地”当作流程节点，但《死亡搁浅》把抵达本身做成了叙事：你不是瞬移到别人面前完成任务，而是真的带着一身泥水和风雪，把东西送过去。
@@ -70,10 +71,7 @@ export const gameData: LifeItem[] = [
 这也是它最打动我的地方。它没有把“连接”写成空泛的鸡汤，而是让连接变成可以踩上去的桥、可以抓住的绳、可以避雨的棚。世界已经支离破碎，但人依然可以通过一次次微小的传递，重新建立联系。这种表达很朴素，却比很多宏大的口号更有力量。
 
 对我来说，《死亡搁浅》像是一场漫长的徒步，也像一份关于文明残骸的维护日志。它让我记住：所谓重建，有时候不是先喊出一个伟大的未来，而是先把今天这件货送到，把这段路修好，把一个陌生人留给我的梯子继续留给下一个人。`,
-    galleryImages: [
-      { src: gallery('death-stranding-screenshot-1.jpg') },
-      { src: gallery('death-stranding-screenshot-2.jpg') },
-    ],
+    galleryImages: galleryReferences(deathStrandingSource.gallery),
   },
 ];
 
@@ -82,12 +80,12 @@ export const gameData: LifeItem[] = [
 // ============================================================
 export const travelData: LifeItem[] = [
   {
-    id: 'zhenjiang',
-    title: '镇江',
+    id: zhenjiangSource.id,
+    title: zhenjiangSource.title,
     description: '不算远行，更像暂居后的慢慢识别：一座没有强行证明自己的江南老城，安静、松弛，也有自己的褶皱。',
-    tech: ['暂居', '旅行'],
+    tech: zhenjiangSource.tech,
     link: '#',
-    imageUrl: cover('zhenjiang-cover.jpg'),
+    imageUrl: legacyAssetReference(zhenjiangSource.cover),
     articleContent: `根本算不上旅游好吧，因为就在这里上学来着。
 
 但也正因为不是旅游，镇江反而变得更真实。它不是那种在攻略里被压缩成几个景点、几张照片和一句“值得打卡”的城市，而是会在上课、吃饭、散步、赶路、发呆的时候，一点点渗进日常里。它的好不是立刻扑过来的，而是走久了之后才慢慢显出来。
@@ -97,13 +95,7 @@ export const travelData: LifeItem[] = [
 在这里待久了，我会对“旅行”这个词产生一点怀疑。真正让我记住一座城市的，往往不是景点本身，而是某个普通下午的光线，是从学校出去时忽然吹来的风，是走过西津渡时看到的旧砖与新店，是江边那种湿润、开阔、又有点沉默的空气。它们很难被整理成标准游记，却会慢慢变成记忆的底色。
 
 所以镇江对我来说，是一种意外之喜。它没有杭州、苏州那样强烈的名气，也不需要把自己包装成某种完美的江南想象。它更像一个暂时落脚的地方：不耀眼，但耐看；不喧哗，但有回声。也许正因为我不是匆匆经过的游客，而是在这里学习和生活的人，它才会以一种更缓慢、更私人、更真实的方式留下来。`,
-    galleryImages: [
-      { src: gallery('zhenjiang-gallery-1.jpg') },
-      { src: gallery('zhenjiang-gallery-2.jpg') },
-      { src: gallery('zhenjiang-gallery-3.webp') },
-      { src: gallery('zhenjiang-gallery-4.webp') },
-      { src: gallery('zhenjiang-gallery-5.webp') },
-    ],
+    galleryImages: galleryReferences(zhenjiangSource.gallery),
   },
 ];
 
@@ -112,11 +104,11 @@ export const travelData: LifeItem[] = [
 // ============================================================
 export const otherData: LifeItem[] = [
   {
-    id: 'game-dev',
-    title: '游戏开发与设计',
+    id: gameDevSource.id,
+    title: gameDevSource.title,
     description: '创造自己脑海中的世界，也研究世界如何被系统、界面、规则和叙事共同支撑起来。还在路上，但这条路本身已经足够有趣。',
-    imageUrl: cover('game-dev-cover.webp'),
-    tech: ['编程', '设计'],
+    imageUrl: legacyAssetReference(gameDevSource.cover),
+    tech: gameDevSource.tech,
     articleContent: `我的游戏开发之路，最开始并不是从“我要做出一款完整的游戏”开始的，而是从一个个脑海里的世界、角色、机制和场景开始的。我一直很喜欢那种能够把想象变成可交互体验的创作方式：不是只写下一段设定，也不是只画出一张画面，而是让玩家真正走进那个世界，感受到它的规则、氛围和情绪。
 
 目前我主要使用 Godot，也接触过 Unity。对我来说，游戏开发最吸引人的地方在于它同时包含程序、设计、美术、叙事和体验节奏。写代码时，我在思考系统如何运转；设计玩法时，我在思考玩家会如何理解和行动；搭建场景时，我又会去考虑画面、气氛和世界观之间的统一。这个过程很复杂，但也正因为复杂，才让我觉得它足够迷人。
@@ -128,9 +120,7 @@ export const otherData: LifeItem[] = [
 我喜欢的方向，大概可以概括成几种混合物：上古科技神教式的遗迹与系统，二次元后朋克苏俄式的冷峻秩序，工业档案风格的信息设计，以及那些看似荒诞、但内部逻辑必须自洽的架空世界。它们不一定都会变成作品，但会不断进入我的设计判断里，成为我理解游戏、网站、界面和叙事的方式。
 
 我现在仍然在路上，还没有做出足够成熟的作品，但我已经很享受这个过程。对我来说，游戏开发不只是技术练习，也是一种表达方式。它让我有机会创造属于自己的世界，并用规则、画面和交互，把那些原本只存在于脑海中的东西一点点变成现实。`,
-    galleryImages: [
-      { src: gallery('game-dev-gallery-1.png') },
-    ],
+    galleryImages: galleryReferences(gameDevSource.gallery),
   },
 ];
 

@@ -81,7 +81,7 @@ vi.mock('@/features/blog/ui/blog/BlogDetailScaffold', () => ({
 }));
 
 vi.mock('@/features/hud/model/HudProvider', () => ({
-  useHud: () => ({ isInverted: false }),
+  useHudPower: () => ({ isInverted: false }),
 }));
 
 vi.mock('@/features/navigation/model/TransitionProvider', () => ({

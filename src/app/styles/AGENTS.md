@@ -33,7 +33,7 @@ styles/
 
 - `--ark-highlight-green` —— 主强调色，改色重新主题化只动这个变量。
 - `--ark-inverted-*` —— 反转模式（拉杆触发）下的颜色。
-- 反转模式由 `MainLayout` 顶层 `.inverted` class 驱动。组件用 `:global(.inverted) &` 选择器，或者读 `useHud().isInverted`。**优先 CSS 变量层**，不要在组件里写大量 if/else。
+- 反转模式由 `MainLayout` 顶层 `.inverted` class 驱动。组件用 `:global(.inverted) &` 选择器，或者读 `useHudPower().isInverted`。**优先 CSS 变量层**，不要在组件里写大量 if/else。
 
 ## 移动端顶部安全区
 

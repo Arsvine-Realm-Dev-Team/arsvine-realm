@@ -3,7 +3,7 @@ import gsap from 'gsap';
 import styles from '../../../../app/styles/Shell.module.scss';
 import VerticalShinyText from '../../../../shared/ui/VerticalShinyText';
 import ActivationLever from '../ActivationLever';
-import { useHud } from '../../model/HudProvider';
+import { useHudAnimation, useHudPower, useHudTyping } from '../../model/HudProvider';
 import { useResponsive } from '@/shared/hooks/useMediaQuery';
 import type { ColumnPhase } from '../../../../shared/types';
 
@@ -49,9 +49,10 @@ export default function NavigationColumns({
   const {
     handleActivateTesseract, isTesseractActivated,
     handleDischargeLeverPull, isDischarging,
-    leversVisible, mainVisible, powerLevel,
-    displayedFateText, isFateTypingActive,
-  } = useHud();
+    powerLevel,
+  } = useHudPower();
+  const { leversVisible, mainVisible } = useHudAnimation();
+  const { displayedFateText, isFateTypingActive } = useHudTyping();
   const { isMobile } = useResponsive();
 
   const rightPanelRef = useRef<HTMLDivElement>(null);

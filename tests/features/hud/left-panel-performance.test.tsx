@@ -10,7 +10,7 @@ vi.mock('next-intl', () => ({
 }));
 
 vi.mock('@/features/hud/model/HudProvider', () => ({
-  useHud: () => useAppMock(),
+  useHudPerformance: () => useAppMock(),
 }));
 
 vi.mock('@/shared/hooks/useMediaQuery', () => ({

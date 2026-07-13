@@ -2,7 +2,7 @@
 import { Fragment, useEffect, useRef, type Ref } from 'react';
 import { useTranslations } from 'next-intl';
 import styles from '../../../../app/styles/Shell.module.scss';
-import { useHud } from '../../model/HudProvider';
+import { useHudPerformance } from '../../model/HudProvider';
 import { useSiteAssets } from '../../../assets/model/SiteAssetsProvider';
 import ActivationLever from '../ActivationLever';
 import { useResponsive } from '@/shared/hooks/useMediaQuery';
@@ -154,7 +154,7 @@ export default function LeftPanel({
   // Avatar 鼠标视差 + 色散：仅桌面（≥1024px）启用；移动端早返回不挂监听。
   // 与 CustomCursor / GlobalHud 一致，refs + rAF + 直接写 DOM style，避免 setState
   // 引入的 react-hooks/* 警告与重渲染开销。
-  const { allowLogoMotion } = useHud();
+  const { allowLogoMotion } = useHudPerformance();
   const logoRef = useRef<HTMLDivElement | null>(null);
   const { isDesktop } = useResponsive();
   useEffect(() => {

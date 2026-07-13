@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   computeBatteryAttractionOffset,
+  createTesseractLineGeometry,
+  createTesseractVertices,
   resolveBatteryAnchorPosition,
+  TESSERACT_EDGES,
 } from '@/shared/lib/tesseract-geometry';
 
 describe('tesseract geometry helpers', () => {
@@ -28,5 +31,15 @@ describe('tesseract geometry helpers', () => {
 
     expect(offset.x).toBeGreaterThan(0);
     expect(Math.abs(offset.y)).toBeLessThan(14);
+  });
+
+  it('creates the full 16-vertex, 32-edge tesseract topology', () => {
+    const vertices = createTesseractVertices();
+    const geometry = createTesseractLineGeometry();
+
+    expect(vertices).toHaveLength(16);
+    expect(TESSERACT_EDGES).toHaveLength(32);
+    expect(geometry.getAttribute('position').count).toBe(64);
+    geometry.dispose();
   });
 });

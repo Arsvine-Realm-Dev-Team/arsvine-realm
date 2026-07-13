@@ -34,7 +34,11 @@ vi.mock('next/dynamic', () => {
 });
 
 vi.mock('@/features/hud/model/HudProvider', () => ({
-  useHud: () => useAppMock(),
+  useHudAnimation: () => useAppMock(),
+  useHudPower: () => useAppMock(),
+  useHudStats: () => useAppMock(),
+  useHudTyping: () => useAppMock(),
+  useHudPerformance: () => useAppMock(),
 }));
 
 vi.mock('@/features/navigation/model/TransitionProvider', () => ({
@@ -42,6 +46,14 @@ vi.mock('@/features/navigation/model/TransitionProvider', () => ({
     navigateTo: vi.fn(),
     handleBack: vi.fn(),
     isDetailOpen: () => false,
+  }),
+}));
+
+vi.mock('@/features/navigation/model/LayoutAnchorsContext', () => ({
+  useLayoutAnchors: () => ({
+    getScrollContainer: () => null,
+    align: vi.fn().mockResolvedValue('aligned'),
+    isPending: () => false,
   }),
 }));
 

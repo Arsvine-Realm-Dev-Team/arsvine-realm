@@ -1,13 +1,12 @@
 import type { ExperienceItem } from '@/shared/types';
-import { gallery } from '@/shared/lib/cdn';
+import { experienceSourceFields } from '@/features/assets/contracts/source-manifest';
 
 // ============================================================
 // Timeline
 // ============================================================
 export const experienceData: ExperienceItem[] = [
   {
-    id: 'highschool',
-    type: 'education',
+    ...experienceSourceFields('highschool'),
     duration: '2019 - 2025',
     title: '高中時期',
     location: '宿遷市第一高級中學',
@@ -16,14 +15,9 @@ export const experienceData: ExperienceItem[] = [
       '那段時間更像一段基礎設施建設：知識、習慣、審美與自學能力，都在緩慢成形。',
     ],
     alignment: 'right',
-    galleryImages: [
-      { src: gallery('highschool-gallery-1.jpg') },
-      { src: gallery('highschool-gallery-2.jpg') },
-    ],
   },
   {
-    id: 'university',
-    type: 'education',
+    ...experienceSourceFields('university'),
     duration: '2025 - 至今',
     title: '大學時光',
     location: '江蘇大學',
@@ -33,19 +27,9 @@ export const experienceData: ExperienceItem[] = [
       '鎮江是暫居地，也是很多記錄開始沉澱成 Arsvine Realm 的地方。',
     ],
     alignment: 'left',
-    galleryImages: [
-      { src: gallery('university-gallery-1.jpg') },
-      { src: gallery('university-gallery-2.jpg') },
-      { src: gallery('photo-ujs-1.webp') },
-      { src: gallery('photo-ujs-2.webp') },
-      { src: gallery('photo-ujs-3.webp') },
-      { src: gallery('photo-ujs-4.webp') },
-      { src: gallery('photo-ujs-5.webp') },
-    ],
   },
   {
-    id: 'rhodes-island',
-    type: 'work',
+    ...experienceSourceFields('rhodes-island'),
     duration: '長期在艦',
     title: '羅德島記錄',
     location: '《明日方舟》 · 羅德島',
@@ -55,6 +39,5 @@ export const experienceData: ExperienceItem[] = [
       '它更像一個精神座標：在混亂世界中維持秩序、理想和一點不服輸的工程精神。',
     ],
     alignment: 'left',
-    galleryImages: [],
   },
 ];

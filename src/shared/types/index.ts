@@ -337,19 +337,6 @@ export interface ColumnHoverState {
 }
 
 // ============================================================
-// Context Type
-// ============================================================
-
-export interface HudContextValue
-  extends AnimationSequenceState,
-    PowerSystemState,
-    AdaptivePerformanceState,
-    RealtimeStatsState,
-    FateTypingState,
-    EnvParamsTypingState,
-    ColumnHoverState {}
-
-// ============================================================
 // Component Props
 // ============================================================
 

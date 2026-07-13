@@ -1,15 +1,14 @@
 import type { Project } from '@/shared/types';
-import { cover, gallery, post } from '@/shared/lib/cdn';
+import { portfolioSourceFields } from '@/features/assets/contracts/source-manifest';
 
 export const webProjects: Project[] = [
   {
-    id: 1,
+    ...portfolioSourceFields('arsvine-realm'),
     title: 'Arsvine Realm',
     description: 'A Next.js personal site built around portfolio work, writing, and a growing personal archive.',
     role: 'Design / Development / Content Architecture',
     year: '2026',
     status: 'shipped',
-    tech: ['Next.js', 'UI/UX', 'Vercel', 'i18n', 'DevOps'],
     highlights: [
       'Sci-fi HUD direction with dense information design',
       'More than 42 animation and interaction patterns',
@@ -19,11 +18,6 @@ export const webProjects: Project[] = [
     ],
     link: '#',
     liveUrl: '',
-    imageUrl: cover('arsvine-realm-preview.webp'),
-    galleryImages: [
-      { src: post('arsvine-realm-screenshot-1.png') },
-      { src: post('arsvine-realm-screenshot-2.png') },
-    ],
     articleContent: `Arsvine Realm is this site. It is not just a portfolio page, but a gradually forming personal archive system: projects, essays, interests, travel notes, art references, and still-evolving fictional settings are all gathered into the same interface order. Technically, it is built with Next.js, deployed on Vercel, and maintained through a lightweight content structure for multilingual pages, image resources, and detail articles.
 
 The project started as a redevelopment of the RainMorime portfolio template, but has since grown through many custom modifications. Visually, I wanted it to carry the cool precision of a sci-fi HUD while also borrowing the kind of dense-but-controlled information design often seen in Hypergryph's interfaces. Lines, cards, motion, tags, and empty space all serve the same purpose: making the site feel like an expandable archive terminal.
@@ -33,13 +27,12 @@ On the engineering side, the project does not try to be complicated for its own 
 For me, Arsvine Realm is not merely about putting things online. It is closer to a long-term base: a place to record what I am building, what I believe in, how I design systems, and how scattered ideas can be turned into visible structure.`,
   },
   {
-    id: 2,
+    ...portfolioSourceFields('endfield-planner'),
     title: 'Endfield Gacha Simulator & Planner',
     description: 'A pull simulation and resource planning tool for Arknights: Endfield, designed to turn player intuition into computable strategy.',
     role: 'Full Stack Developer / System Designer',
     year: '2026',
     status: 'wip',
-    tech: ['JavaScript', 'HTML', 'Python', 'Flask', 'Monte Carlo'],
     highlights: [
       'Separate simulation and planning workflows',
       'Strategy scoring based on Monte Carlo simulation',
@@ -49,10 +42,6 @@ For me, Arsvine Realm is not merely about putting things online. It is closer to
     ],
     link: '#',
     liveUrl: '',
-    imageUrl: cover('endfield-planner-preview.png'),
-    galleryImages: [
-      { src: post('endfield-planner-screenshot-1.png') },
-    ],
     articleContent: `This is a gacha simulation and planning tool prepared for Arknights: Endfield. Its core goal is not to simply recreate the entertainment loop of "single pull, ten-pull, and success animation", but to help players answer a more practical question: when resources are limited, goals differ, and banners keep rotating, which pulling strategy is closer to their own optimum?
 
 The project is divided into two main pages. The simulator page recreates the banner pulling process and supports past, current, and possible future banner configurations. The planner page focuses more on strategy analysis. Players can enter their resources, target characters, expected savings, and other conditions; the system then uses Monte Carlo simulation to estimate the risk and expected value of different plans, producing a score and recommendation.
@@ -67,18 +56,13 @@ export const gameProjects: Project[] = [];
 
 export const earlyProjects: Project[] = [
   {
-    id: 3,
+    ...portfolioSourceFields('early-projects'),
     title: 'Early Projects',
     description: 'Experiments, unfinished pieces, and remnants from the learning years. They are not all mature, but they form the earliest technical trail.',
     role: 'Student / Explorer',
     year: '201x',
     status: 'archived',
-    tech: ['HTML', 'CSS', 'JavaScript', 'Python', 'C++', 'C#', 'Scratch', 'Unity'],
     link: '#',
-    imageUrl: cover('gitblock-cover.png'),
-    galleryImages: [
-      { src: gallery('gitblock-allindo.png') },
-    ],
     articleContent: `My early projects are difficult to organize completely now. Some were course assignments, some were spontaneous web pages, some were game prototypes, scripts, or small utilities, and some only survive as screenshots or forgotten filenames. Looking back, they were rough, and many of them could hardly be called "engineering". But those unstable attempts gradually pushed me toward programming, game design, and system building.
 
 These projects touched HTML, CSS, JavaScript, Python, C++, C#, Scratch, and Unity. At that stage I was mostly exploring basic questions: how a button responds, how a piece of logic runs, how an interface becomes less ugly, and how a game mechanic can move from an idea into something playable.
