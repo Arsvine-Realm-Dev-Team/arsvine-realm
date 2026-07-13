@@ -8,7 +8,7 @@ ARSVINE REALM is a personal portfolio and blog site built around a post-apocalyp
 
 - **Project type:** personal site, not a generic template
 - **Owner:** Arsvine Zhu
-- **Stack:** Next.js 16 Pages Router, React 19, TypeScript, SCSS Modules, Three.js, GSAP, MDX, `next-intl` 4, Vitest. Production runs on Vercel using the standard Next.js build output. `server.js` is the local-development and optional self-hosted entry.
+- **Stack:** Next.js 16 App Router, React 19, TypeScript, SCSS Modules, Three.js, GSAP, MDX, `next-intl` 4, Vitest. Production runs on Vercel using the standard Next.js build output. `server.js` is the local-development and optional self-hosted entry.
 - **Runtime target:** Node.js `24.x`
 - **UI locales:** `zh-CN`, `zh-TW`, `en`
 - **Public route shape:** `/<locale>/...`
@@ -62,10 +62,10 @@ pnpm vitest run -t "reading time"
 - Unified animated navigation through `TransitionContext`; internal navigation should use `useTransition().navigateTo()`.
 - Trilingual UI through `next-intl` and locale-prefixed routing.
 - Content aggregation page at `/<locale>/content` with hash sections.
-- Blog detail pages using SSG, `fallback: 'blocking'`, and ISR.
+- Blog detail pages using App Router static params and ISR.
 - Runtime blog/tweet loading from an external private GitHub content repository when configured (`blog-index.json`, `blog/<slug>/<locale>.mdx`, `tweets/index.json`, `tweets/YYYY-MM.json`).
 - Tweets archive page with month pagination and a development-only synthetic stress mode.
-- TOTP-protected posts that do not ship protected MDX in static props or `_next/data` JSON.
+- TOTP-protected posts that do not ship protected MDX in HTML or RSC payloads.
 - Self-hosted Google Fonts and media assets served from Tencent COS through `cdn.arsvine.com`.
 - Desktop-only WebGL/Three.js atmosphere effects loaded with SSR disabled.
 - Dynamic `sitemap.xml`, per-locale RSS, and `robots.txt`.
@@ -73,11 +73,10 @@ pnpm vitest run -t "reading time"
 ## Project structure
 
 ```text
-src/app/             # provider composition, application shell, i18n, global styles/tokens
 config/              # small runtime config fragments, e.g. image host allowlist
 content/blog/init/   # bundled fallback post when external content repo is unavailable
 docs/                # documentation and handoff notes
-src/pages/           # Next.js Pages Router routes and API routes
+src/app/             # Next.js App Router pages and Route Handlers
 src/features/        # feature UI, state, server loaders/contracts/styles and public entrypoints
 public/              # static assets, icons, local music test folder
 scripts/             # image, font, favicon, and local-host helpers

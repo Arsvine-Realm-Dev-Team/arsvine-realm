@@ -1,39 +1,27 @@
-import Head from 'next/head';
+'use client';
+
 import { useSyncExternalStore } from 'react';
-import { useRouter } from 'next/router';
 import { useTranslations } from 'next-intl';
 import SectionPageLayout from '../../../app/shell/SectionPageLayout';
 import { useTransition } from '../model/TransitionProvider';
-import { getSiteUrl } from '@/shared/config/site';
 import { resolveLocale } from '@/shared/contracts/locale';
 import styles from '../styles/NotFoundPage.module.scss';
+import { useNavigationRuntime } from '../model/NavigationRuntime';
 
 export default function NotFoundView() {
-  const router = useRouter();
+  const { asPath, query } = useNavigationRuntime();
   const { navigateTo } = useTransition();
-  const locale = resolveLocale(router.query.locale, router.asPath);
+  const locale = resolveLocale(query.locale, asPath);
   const t = useTranslations('pages.notFound');
   const tSite = useTranslations('pages.site');
   const requestedPath = useSyncExternalStore(
     () => () => {},
-    () => (router.asPath && router.asPath !== '/404' ? router.asPath : ''),
+    () => (asPath && asPath !== '/404' ? asPath : ''),
     () => '',
   );
 
   return (
     <>
-      <Head>
-        <title>{`${t('title')} | ${tSite('title')}`}</title>
-        <meta name="description" content={t('description')} />
-        <meta name="robots" content="noindex, follow" />
-        <meta property="og:title" content={t('title')} />
-        <meta property="og:description" content={t('description')} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={`${getSiteUrl()}${requestedPath || `/${locale}/404`}`} />
-        <meta name="twitter:title" content={t('title')} />
-        <meta name="twitter:description" content={t('description')} />
-      </Head>
-
       <SectionPageLayout>
         <section className={styles.page}>
           <div className={styles.panel}>

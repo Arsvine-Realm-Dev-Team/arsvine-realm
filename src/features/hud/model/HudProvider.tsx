@@ -1,3 +1,5 @@
+'use client';
+
 import { createContext, useContext, useMemo, useSyncExternalStore, type ReactNode } from 'react';
 
 import { getHudTypingEnabledSnapshot, subscribeHudTypingVisibility } from '@/shared/lib/hud-typing-visibility';

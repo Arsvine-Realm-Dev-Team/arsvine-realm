@@ -18,9 +18,9 @@ CSS consumes capability attributes such as `data-heavy-css-effects`, `data-decor
 
 ## Detection and recovery
 
-The document bootstrap selects a hydration-safe initial ceiling. Reduced motion maps to `minimal`, Save-Data and slow networks to `motion-reduced`, low memory or CPU concurrency to `logo-reduced`, and other devices to `full`.
+The document bootstrap selects a hydration-safe initial ceiling from explicit user preferences only. Reduced motion maps to `minimal`; Save-Data maps to `motion-reduced`; all other visitors start at `full`. Network effective type, RTT, downlink, memory, and CPU-concurrency hints are not visual-performance inputs: they do not measure frame pacing and are frequently coarse or stale. The `<html>` element exposes `data-performance-reason` (`reduced-motion`, `save-data`, `runtime-fps`, or `none`) alongside capability attributes for diagnosis.
 
-After the opening animation, visible-page sampling uses windows of up to 120 frames or 2500ms. The first poor window moves `full` to `logo-reduced` immediately. Later stages need two poor windows; three healthy windows recover one tier. Poor means average FPS below 45 or at least 25% slow frames. Healthy means at least 55 FPS and no more than 10% slow frames. Later degradation and all recovery have 5s and 10s cooldowns. A page cannot recover above the stricter of its heuristic and session runtime ceilings.
+After the opening animation, visible-page sampling uses windows of up to 120 frames or 2500ms. The first poor window moves `full` to `logo-reduced` immediately. Later stages need two poor windows; three healthy windows recover one tier. Poor means average FPS below 45 or at least 25% slow frames. Healthy means at least 55 FPS and no more than 10% slow frames. Later degradation and all recovery have 5s and 10s cooldowns. A page cannot recover above the stricter of its explicit-preference and session runtime ceilings.
 
 When adding an expensive effect, add an explicit capability rather than checking device properties in the component. Optional effects must tolerate unmounting and module-load failure.
 

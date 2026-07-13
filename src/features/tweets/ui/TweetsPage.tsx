@@ -1,9 +1,8 @@
-import Head from 'next/head';
+'use client';
+
 import { useTranslations } from 'next-intl';
 import SectionPageLayout from '../../../app/shell/SectionPageLayout';
 import TweetsSection from './TweetsSection';
-import HreflangLinks from '../../../shared/ui/HreflangLinks';
-import { getSiteUrl } from '@/shared/config/site';
 import type { Locale } from '@/shared/contracts/locale';
 import type { TweetMonthGroup } from '../model/types';
 
@@ -30,20 +29,7 @@ export default function TweetsPage({
   const t = useTranslations('pages.tweets');
 
   return (
-    <>
-      <Head>
-        <title>{t('title')}</title>
-        <meta name="description" content={t('description')} />
-        <meta property="og:title" content={t('title')} />
-        <meta property="og:description" content={t('description')} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={`${getSiteUrl()}/${locale}/tweets`} />
-        <meta name="twitter:title" content={t('title')} />
-        <meta name="twitter:description" content={t('description')} />
-        <HreflangLinks basePath="/tweets" />
-      </Head>
-
-      <SectionPageLayout>
+    <SectionPageLayout>
         <TweetsSection
           locale={locale}
           monthGroups={monthGroups}
@@ -53,7 +39,6 @@ export default function TweetsPage({
           sourceUnavailable={sourceUnavailable}
           sourceError={sourceError}
         />
-      </SectionPageLayout>
-    </>
+    </SectionPageLayout>
   );
 }

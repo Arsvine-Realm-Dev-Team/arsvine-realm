@@ -1,15 +1,12 @@
+'use client';
+
 import { useEffect } from 'react';
-import Head from 'next/head';
-import { useRouter } from 'next/router';
-import type { GetStaticPaths, GetStaticProps } from 'next';
 import { useTranslations } from 'next-intl';
 import { useHudAnimation, useHudColumnHover, useHudPower } from '../model/HudProvider';
 import { useTransition } from '../../navigation/model/TransitionProvider';
 import NavigationColumns from './layout/NavigationColumns';
-import HreflangLinks from '../../../shared/ui/HreflangLinks';
-import { getSiteUrl } from '@/shared/config/site';
 import { locales, type Locale } from '@/shared/contracts/locale';
-import { loadMessages } from '@/app/i18n/data';
+import { useNavigationRuntime } from '@/features/navigation/model/NavigationRuntime';
 
 interface HomeProps {
   locale: Locale;
@@ -17,7 +14,7 @@ interface HomeProps {
 }
 
 export default function Home({ locale }: HomeProps) {
-  const router = useRouter();
+  const { prefetch } = useNavigationRuntime();
   const { navigateTo } = useTransition();
   const tSite = useTranslations('pages.site');
   const {
@@ -35,8 +32,8 @@ export default function Home({ locale }: HomeProps) {
       return;
     }
 
-    router.prefetch(`/${locale}/content`);
-  }, [router, locale]);
+    void prefetch(`/${locale}/content`);
+  }, [prefetch, locale]);
 
   const handleColumnClick = (columnIndex: number) => {
     if (!animationsComplete) return;
@@ -47,19 +44,7 @@ export default function Home({ locale }: HomeProps) {
   };
 
   return (
-    <>
-      <Head>
-        <title>{tSite('title')}</title>
-        <meta name="description" content={tSite('description')} />
-        <meta property="og:title" content={tSite('title')} />
-        <meta property="og:description" content={tSite('description')} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={`${getSiteUrl()}/${locale}/`} />
-        <meta name="twitter:title" content={tSite('title')} />
-        <meta name="twitter:description" content={tSite('description')} />
-        <HreflangLinks basePath="/" />
-      </Head>
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
+    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
         <NavigationColumns
           activeSection="home"
           linesAnimated={linesAnimated}
@@ -78,18 +63,6 @@ export default function Home({ locale }: HomeProps) {
           handleColumnMouseEnter={handleColumnMouseEnter}
           handleColumnMouseLeave={handleColumnMouseLeave}
         />
-      </div>
-    </>
+    </div>
   );
 }
-
-export const getStaticPaths: GetStaticPaths = async () => ({
-  paths: locales.map((locale) => ({ params: { locale } })),
-  fallback: false,
-});
-
-export const getStaticProps: GetStaticProps<HomeProps> = async ({ params }) => {
-  const locale = params!.locale as Locale;
-  const messages = await loadMessages(locale);
-  return { props: { locale, messages } };
-};

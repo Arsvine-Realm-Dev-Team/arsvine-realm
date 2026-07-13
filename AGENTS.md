@@ -14,9 +14,9 @@ This file is the concise coding-agent entry point for **ARSVINE REALM**. Keep it
 
 ## Project snapshot
 
-ARSVINE REALM is a personal post-apocalyptic HUD-themed portfolio and blog site. It uses **Next.js 16 Pages Router**, React 19, TypeScript, SCSS Modules, Three.js, GSAP, MDX, `next-intl` 4, and Vitest. The production runtime target is Node.js `24.x`.
+ARSVINE REALM is a personal post-apocalyptic HUD-themed portfolio and blog site. It uses **Next.js 16 App Router**, React 19, TypeScript, SCSS Modules, Three.js, GSAP, MDX, `next-intl` 4, and Vitest. The production runtime target is Node.js `24.x`.
 
-The custom `server.js` is the local-development and optional self-hosted entry. Production runs on Vercel, which uses the standard Next.js build output (Pages Router + Edge Middleware + Serverless Functions); `server.js` does **not** run in Vercel deployments. The `pnpm start` script is intended for self-hosted deployments (`pm2 start server.js` or similar).
+The custom `server.js` is the local-development and optional self-hosted entry. Production runs on Vercel, which uses the standard Next.js App Router build output (Proxy + Route Handlers + Serverless Functions); `server.js` does **not** run in Vercel deployments. The `pnpm start` script is intended for self-hosted deployments (`pm2 start server.js` or similar).
 
 User-facing pages live under `/<locale>/...` with UI locales `zh-CN`, `zh-TW`, and `en`.
 
@@ -40,7 +40,7 @@ npx vitest run -t "name pattern"
 
 ## Hard rules
 
-1. **Use Pages Router, not App Router.** Routes are under `src/pages/`, not `app/`.
+1. **Use App Router.** Routes are under `src/app/`.
 2. **Do not replace `server.js`.** It is the local-development and optional self-hosted entry; `pnpm dev` and `pnpm start` both go through it. Vercel deployments do not run `server.js`; they use the standard Next.js build output.
 3. **Use `useTransition().navigateTo()` for internal navigation.** Direct `router.push()` breaks page transition behavior.
 4. **Do not use IP-based language selection.** Locale resolution is `NEXT_LOCALE cookie > Accept-Language > zh-CN`.
@@ -56,7 +56,7 @@ npx vitest run -t "name pattern"
 | Need | Edit first |
 |---|---|
 | Site metadata, SEO, fonts, social links | `src/shared/config/site.ts` |
-| Music playlist / cloud audio catalog | `src/pages/api/assets/audio`, `src/features/assets/server/catalog/`, `src/features/music/` |
+| Music playlist / cloud audio catalog | `src/app/api/assets/audio`, `src/features/assets/server/catalog/`, `src/features/music/` |
 | Projects / experience / life / skills / friend links | `src/features/<feature>/contracts/data/*.ts` |
 | UI copy | `src/app/locales/*.json` |
 | Remote image domains | `config/image-hosts.js` |

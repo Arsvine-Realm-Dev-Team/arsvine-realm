@@ -34,18 +34,21 @@ export function getContentSectionHashFromUrl(url: string): string | null {
 }
 
 export function classifyRoutePathname(pathname: string): RouteKind {
-  if (pathname === '/[locale]') {
+  const segments = pathname.split('/').filter(Boolean);
+  const routeSegments = segments.slice(1);
+
+  if (segments.length === 1) {
     return 'home';
   }
 
-  if (pathname === '/[locale]/content') {
+  if (routeSegments.length === 1 && routeSegments[0] === 'content') {
     return 'content';
   }
 
   if (
-    pathname.startsWith('/[locale]/web/')
-    || pathname.startsWith('/[locale]/life/')
-    || pathname.startsWith('/[locale]/blog/')
+    routeSegments[0] === 'web'
+    || routeSegments[0] === 'life'
+    || routeSegments[0] === 'blog'
   ) {
     return 'standalone';
   }

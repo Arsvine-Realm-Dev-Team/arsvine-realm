@@ -3,39 +3,32 @@ import {
   PERFORMANCE_CAPABILITIES,
   PERFORMANCE_CAPABILITY_ATTRIBUTES,
 } from './performance-tiers';
+import { resolveInitialPerformancePolicy } from './performance-policy';
 
 export const POWER_SYSTEM_STORAGE_KEY = 'arsvine:power-system';
 export const THEME_MODE_STORAGE_KEY = 'arsvine:theme-mode';
 
-const LOW_EFFECTIVE_TYPES = new Set(['slow-2g', '2g', '3g']);
-
 function buildPerformanceTierBootstrap() {
   const capabilitiesByTier = JSON.stringify(PERFORMANCE_CAPABILITIES);
   const capabilityAttributes = JSON.stringify(PERFORMANCE_CAPABILITY_ATTRIBUTES);
+  const initialPolicyResolver = resolveInitialPerformancePolicy.toString();
   return `(() => {
     try {
       const html = document.documentElement;
       const reduceMotion = typeof matchMedia === 'function'
         && matchMedia('(prefers-reduced-motion: reduce)').matches;
       const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-      const lowNetwork = Boolean(connection && (
-        connection.saveData
-        || ${JSON.stringify(Array.from(LOW_EFFECTIVE_TYPES))}.includes(connection.effectiveType)
-      ));
-      const lowMemory = typeof navigator.deviceMemory === 'number' && navigator.deviceMemory <= 4;
-      const lowConcurrency = typeof navigator.hardwareConcurrency === 'number' && navigator.hardwareConcurrency <= 4;
-
-      const tier = reduceMotion
-        ? 'minimal'
-        : lowNetwork
-          ? 'motion-reduced'
-          : lowMemory || lowConcurrency
-            ? 'logo-reduced'
-            : 'full';
+      const resolveInitialPerformancePolicy = ${initialPolicyResolver};
+      const initialPolicy = resolveInitialPerformancePolicy({
+        reducedMotion: reduceMotion,
+        saveData: Boolean(connection && connection.saveData),
+      });
+      const tier = initialPolicy.tier;
       const capabilities = ${capabilitiesByTier}[tier];
       const capabilityAttributes = ${capabilityAttributes};
 
       html.setAttribute('data-performance-tier', tier);
+      html.setAttribute('data-performance-reason', initialPolicy.reason || 'none');
       for (const [capability, attribute] of Object.entries(capabilityAttributes)) {
         html.setAttribute(attribute, capabilities[capability] ? 'on' : 'off');
       }

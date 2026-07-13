@@ -1,4 +1,4 @@
-// Google Fonts (Dosis + Noto Sans SC + Noto Serif SC) 通过 pages/_document.tsx
+// Google Fonts (Dosis + Noto Sans SC + Noto Serif SC) 通过根布局
 // 的 <link rel="stylesheet"> 加载，避免 @import 的串行阻塞。
 
 @font-face {
@@ -354,7 +354,7 @@ body, html, #__next {
 }
 
 /* 区域可见性：被屏蔽地区（CN/IR/KP/TM）的访客隐藏 X (Twitter) 图标，
-   由 _document.tsx 写入 <html data-x-blocked="true">；同步内联脚本在
+   由根布局写入 <html data-x-blocked="true">；同步内联脚本在
    hydration 前完成，避免首屏闪烁。React 渲染本身仍会输出 X 节点，
    隐藏只发生在 CSS 层面 —— 切换 VPN 后 cookie 变化、刷新即可恢复显示。 */
 html[data-x-blocked="true"] [data-hide-when-x-blocked] {

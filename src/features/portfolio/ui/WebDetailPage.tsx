@@ -1,5 +1,6 @@
+'use client';
+
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import Head from 'next/head';
 import { useTranslations } from 'next-intl';
 import styles from '../../../shared/ui/detail/StandaloneDetailView.module.scss';
 import hudStyles from '../../../app/styles/Shell.module.scss';
@@ -7,7 +8,6 @@ import { useHudPower } from '../../../features/hud/model/HudProvider';
 import { useTransition } from '../../../features/navigation/model/TransitionProvider';
 import LazyImage from '../../../shared/ui/LazyImage';
 import Lightbox from '../../../shared/ui/Lightbox';
-import HreflangLinks from '../../../shared/ui/HreflangLinks';
 import LocaleFallbackBanner from '../../../shared/ui/LocaleFallbackBanner';
 import DetailFooterNav from '../../../shared/ui/detail/DetailFooterNav';
 import DetailGallerySection from '../../../shared/ui/detail/DetailGallerySection';
@@ -324,13 +324,6 @@ function WebDetailContent({
 
   return (
     <div ref={wrapperRef} className={`${styles.pageWrapper} ${isInverted ? hudStyles.inverted : ''}`}>
-      <Head>
-        <title>{`${project.title.toUpperCase()} // WORKS`}</title>
-        <meta name="description" content={project.title} />
-        <meta property="og:type" content="article" />
-        <HreflangLinks basePath={`/web/${project.id}`} />
-      </Head>
-
       <div className={styles.mainContent}>
         {translationStatus !== 'source' && (
           <LocaleFallbackBanner

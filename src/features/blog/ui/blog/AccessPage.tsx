@@ -1,9 +1,8 @@
+'use client';
+
 import { useCallback, useRef, useState } from 'react';
-import Head from 'next/head';
 import { useTranslations } from 'next-intl';
 import SectionPageLayout from '../../../../app/shell/SectionPageLayout';
-import HreflangLinks from '../../../../shared/ui/HreflangLinks';
-import { getSiteUrl } from '@/shared/config/site';
 import type { ProtectedVerifyResponse } from '@/shared/lib/content/access-api';
 import type { Locale } from '@/shared/contracts/locale';
 import { useTransition } from '../../../navigation/model/TransitionProvider';
@@ -88,18 +87,6 @@ export default function AccessPage({ locale, group, nextPath }: AccessPageProps)
 
   return (
     <>
-      <Head>
-        <title>{t('title')}</title>
-        <meta name="description" content={t('description')} />
-        <meta property="og:title" content={t('title')} />
-        <meta property="og:description" content={t('description')} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={`${getSiteUrl()}/${locale}/access/${group}`} />
-        <meta name="twitter:title" content={t('title')} />
-        <meta name="twitter:description" content={t('description')} />
-        <HreflangLinks basePath={`/access/${group}`} />
-      </Head>
-
       <SectionPageLayout>
         <section className={styles.page}>
           <header className={styles.header}>

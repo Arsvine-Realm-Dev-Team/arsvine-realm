@@ -40,7 +40,7 @@
 | `i18n-data.ts` | 显式静态 registry：(主题 × locale) → 模块。**新增 locale 时必须改这里**。避免动态 `require` 触发 webpack Critical dependency 警告 |
 | `cdn.ts` | `cover()` / `gallery()` / `post()` / `avatar()` / `music()` / `font()` helper —— 把对象 key 拼成 `cdn.arsvine.com` 完整 URL，未配置 CDN 时返回相对路径，本地 `public/` 镜像可作为可选 fallback |
 | `region-visibility.ts` | 基于访客所在地的 UI 微调（X / Bilibili 等被屏蔽地区隐藏对应外链）。**仅 UI**，不参与权限决策 |
-| `document-bootstrap.ts` | `_document.tsx` 注入的内联脚本：在首次绘制前从 storage 读 power state / theme，避免无主题闪烁。包含持久化 key 常量 |
+| `document-bootstrap.ts` | 根布局注入的内联脚本：在首次绘制前从 storage 读 power state / theme，避免无主题闪烁。包含持久化 key 常量 |
 | `ui-timings.ts` | 跨组件共享的动画时长常量（如 `CONTENT_DETAIL_EXIT_DELAY_MS = 1800`） |
 
 ### 几何/算法

@@ -25,15 +25,14 @@ function isValidRecord(value: unknown): value is SiteAssetRecord {
   return typeof objectKey === 'string' && (objectKey.startsWith('realm/') || objectKey.startsWith('shared/'));
 }
 
-function getSiteAssetManifestUrl(base: string, version: string) {
+export function getSiteAssetManifestUrl(base: string, version: string) {
   const url = new URL(`${base}/realm/site-catalog/versions/${version}/assets.json`);
 
-  // The CDN currently varies CORS headers by Origin but has cached an older
-  // production-origin response for this immutable manifest path. Keep local
-  // development in its own cache namespace so the documented dev alias can
-  // receive its matching CORS response without changing production URLs.
-  if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
-    url.searchParams.set('dev-origin', window.location.origin);
+  // EdgeOne can retain a pre-CORS response for an immutable manifest path.
+  // Keep every non-primary site origin in a separate cache namespace so a
+  // stale header variant cannot block beta or local development clients.
+  if (typeof window !== 'undefined' && window.location.origin !== 'https://arsvine.com') {
+    url.searchParams.set('cors-origin', window.location.origin);
   }
 
   return url.toString();

@@ -1,8 +1,6 @@
 import React, { startTransition, useCallback, useEffect, useRef, useState } from 'react';
-import Head from 'next/head';
 import { useTranslations } from 'next-intl';
 import { buildBlogPostHref } from '../../model/blogClient';
-import { getSiteUrl } from '@/shared/config/site';
 import type { ProtectedVerifyResponse } from '@/shared/lib/content/access-api';
 import type { BlogContentLocale } from '../../server/blog';
 import { type Locale } from '@/shared/contracts/locale';
@@ -10,7 +8,6 @@ import type { BlogPostMeta } from '../../../../shared/types';
 import BlogDetailScaffold from './BlogDetailScaffold';
 import styles from '../../styles/BlogDetailView.module.scss';
 import accessStyles from '../../styles/PostAccessPage.module.scss';
-import HreflangLinks from '../../../../shared/ui/HreflangLinks';
 
 interface ProtectedPostGateProps {
   locale: Locale;
@@ -117,19 +114,6 @@ export default function ProtectedPostGate({
 
   return (
     <>
-      <Head>
-        <title>{`${meta.title} // Blog`}</title>
-        <meta name="description" content={meta.excerpt} />
-        <meta name="robots" content="noindex,nofollow,noarchive" />
-        <meta property="og:title" content={meta.title} />
-        <meta property="og:description" content={meta.excerpt} />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={`${getSiteUrl()}/${locale}/blog/${meta.slug}`} />
-        <meta name="twitter:title" content={meta.title} />
-        <meta name="twitter:description" content={meta.excerpt} />
-        <HreflangLinks basePath={`/blog/${meta.slug}`} />
-      </Head>
-
       <BlogDetailScaffold
         locale={locale}
         meta={meta}

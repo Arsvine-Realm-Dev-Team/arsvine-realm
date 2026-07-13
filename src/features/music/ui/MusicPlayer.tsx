@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/router';
 import { useTranslations } from 'next-intl';
 import styles from './MusicPlayer.module.scss';
 import { defaultLocale, isLocale, type Locale } from '@/shared/contracts/locale';
@@ -12,6 +11,7 @@ import { useMusicPlayerState } from './music-player/useMusicPlayerState';
 import { useVinylDrag } from './music-player/useVinylDrag';
 import VinylDeck from './music-player/VinylDeck';
 import type { MusicTrack } from '../../../shared/types';
+import { useNavigationRuntime } from '@/features/navigation/model/NavigationRuntime';
 
 const commonLabelFallbacks: Record<Locale, Record<'expandPlaylist' | 'collapsePlaylist', string>> = {
   'zh-CN': {
@@ -31,12 +31,12 @@ const commonLabelFallbacks: Record<Locale, Record<'expandPlaylist' | 'collapsePl
 const HANDLE_BAR_COUNT = 7;
 
 const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
-  const router = useRouter();
+  const { query } = useNavigationRuntime();
   const tCommon = useTranslations('common');
   const tMusicPlayer = useTranslations('musicPlayer');
   const { isMobile } = useResponsive();
   const safeTimers = useSafeTimeouts();
-  const queryLocale = router.query.locale;
+  const queryLocale = query.locale;
   const locale: Locale = isLocale(queryLocale) ? queryLocale : defaultLocale;
 
   const [isOpen, setIsOpen] = useState(false);

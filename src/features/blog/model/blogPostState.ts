@@ -44,8 +44,10 @@ interface VariantLoadError {
 
 interface PostVariantErrorResponse {
   ok: false;
-  code: 'METHOD_NOT_ALLOWED' | 'VALIDATION_FAILED' | 'FORBIDDEN' | 'NOT_FOUND' | 'INTERNAL_ERROR';
-  message: string;
+  error: {
+    code: 'METHOD_NOT_ALLOWED' | 'VALIDATION_FAILED' | 'FORBIDDEN' | 'NOT_FOUND' | 'INTERNAL_ERROR' | 'UPSTREAM_FAILED';
+    message: string;
+  };
 }
 
 interface PostVariantSuccessResponse extends BlogVariantPayload {
@@ -56,9 +58,9 @@ type PostVariantResponse = PostVariantSuccessResponse | PostVariantErrorResponse
 
 function getVariantLoadErrorMessage(response: PostVariantErrorResponse | null) {
   if (!response) return 'Unable to load article content.';
-  if (response.code === 'NOT_FOUND') return 'Requested article locale is unavailable.';
-  if (response.code === 'VALIDATION_FAILED') return 'Requested article locale is invalid.';
-  return response.message || 'Unable to load article content.';
+  if (response.error.code === 'NOT_FOUND') return 'Requested article locale is unavailable.';
+  if (response.error.code === 'VALIDATION_FAILED') return 'Requested article locale is invalid.';
+  return response.error.message || 'Unable to load article content.';
 }
 
 const checkGrant = fromPromise<{ granted: boolean }, { group: string }>(async ({ input, signal }) => {
@@ -80,7 +82,7 @@ const loadVariant = fromPromise<
   if (!response.ok || !data.ok) {
     const errorResponse = data && !data.ok ? data : null;
     throw {
-      code: errorResponse?.code ?? 'INTERNAL_ERROR',
+      code: errorResponse?.error.code ?? 'INTERNAL_ERROR',
       message: getVariantLoadErrorMessage(errorResponse),
     } satisfies VariantLoadError;
   }

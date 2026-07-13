@@ -297,7 +297,7 @@ export type PerformanceTier =
   | 'motion-reduced'
   | 'webgl-reduced'
   | 'minimal';
-export type PerformanceReason = 'reduced-motion' | 'device-heuristic' | 'runtime-fps' | null;
+export type PerformanceReason = 'reduced-motion' | 'save-data' | 'runtime-fps' | null;
 
 export interface AdaptivePerformanceState {
   performanceTier: PerformanceTier;

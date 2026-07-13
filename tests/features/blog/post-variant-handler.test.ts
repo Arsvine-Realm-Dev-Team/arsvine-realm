@@ -27,7 +27,7 @@ vi.mock('next-mdx-remote/serialize', () => ({
   serialize: serializeMock,
 }));
 
-import handler from '@/pages/api/post-variant';
+import handler from '@/features/blog/server/postVariantHandler';
 
 function createMockResponse() {
   const headers = new Map<string, string | string[]>();

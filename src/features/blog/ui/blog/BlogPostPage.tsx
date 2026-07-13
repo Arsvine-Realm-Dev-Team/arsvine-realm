@@ -1,12 +1,11 @@
+'use client';
+
 import { startTransition, useState, useEffect, useRef, useCallback } from 'react';
-import Head from 'next/head';
-import { useRouter } from 'next/router';
 import gsap from 'gsap';
 import { useTranslations } from 'next-intl';
 import { MDXRemote, type MDXRemoteSerializeResult } from 'next-mdx-remote';
 import MDXComponents from '../mdx/MDXComponents';
 import LocaleFallbackBanner from '../../../../shared/ui/LocaleFallbackBanner';
-import HreflangLinks from '../../../../shared/ui/HreflangLinks';
 import { AnimatedTitleChars } from '../../../../shared/ui/AnimatedTitleChars';
 import useBlogPostState, {
   blogContentLocaleLabels,
@@ -21,9 +20,9 @@ import styles from '../../styles/BlogDetailView.module.scss';
 import accessStyles from '../../styles/PostAccessPage.module.scss';
 import ProtectedPostGate from './ProtectedPostGate';
 import BlogStateShell from './BlogStateShell';
-import { getSiteUrl } from '@/shared/config/site';
 import type { Locale } from '@/shared/contracts/locale';
 import { formatReadingTime } from '../../model/formatReadingTime';
+import { useNavigationRuntime } from '@/features/navigation/model/NavigationRuntime';
 
 export interface BlogPostPageProps {
   locale: Locale;
@@ -53,7 +52,7 @@ export default function BlogPostPage({
   access,
   isProtected,
 }: BlogPostPageProps) {
-  const router = useRouter();
+  const { asPath } = useNavigationRuntime();
   const tCommon = useTranslations('common');
   const [hydrationReady, setHydrationReady] = useState(false);
 
@@ -80,7 +79,7 @@ export default function BlogPostPage({
     markAuthGranted,
     retryRequestedContentLocale,
   } = useBlogPostState({
-    routerAsPath: router.asPath,
+    routerAsPath: asPath,
     locale,
     meta,
     mdxSource,
@@ -94,7 +93,7 @@ export default function BlogPostPage({
     hydrationReady,
   });
 
-  if (router.isFallback || viewState === 'authChecking') {
+  if (viewState === 'authChecking') {
     return (
       <BlogStateShell
         locale={locale}
@@ -308,23 +307,6 @@ function BlogDetailContent({
 
   return (
     <>
-      <Head>
-        <title>{`${meta.title} // Blog`}</title>
-        <meta name="description" content={meta.excerpt} />
-        {meta.access.mode === 'totp' ? <meta name="robots" content="noindex,nofollow,noarchive" /> : null}
-        <meta property="og:title" content={meta.title} />
-        <meta property="og:description" content={meta.excerpt} />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={`${getSiteUrl()}/${locale}/blog/${meta.slug}`} />
-        <meta name="twitter:title" content={meta.title} />
-        <meta name="twitter:description" content={meta.excerpt} />
-        <meta property="article:published_time" content={meta.date} />
-        {meta.tags.map((tag) => (
-          <meta key={tag} property="article:tag" content={tag} />
-        ))}
-        <HreflangLinks basePath={`/blog/${meta.slug}`} />
-      </Head>
-
       <BlogDetailScaffold
         locale={locale}
         meta={meta}

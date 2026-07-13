@@ -1,23 +1,23 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { routerEvents, translate } = vi.hoisted(() => {
+const { translate } = vi.hoisted(() => {
   const translations = {
     taglinePrimary: 'A',
     taglineSecondary: '中',
   };
 
   return {
-    routerEvents: {
-      on: vi.fn(),
-      off: vi.fn(),
-    },
     translate: (key: keyof typeof translations) => translations[key],
   };
 });
 
-vi.mock('next/router', () => ({
-  useRouter: () => ({ events: routerEvents }),
+vi.mock('@/features/navigation/model/NavigationRuntime', () => ({
+  useNavigationRuntime: () => ({
+    pathname: '/zh-CN',
+    asPath: '/zh-CN',
+    query: { locale: 'zh-CN' },
+  }),
 }));
 
 vi.mock('next-intl', () => ({
@@ -32,8 +32,6 @@ import {
 describe('typing effect hooks', () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    routerEvents.on.mockClear();
-    routerEvents.off.mockClear();
   });
 
   afterEach(() => {

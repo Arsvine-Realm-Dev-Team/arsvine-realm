@@ -30,6 +30,13 @@ describe('classifyRoutePathname', () => {
     expect(classifyRoutePathname('/[locale]/life/[slug]')).toBe('standalone');
     expect(classifyRoutePathname('/[locale]/friends')).toBe('auxiliary');
   });
+
+  it('also classifies App Router pathname values', () => {
+    expect(classifyRoutePathname('/zh-CN')).toBe('home');
+    expect(classifyRoutePathname('/zh-CN/content')).toBe('content');
+    expect(classifyRoutePathname('/zh-CN/blog/init')).toBe('standalone');
+    expect(classifyRoutePathname('/zh-CN/friends')).toBe('auxiliary');
+  });
 });
 
 describe('resolveContentHashTransitionMode', () => {
@@ -69,6 +76,13 @@ describe('resolveNavigationTransitionPlan', () => {
     ['/[locale]/friends', '/en', true, 'returnHomeMobile'],
     ['/[locale]/friends', '/en/blog/init', false, 'blogDetailFade'],
     ['/[locale]/friends', '/en/tweets', false, 'standardSlide'],
+    ['/zh-CN/content', '/en/content#life', false, 'samePageHash'],
+    ['/zh-CN', '/en/content#life', false, 'homeForwardDesktop'],
+    ['/zh-CN', '/en/content#life', true, 'homeForwardMobile'],
+    ['/zh-CN/friends', '/en/content#life', false, 'crossPageHash'],
+    ['/zh-CN/friends', '/en', false, 'returnHomeDesktop'],
+    ['/zh-CN/friends', '/en', true, 'returnHomeMobile'],
+    ['/zh-CN/friends', '/en/blog/init', false, 'blogDetailFade'],
   ] as const)('maps %s -> %s to %s', (sourcePathname, targetUrl, mobile, expected) => {
     expect(resolveNavigationTransitionPlan({ sourcePathname, targetUrl, mobile })).toBe(expected);
   });

@@ -141,31 +141,31 @@ describe('useAdaptivePerformance', () => {
     expect(document.documentElement.getAttribute('data-performance-tier')).toBe('minimal');
   });
 
-  it('reduces immediately when saveData or 2g effective type is reported', () => {
+  it('reduces immediately only when Save-Data is explicitly requested', () => {
     setNavigatorProperty('connection', { saveData: true, effectiveType: '4g' });
 
     const { result } = renderHook(() => useAdaptivePerformance(false));
 
     expect(result.current.performanceTier).toBe('motion-reduced');
-    expect(result.current.performanceReason).toBe('device-heuristic');
+    expect(result.current.performanceReason).toBe('save-data');
   });
 
-  it('reduces immediately when the network effective type is 3g', () => {
+  it('does not use network estimates as a visual-performance ceiling', () => {
     setNavigatorProperty('connection', { saveData: false, effectiveType: '3g' });
 
     const { result } = renderHook(() => useAdaptivePerformance(false));
 
-    expect(result.current.performanceTier).toBe('motion-reduced');
-    expect(result.current.performanceReason).toBe('device-heuristic');
+    expect(result.current.performanceTier).toBe('full');
+    expect(result.current.performanceReason).toBeNull();
   });
 
-  it('reduces immediately for low device memory or low CPU concurrency', () => {
+  it('does not use coarse hardware hints as a visual-performance ceiling', () => {
     setNavigatorProperty('deviceMemory', 4);
 
     const { result } = renderHook(() => useAdaptivePerformance(false));
 
-    expect(result.current.performanceTier).toBe('logo-reduced');
-    expect(result.current.performanceReason).toBe('device-heuristic');
+    expect(result.current.performanceTier).toBe('full');
+    expect(result.current.performanceReason).toBeNull();
   });
 
   it('uses the first poor window exclusively for logo effects', () => {

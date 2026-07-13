@@ -1,5 +1,6 @@
 /**
- * HreflangLinks — 在 <Head> 中输出三语 + x-default 的 hreflang 交叉引用，
+ * HreflangLinks — Pages Router 遗留的 hreflang 组件。App Router 路由改用
+ * generateMetadata 的 alternates.languages；保留本文件仅供非路由嵌入场景复用。
  * 方便搜索引擎理解站点 i18n 结构并按访客语言推荐正确版本。
  *
  * basePath 不含 locale 前缀，例如：'/' 或 '/blog/init'。

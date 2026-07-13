@@ -12,7 +12,7 @@ import type {
  *  - HUD / Loading 的站名
  *  - Contact 邮箱与点击复制
  *  - About 页脚版权
- *  - <Head> 中的 title / description / Open Graph
+ *  - App Router metadata 中的 title / description / Open Graph
  *  - sitemap.xml / rss.xml / robots.txt 的 base URL 与标题
  *  - 首页打字机签名（中英两句）
  *  - 站点 favicon / og:image / twitter:image

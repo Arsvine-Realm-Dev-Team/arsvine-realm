@@ -1,9 +1,9 @@
-import { useRouter } from 'next/router';
 import { useTranslations } from 'next-intl';
 import styles from '../styles/ProfileSections.module.scss';
 import { siteConfig } from '@/shared/config/site';
 import { defaultLocale, isLocale } from '@/shared/contracts/locale';
 import type { RefObject } from 'react';
+import { useNavigationRuntime } from '@/features/navigation/model/NavigationRuntime';
 
 interface ContactSectionProps {
   contactSectionRef: RefObject<HTMLDivElement | null>;
@@ -19,8 +19,8 @@ export default function ContactSection({
   handleShowFriendLinks,
 }: ContactSectionProps) {
   const t = useTranslations('sections.contact');
-  const router = useRouter();
-  const locale = isLocale(router.query.locale) ? router.query.locale : defaultLocale;
+  const { query } = useNavigationRuntime();
+  const locale = isLocale(query.locale) ? query.locale : defaultLocale;
   // X (Twitter) 的可见性由 _document 注入的 <html data-x-blocked> + globals.scss
   // 里的 [data-hide-when-x-blocked] 规则统一处理，CSS 命中后直接 display:none，
   // 不依赖 useEffect 解析 cookie —— SSR/hydration 前就生效，无首屏闪烁。

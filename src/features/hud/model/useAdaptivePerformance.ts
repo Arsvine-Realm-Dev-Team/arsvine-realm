@@ -7,6 +7,7 @@ import {
   PERFORMANCE_TIERS,
   performanceTierIndex,
 } from '@/shared/lib/performance-tiers';
+import { resolveInitialPerformancePolicy } from '@/shared/lib/performance-policy';
 import type { AdaptivePerformanceState, PerformanceReason, PerformanceTier } from '../../../shared/types';
 
 const MAX_SAMPLE_FRAMES = 120;
@@ -21,43 +22,30 @@ const GOOD_WINDOWS_TO_RECOVER = 3;
 const DEGRADE_COOLDOWN_MS = 5000;
 const RECOVER_COOLDOWN_MS = 10000;
 
-interface NetworkInformationLike { saveData?: boolean; effectiveType?: string }
-interface NavigatorPerformanceLike extends Navigator { connection?: NetworkInformationLike; deviceMemory?: number }
-
-function resolveHeuristic(reducedMotion: boolean): { maxTier: PerformanceTier; reason: PerformanceReason } {
-  if (reducedMotion) return { maxTier: 'minimal', reason: 'reduced-motion' };
-  if (typeof window === 'undefined') return { maxTier: 'full', reason: null };
-
-  const nav = navigator as NavigatorPerformanceLike;
-  const connection = nav.connection;
-  if (connection?.saveData || ['slow-2g', '2g', '3g'].includes(connection?.effectiveType || '')) {
-    return { maxTier: 'motion-reduced', reason: 'device-heuristic' };
-  }
-  if ((typeof nav.deviceMemory === 'number' && nav.deviceMemory <= 4)
-    || (typeof navigator.hardwareConcurrency === 'number' && navigator.hardwareConcurrency <= 4)) {
-    return { maxTier: 'logo-reduced', reason: 'device-heuristic' };
-  }
-  return { maxTier: 'full', reason: null };
+interface NavigatorConnectionLike extends Navigator {
+  connection?: { saveData?: boolean };
+  mozConnection?: { saveData?: boolean };
+  webkitConnection?: { saveData?: boolean };
 }
 
 function resolveRecoveryCeiling(
-  heuristicTier: PerformanceTier,
-  heuristicReason: PerformanceReason,
+  preferenceTier: PerformanceTier,
+  preferenceReason: PerformanceReason,
   runtimeTier: PerformanceTier,
 ): { tier: PerformanceTier; reason: PerformanceReason } {
-  if (performanceTierIndex(runtimeTier) > performanceTierIndex(heuristicTier)) {
+  if (performanceTierIndex(runtimeTier) > performanceTierIndex(preferenceTier)) {
     return { tier: runtimeTier, reason: 'runtime-fps' };
   }
-  return { tier: heuristicTier, reason: heuristicReason };
+  return { tier: preferenceTier, reason: preferenceReason };
 }
 
 export default function useAdaptivePerformance(animationsComplete: boolean): AdaptivePerformanceState {
   const reducedMotion = useReducedMotion();
   const [state, setState] = useState(() => buildPerformanceState('full', null));
   const [isPageVisible, setIsPageVisible] = useState(() => typeof document === 'undefined' || !document.hidden);
-  const [heuristicsReady, setHeuristicsReady] = useState(false);
-  const heuristicTierRef = useRef<PerformanceTier>('full');
-  const heuristicReasonRef = useRef<PerformanceReason>(null);
+  const [policyReady, setPolicyReady] = useState(false);
+  const preferenceTierRef = useRef<PerformanceTier>('full');
+  const preferenceReasonRef = useRef<PerformanceReason>(null);
   const runtimeCeilingRef = useRef<PerformanceTier>('full');
   const lastTierChangeRef = useRef(0);
 
@@ -68,29 +56,34 @@ export default function useAdaptivePerformance(animationsComplete: boolean): Ada
   }, []);
 
   useEffect(() => {
-    const heuristic = resolveHeuristic(reducedMotion);
-    heuristicTierRef.current = heuristic.maxTier;
-    heuristicReasonRef.current = heuristic.reason;
+    const nav = navigator as NavigatorConnectionLike;
+    const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
+    const preference = resolveInitialPerformancePolicy({
+      reducedMotion,
+      saveData: Boolean(connection?.saveData),
+    });
+    preferenceTierRef.current = preference.tier;
+    preferenceReasonRef.current = preference.reason;
     const ceiling = resolveRecoveryCeiling(
-      heuristicTierRef.current,
-      heuristicReasonRef.current,
+      preferenceTierRef.current,
+      preferenceReasonRef.current,
       runtimeCeilingRef.current,
     );
-    // Client-only device signals are unavailable during SSR; reconcile them after hydration.
+    // Client-only user preferences are unavailable during SSR; reconcile after hydration.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setHeuristicsReady(true);
+    setPolicyReady(true);
     setState((current) => performanceTierIndex(current.performanceTier) < performanceTierIndex(ceiling.tier)
       ? buildPerformanceState(ceiling.tier, ceiling.reason)
       : current);
   }, [reducedMotion]);
 
   useEffect(() => {
-    if (!heuristicsReady) return;
+    if (!policyReady) return;
     applyPerformanceAttributes(document.documentElement, state);
-  }, [heuristicsReady, state]);
+  }, [policyReady, state]);
 
   useEffect(() => {
-    if (!heuristicsReady || !animationsComplete || !isPageVisible || reducedMotion) return;
+    if (!policyReady || !animationsComplete || !isPageVisible || reducedMotion) return;
 
     let rafId = 0;
     let startTime: number | null = null;
@@ -136,8 +129,8 @@ export default function useAdaptivePerformance(animationsComplete: boolean): Ada
           return buildPerformanceState(nextTier, 'runtime-fps');
         }
         const ceiling = resolveRecoveryCeiling(
-          heuristicTierRef.current,
-          heuristicReasonRef.current,
+          preferenceTierRef.current,
+          preferenceReasonRef.current,
           runtimeCeilingRef.current,
         );
         const maxIndex = performanceTierIndex(ceiling.tier);
@@ -176,7 +169,7 @@ export default function useAdaptivePerformance(animationsComplete: boolean): Ada
 
     rafId = window.requestAnimationFrame(sample);
     return () => { if (rafId) window.cancelAnimationFrame(rafId); };
-  }, [animationsComplete, heuristicsReady, isPageVisible, reducedMotion]);
+  }, [animationsComplete, isPageVisible, policyReady, reducedMotion]);
 
   return state;
 }
