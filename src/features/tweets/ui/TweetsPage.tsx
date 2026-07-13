@@ -1,6 +1,5 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
 import SectionPageLayout from '../../../app/shell/SectionPageLayout';
 import TweetsSection from './TweetsSection';
 import type { Locale } from '@/shared/contracts/locale';
@@ -26,8 +25,6 @@ export default function TweetsPage({
   sourceUnavailable,
   sourceError,
 }: TweetsPageProps) {
-  const t = useTranslations('pages.tweets');
-
   return (
     <SectionPageLayout>
         <TweetsSection

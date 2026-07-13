@@ -13,7 +13,6 @@ export default function NotFoundView() {
   const { navigateTo } = useTransition();
   const locale = resolveLocale(query.locale, asPath);
   const t = useTranslations('pages.notFound');
-  const tSite = useTranslations('pages.site');
   const requestedPath = useSyncExternalStore(
     () => () => {},
     () => (asPath && asPath !== '/404' ? asPath : ''),

@@ -1,11 +1,10 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useTranslations } from 'next-intl';
 import { useHudAnimation, useHudColumnHover, useHudPower } from '../model/HudProvider';
 import { useTransition } from '../../navigation/model/TransitionProvider';
 import NavigationColumns from './layout/NavigationColumns';
-import { locales, type Locale } from '@/shared/contracts/locale';
+import type { Locale } from '@/shared/contracts/locale';
 import { useNavigationRuntime } from '@/features/navigation/model/NavigationRuntime';
 
 interface HomeProps {
@@ -16,7 +15,6 @@ interface HomeProps {
 export default function Home({ locale }: HomeProps) {
   const { prefetch } = useNavigationRuntime();
   const { navigateTo } = useTransition();
-  const tSite = useTranslations('pages.site');
   const {
     linesAnimated, pulsingNormalIndices, pulsingReverseIndices,
     textVisible, animationsComplete, columnPhase,

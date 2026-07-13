@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useTranslations } from 'next-intl';
 import styles from '../../../app/styles/Shell.module.scss';
 import contentStyles from '../styles/ContentPage.module.scss';
 import { useLayoutAnchors } from '../model/LayoutAnchorsContext';
@@ -67,7 +66,6 @@ export default function ContentPage({
   const { prefetch } = useNavigationRuntime();
   const { navigateTo, setBackOverride } = useTransition();
   const { registerScrollContainer } = useLayoutAnchors();
-  const tSite = useTranslations('pages.site');
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -245,8 +243,6 @@ export default function ContentPage({
       isClosingRef.current = false;
     }
   }, []);
-
-  const isDetailOpen = isDetailMounted && !isClosing;
 
   return (
     <>

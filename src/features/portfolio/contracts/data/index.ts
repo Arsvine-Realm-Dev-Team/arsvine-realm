@@ -1,4 +1,4 @@
-import type { Project } from '@/shared/types';
+import type { CopyableToken, Project } from '@/shared/types';
 import { findSourceItem, galleryReferences, legacyAssetReference, sourceManifests } from '@/features/assets/contracts/source-manifest';
 
 const realmSource = findSourceItem(sourceManifests.portfolio, 'arsvine-realm');
@@ -105,13 +105,6 @@ export const workProjects = [...webProjects, ...gameProjects];
 // 把你的服务器 IP / QQ 群号 / Discord 邀请码 / 邮箱别名等加在这里。
 // 数组为空则只保留 Markdown 链接解析能力。
 // ============================================================
-export interface CopyableToken {
-  /** 要匹配的字符串（按完整字面量匹配，特殊字符会自动正则转义） */
-  pattern: string;
-  /** 鼠标悬浮提示，可选 */
-  label?: string;
-}
-
 export const copyableTokens: CopyableToken[] = [
   { pattern: 'arsvine.com', label: '主站地址' },
   { pattern: 'www.arsvine.com', label: '主站 WWW 地址' },

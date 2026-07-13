@@ -1,4 +1,4 @@
-import type { Project } from '@/shared/types';
+import type { CopyableToken, Project } from '@/shared/types';
 import { portfolioSourceFields } from '@/features/assets/contracts/source-manifest';
 
 export const webProjects: Project[] = [
@@ -73,11 +73,6 @@ export const earlyProjects: Project[] = [
 
 export const learnProjects = earlyProjects;
 export const workProjects = [...webProjects, ...gameProjects];
-
-export interface CopyableToken {
-  pattern: string;
-  label?: string;
-}
 
 export const copyableTokens: CopyableToken[] = [
   { pattern: 'arsvine.com', label: '主站地址' },

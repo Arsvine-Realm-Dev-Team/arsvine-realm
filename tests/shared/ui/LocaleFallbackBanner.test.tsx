@@ -54,6 +54,6 @@ describe('LocaleFallbackBanner', () => {
       requestedLocale: 'en', actualLocale: 'zh-CN', status: 'fallback',
     });
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss notice' }));
-    expect(screen.getByRole('status')).not.toBeNull();
+    expect(screen.queryByRole('status')).not.toBeNull();
   });
 });
