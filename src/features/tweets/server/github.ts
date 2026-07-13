@@ -149,22 +149,31 @@ export async function getTweetMonthGroups(): Promise<TweetMonthGroup[]> {
   }
 
   const monthlyTweets = await Promise.all(
-    index.map(async (item) => {
-      const tweets = await fetchGitHubJson<TweetItem[]>(item.path);
-      const visibleTweets = sortTweets(
-        tweets.filter((tweet) => (tweet.visibility ?? 'public') === 'public'),
-      );
+    index.map(async (item): Promise<TweetMonthGroup | null> => {
+      try {
+        const tweets = await fetchGitHubJson<TweetItem[]>(item.path);
+        const visibleTweets = sortTweets(
+          tweets.filter((tweet) => (tweet.visibility ?? 'public') === 'public'),
+        );
 
-      return {
-        month: item.month,
-        count: item.count,
-        updatedAt: item.updatedAt,
-        tweets: visibleTweets,
-      } satisfies TweetMonthGroup;
+        return {
+          month: item.month,
+          count: item.count,
+          updatedAt: item.updatedAt,
+          tweets: visibleTweets,
+        } satisfies TweetMonthGroup;
+      } catch (error) {
+        // The index is a directory of independent monthly documents. A single
+        // transient 5xx must not prevent ISR/static generation from rendering
+        // every other available month.
+        console.warn(`[tweets/github] skipping unavailable month ${item.month}:`, error);
+        return null;
+      }
     }),
   );
 
   return monthlyTweets
+    .filter((group): group is TweetMonthGroup => group !== null)
     .filter((group) => group.tweets.length > 0);
 }
 
