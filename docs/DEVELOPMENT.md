@@ -37,7 +37,7 @@ pnpm check         # lint + typecheck + test + build
 Run a single test file:
 
 ```bash
-pnpm vitest run lib/blog-client.test.ts
+pnpm vitest run tests/features/blog/blog-client.test.ts
 ```
 
 Run tests by name:
@@ -46,7 +46,7 @@ Run tests by name:
 pnpm vitest run -t "reading time"
 ```
 
-Vitest uses `jsdom` and matches `**/*.test.ts`. New test files should live under `tests/` and be grouped by module or feature area, for example `tests/lib/`, `tests/components/`, `tests/pages/`, and `tests/repo/`.
+Vitest uses `jsdom` and matches `**/*.test.ts`. New tests should live under `tests/features/` when they exercise a feature; cross-feature primitives belong in `tests/shared/`, application composition in `tests/app/`, and repository-wide route contracts in `tests/repo/`.
 
 ## Local environment
 
@@ -140,9 +140,10 @@ Use `cos-workspace/coscli-windows-amd64.exe` for upload and verification. Pass c
 For routine content changes, prefer these locations before editing component logic:
 
 ```text
-data/                 # site config, projects, experience, life, skills, friend links, music
+src/shared/config/     # site config
+src/features/*/contracts/data/ # projects, experience, life, skills, friend links
 content/blog/init/    # bundled fallback blog post
-locales/              # next-intl UI strings
+src/app/locales/      # next-intl UI strings
 public/               # static images, icons, local music test files
 config/               # small runtime config fragments, e.g. image hosts
 ```
@@ -150,22 +151,21 @@ config/               # small runtime config fragments, e.g. image hosts
 Trilingual bundled data is split by topic:
 
 ```text
-data/
-  projects/{index.ts,en.ts,zh-TW.ts}
-  experience/{index.ts,en.ts,zh-TW.ts}
-  life/{index.ts,en.ts,zh-TW.ts}
-  skills/{index.ts,en.ts,zh-TW.ts}
-  friendLinks/{index.ts,en.ts,zh-TW.ts}
-  site.ts
-  music.ts
+src/features/
+  portfolio/contracts/data/{index.ts,en.ts,zh-TW.ts}
+  experience/contracts/data/{index.ts,en.ts,zh-TW.ts}
+  life/contracts/data/{index.ts,en.ts,zh-TW.ts}
+  profile/contracts/skills/{index.ts,en.ts,zh-TW.ts}
+  profile/contracts/friendLinks/{index.ts,en.ts,zh-TW.ts}
+src/shared/config/site.ts
 ```
 
 `index.ts` is Simplified Chinese (`zh-CN`) and acts as the fallback. When adding a locale, update all of these together:
 
-- `i18n/config.ts`
-- `locales/<locale>.json`
-- every relevant `data/<topic>/<locale>.ts`
-- `lib/i18n-data.ts` static registry
+- `src/app/i18n/config.ts`
+- `src/app/locales/<locale>.json`
+- every relevant `src/features/<feature>/contracts/data/<locale>.ts`
+- `src/app/i18n/data.ts` static registry
 - locale matching logic in `proxy.ts` if needed
 
 Do not replace the explicit registry with dynamic `require`; it causes Critical dependency warnings and makes bundling less predictable.

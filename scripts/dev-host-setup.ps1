@@ -50,6 +50,41 @@ $InternetSettingsPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Interne
 $ProjectRoot = Split-Path -Parent (Split-Path -Parent $PSCommandPath)
 $EntryRegex  = "^\s*\d{1,3}(\.\d{1,3}){3}\s+$([regex]::Escape($Hostname))(\s|$)"
 
+# Initialise error-reporting state before any system interaction. This lets a
+# top-level failure report its stage and clean up only changes owned by this run.
+$script:CurrentStage = 'initialising launcher'
+$script:WeAddedHostsEntry = $false
+$script:WeAddedProxyBypass = $false
+$script:DevServerMayBeRunning = $false
+$script:CleanupRan = $false
+$script:FailureReported = $false
+$script:LocationPushed = $false
+
+function Write-LauncherFailure {
+    param([Parameter(Mandatory = $true)] [System.Management.Automation.ErrorRecord]$ErrorRecord)
+
+    $location = if ($ErrorRecord.InvocationInfo.ScriptLineNumber) {
+        "$($ErrorRecord.InvocationInfo.PSCommandPath):$($ErrorRecord.InvocationInfo.ScriptLineNumber)"
+    } else {
+        $PSCommandPath
+    }
+
+    Write-Host ''
+    Write-Host 'Local dev launcher failed.' -ForegroundColor Red
+    Write-Host "Stage: $script:CurrentStage" -ForegroundColor Yellow
+    Write-Host "Error: $($ErrorRecord.Exception.Message)" -ForegroundColor Red
+    Write-Host "Location: $location" -ForegroundColor DarkGray
+    Write-Host 'The launcher will now restore any hosts/proxy changes made by this run.' -ForegroundColor DarkGray
+}
+
+trap {
+    Write-LauncherFailure -ErrorRecord $_
+    if (Get-Command Invoke-DevHostCleanup -ErrorAction SilentlyContinue) {
+        Invoke-DevHostCleanup
+    }
+    exit 1
+}
+
 # --- Privilege helpers ----------------------------------------------------
 
 $currentPrincipal = New-Object Security.Principal.WindowsPrincipal(
@@ -67,6 +102,7 @@ function Invoke-ElevatedHostsAction {
         return
     }
 
+    $script:CurrentStage = "elevating hosts $Action action"
     Write-Host "Elevating to Administrator for hosts update..." -ForegroundColor Yellow
     $shell = if (Get-Command pwsh.exe -ErrorAction SilentlyContinue) { 'pwsh.exe' } else { 'powershell.exe' }
     $argList = @(
@@ -103,17 +139,20 @@ function Backup-HostsOnce {
 }
 
 function Add-HostsEntry {
+    $script:CurrentStage = 'adding hosts entry'
     if (Test-HostsEntry) { return $false }   # already present, we did NOT add
     Backup-HostsOnce
     $lines = Get-Content $HostsPath
     $newLines = @($lines) + $Marker
     [System.IO.File]::WriteAllLines($HostsPath, $newLines, [System.Text.Encoding]::ASCII)
+    $script:WeAddedHostsEntry = $true
     ipconfig /flushdns | Out-Null
     Write-Host "Added: $Marker" -ForegroundColor Green
     return $true                              # we added it -> we own removal
 }
 
 function Remove-HostsEntry {
+    $script:CurrentStage = 'removing hosts entry'
     if (-not (Test-HostsEntry)) {
         Write-Host "No entry for $Hostname found." -ForegroundColor DarkGray
         return
@@ -171,6 +210,7 @@ function Test-ProxyBypassEntry {
 }
 
 function Add-ProxyBypassEntry {
+    $script:CurrentStage = 'adding proxy bypass entry'
     try {
         $settings = Get-ItemProperty -Path $InternetSettingsPath -ErrorAction Stop
     } catch {
@@ -190,12 +230,14 @@ function Add-ProxyBypassEntry {
     $tokens = Get-ProxyOverrideTokens
     $newValue = @($tokens + $Hostname) -join ';'
     Set-ItemProperty -Path $InternetSettingsPath -Name ProxyOverride -Value $newValue
+    $script:WeAddedProxyBypass = $true
     Refresh-InternetSettings
     Write-Host "Added $Hostname to ProxyOverride." -ForegroundColor Green
     return $true
 }
 
 function Remove-ProxyBypassEntry {
+    $script:CurrentStage = 'removing proxy bypass entry'
     $tokens = Get-ProxyOverrideTokens
     if (-not $tokens.Count) {
         return
@@ -242,9 +284,52 @@ function Get-ProcessNameByPid {
     }
 }
 
+function Invoke-DevHostCleanup {
+    if ($script:CleanupRan) {
+        return
+    }
+
+    $script:CleanupRan = $true
+    $cleanupFailures = [System.Collections.Generic.List[string]]::new()
+
+    Write-Host ''
+    Write-Host 'Cleaning up local development settings...' -ForegroundColor DarkGray
+
+    if ($script:DevServerMayBeRunning) {
+        try {
+            Stop-PortListener -Port $DevPort
+        } catch {
+            $cleanupFailures.Add("port ${DevPort}: $($_.Exception.Message)")
+        }
+    }
+
+    if ($script:WeAddedHostsEntry) {
+        try {
+            if ($isAdministrator) { Remove-HostsEntry } else { Invoke-ElevatedHostsAction -Action 'Remove' }
+        } catch {
+            $cleanupFailures.Add("hosts entry: $($_.Exception.Message)")
+        }
+    } else {
+        Write-Host 'Hosts entry was pre-existing; leaving it in place.' -ForegroundColor DarkGray
+    }
+
+    if ($script:WeAddedProxyBypass) {
+        try {
+            Remove-ProxyBypassEntry
+        } catch {
+            $cleanupFailures.Add("proxy bypass: $($_.Exception.Message)")
+        }
+    }
+
+    if ($cleanupFailures.Count) {
+        Write-Host "Cleanup warnings: $($cleanupFailures -join '; ')" -ForegroundColor DarkYellow
+    }
+}
+
 # --- Subcommand: -Remove (manual cleanup) ---------------------------------
 
 if ($ElevatedHostsAction) {
+    $script:CurrentStage = "running elevated hosts $ElevatedHostsAction action"
     if (-not $isAdministrator) {
         Write-Host "Elevated hosts action requires Administrator context." -ForegroundColor Red
         exit 1
@@ -262,6 +347,7 @@ if ($ElevatedHostsAction) {
 }
 
 if ($Remove) {
+    $script:CurrentStage = 'removing local development settings'
     if ($isAdministrator) {
         Remove-HostsEntry
     } else {
@@ -275,6 +361,7 @@ if ($Remove) {
 # --- Add hosts entry ------------------------------------------------------
 
 if ($isAdministrator) {
+    $script:CurrentStage = 'adding hosts entry'
     $weAdded = Add-HostsEntry
     if (-not $weAdded) {
         Write-Host "Entry for $Hostname already present. Will NOT remove it on exit." -ForegroundColor Yellow
@@ -289,8 +376,10 @@ if ($isAdministrator) {
         $weAdded = $true
     }
 }
+$script:WeAddedHostsEntry = $weAdded
 
 $weAddedProxyBypass = Add-ProxyBypassEntry
+$script:WeAddedProxyBypass = $weAddedProxyBypass
 
 # --- Subcommand: -HostsOnly (no dev server) -------------------------------
 
@@ -318,6 +407,7 @@ if ($LegacyDevPort -ne $DevPort) {
 }
 
 foreach ($portToCheck in $portsToCheck) {
+    $script:CurrentStage = "checking port $portToCheck"
     $preExisting = Get-PortListenerPid -Port $portToCheck
     if (-not $preExisting) {
         continue
@@ -334,10 +424,7 @@ foreach ($portToCheck in $portsToCheck) {
         $stillHeld = Get-PortListenerPid -Port $portToCheck
         if ($stillHeld) {
             Write-Host "Port $portToCheck is still in use after cleanup (PID $stillHeld)." -ForegroundColor Red
-            if ($weAdded) {
-                if ($isAdministrator) { Remove-HostsEntry } else { Invoke-ElevatedHostsAction -Action 'Remove' }
-            }
-            if ($weAddedProxyBypass) { Remove-ProxyBypassEntry }
+            Invoke-DevHostCleanup
             Read-Host "Press Enter to close"
             exit 1
         }
@@ -346,10 +433,7 @@ foreach ($portToCheck in $portsToCheck) {
         Write-Host ""
         Write-Host "Port $DevPort is already in use ($ownerLabel)." -ForegroundColor Red
         Write-Host "Refusing to kill a non-node process automatically." -ForegroundColor Yellow
-        if ($weAdded) {
-            if ($isAdministrator) { Remove-HostsEntry } else { Invoke-ElevatedHostsAction -Action 'Remove' }
-        }
-        if ($weAddedProxyBypass) { Remove-ProxyBypassEntry }
+        Invoke-DevHostCleanup
         Read-Host "Press Enter to close"
         exit 1
     }
@@ -367,34 +451,39 @@ Write-Host "Press Ctrl+C to stop the server and clean up the local alias." -Fore
 Write-Host ""
 
 try {
+    $script:CurrentStage = 'starting dev server'
     Push-Location $ProjectRoot
+    $script:LocationPushed = $true
     # IMPORTANT: invoke node.exe directly. This keeps live stdout visible in
     # the current console while still avoiding the extra cmd.exe wrapper that
     # can orphan node.exe on Ctrl+C.
     $previousPort = $env:PORT
     $env:PORT = [string]$DevPort
+    $script:DevServerMayBeRunning = $true
     & node.exe server.js
+    $serverExitCode = $LASTEXITCODE
+    if ($serverExitCode -ne 0) {
+        throw "Dev server exited with code $serverExitCode."
+    }
+}
+catch {
+    $script:FailureReported = $true
+    Write-LauncherFailure -ErrorRecord $_
+    exit 1
 }
 finally {
-    Pop-Location
+    if ($script:LocationPushed) {
+        Pop-Location
+    }
     if ($null -ne $previousPort) {
         $env:PORT = $previousPort
     } else {
         Remove-Item Env:PORT -ErrorAction SilentlyContinue
     }
-    Write-Host ""
-    # Belt-and-suspenders: sweep port 80 so Ctrl+C / console close never leaves
-    # an orphan listener behind.
-    Stop-PortListener -Port $DevPort
-    if ($weAdded) {
-        if ($isAdministrator) { Remove-HostsEntry } else { Invoke-ElevatedHostsAction -Action 'Remove' }
-    } else {
-        Write-Host "Hosts entry was pre-existing; leaving it in place." -ForegroundColor DarkGray
+    Invoke-DevHostCleanup
+    if (-not $script:FailureReported) {
+        Write-Host ""
+        Write-Host "Done. Press Enter to close." -ForegroundColor Green
+        Read-Host
     }
-    if ($weAddedProxyBypass) {
-        Remove-ProxyBypassEntry
-    }
-    Write-Host ""
-    Write-Host "Done. Press Enter to close." -ForegroundColor Green
-    Read-Host
 }

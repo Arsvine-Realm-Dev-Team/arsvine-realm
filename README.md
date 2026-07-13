@@ -52,7 +52,7 @@ pnpm check         # lint + typecheck + test + build
 Run a single Vitest file or filter by case name:
 
 ```bash
-pnpm vitest run lib/blog-client.test.ts
+pnpm vitest run tests/features/blog/blog-client.test.ts
 pnpm vitest run -t "reading time"
 ```
 
@@ -73,21 +73,15 @@ pnpm vitest run -t "reading time"
 ## Project structure
 
 ```text
-components/          # page components, layout, cards, MDX components, effects, interactions
+src/app/             # provider composition, application shell, i18n, global styles/tokens
 config/              # small runtime config fragments, e.g. image host allowlist
 content/blog/init/   # bundled fallback post when external content repo is unavailable
-contexts/            # AppContext, TransitionContext, LayoutAnchorsContext
-data/                # trilingual data, site config, music playlist
 docs/                # documentation and handoff notes
-hooks/               # custom React hooks
-i18n/                # next-intl config and request setup
-lib/                 # business logic: blog, content access, tweets, reducers, geometry, utilities
-locales/             # UI translation JSON
-pages/               # Next.js Pages Router routes and API routes
+src/pages/           # Next.js Pages Router routes and API routes
+src/features/        # feature UI, state, server loaders/contracts/styles and public entrypoints
 public/              # static assets, icons, local music test folder
 scripts/             # image, font, favicon, and local-host helpers
-styles/              # global SCSS and module partials
-types/               # shared TypeScript types
+src/shared/          # cross-feature hooks, UI primitives, server adapters, types and styles
 server.js            # custom Next.js server
 ```
 
@@ -95,10 +89,9 @@ server.js            # custom Next.js server
 
 Routine maintenance should start from data/config files rather than component logic:
 
-- `data/site.ts` — site identity, SEO text, fonts, social links, page-level labels.
-- `data/music.ts` — music playlist.
-- `data/<topic>/{index.ts,en.ts,zh-TW.ts}` — trilingual structured data.
-- `locales/{zh-CN,zh-TW,en}.json` — UI strings.
+- `src/shared/config/site.ts` — site identity, SEO text, fonts, social links, page-level labels.
+- `src/features/<feature>/contracts/data/{index.ts,en.ts,zh-TW.ts}` — trilingual structured data.
+- `src/app/locales/{zh-CN,zh-TW,en}.json` — UI strings.
 - `config/image-hosts.js` — Next.js remote image host allowlist.
 - `.env.example` — documented environment variables.
 

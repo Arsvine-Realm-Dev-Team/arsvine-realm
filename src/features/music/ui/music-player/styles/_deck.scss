@@ -1,0 +1,186 @@
+// 黑胶唱片拖动切换机制的容器
+.vinylMechanismContainer {
+  width: 100%;
+  padding: 20px 10px; // 上下内边距调整
+  position: relative; // 用于定位唱臂
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0; // 防止被父容器压缩
+  overflow: hidden; // 隐藏拖动时移出边界的唱片
+  height: 200px; // 固定高度
+  cursor: none;
+
+  &:active {
+    cursor: none;
+  }
+}
+
+// 唱盘 (固定部分，唱片在其上旋转和切换)
+.vinylPlatter {
+  width: 160px; // 唱盘直径
+  height: 160px;
+  margin-left: -32px; // 位置调整，使其更居中
+  border: 1px solid var(--ark-border); // 边框
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative; // 用于定位内部的唱片
+  overflow: visible; // 唱盘本身不裁剪，由父容器 vinylMechanismContainer 裁剪
+}
+
+// 单个黑胶唱片样式
+.vinylRecord {
+  width: 150px; // 唱片直径 (比唱盘略小)
+  height: 150px;
+  background-color: transparent;
+  border: 2px solid var(--ark-border); // 边框颜色
+  border-radius: 50%;
+  position: absolute; // 绝对定位，以便实现叠加和独立位移
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.3s ease-out; // 松开拖动时的回弹/切换动画
+  z-index: 1; // 当前播放的唱片在最上层
+  pointer-events: none; // 唱片本身不捕获鼠标事件，由父容器处理拖动
+}
+
+// 即将通过拖动进入的唱片样式
+.incomingVinylRecord {
+  z-index: 0; // 在当前唱片下方
+  opacity: 0; // 默认通过透明度隐藏 (JS 中会根据拖动状态调整)
+  pointer-events: none;
+  // 过渡效果在 JS 中根据 isDragging 状态动态添加/移除
+}
+
+// 唱片旋转动画类
+.recordSpinning {
+  animation: spinRecord 3s linear infinite;
+}
+
+// 唱片中心标签样式 (包含扫描线效果)
+.vinylLabel {
+  width: 50px;
+  height: 50px;
+  background: transparent;
+  border: 1px solid var(--ark-border);
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden; // 用于裁剪扫描线伪元素
+
+  // 环形绿色扫描线效果
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background:
+      repeating-linear-gradient( // 扫描线条纹
+        to bottom,
+        transparent 0px,
+        transparent 2px,
+        rgba(0,0,0,0.15) 2px,
+        rgba(0,0,0,0.15) 4px
+      ),
+      var(--ark-highlight-green); // 绿色底色
+    opacity: 0.7;
+    border-radius: 50%;
+    -webkit-mask-image: radial-gradient(circle, transparent 0 18%, #000 19% 100%); // 环形遮罩
+    mask-image: radial-gradient(circle, transparent 0 18%, #000 19% 100%);
+    animation: scanMove 8s linear infinite; // 扫描线滚动动画
+    pointer-events: none;
+  }
+
+  // 中心小透明圆 (用于覆盖扫描线中心)
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 16px; height: 16px;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    border-radius: 50%;
+    box-shadow: 0 0 0 999px rgba(0,0,0,0.0); // CSS Hack 保证中心透明
+    z-index: 2;
+  }
+}
+
+// 唱臂整体的容器 (用于定位和旋转)
+.tonearmAssembly {
+  position: absolute;
+  right: 58px; // 根据唱盘位置和唱臂尺寸精确计算的右侧定位
+  bottom: 185px; // 精确计算的底部定位
+  width: 1px;  // 容器本身尺寸不重要，作为旋转中心
+  height: 1px;
+  transform-origin: top center; // 旋转中心点 (容器的顶部中心)
+  transition: transform 0.4s ease-in-out; // 唱臂放下/抬起动画
+}
+
+// 唱臂播放时 (放下到唱片上) 的旋转状态
+.tonearmAssembly.tonearmPlaying {
+  transform: rotate(20deg); // 旋转角度
+}
+
+// 唱臂的点击热区 (用于触发播放/暂停)
+.tonearmHitbox {
+  position: absolute;
+  left: -10px; // 相对于 tonearmAssembly 定位
+  top: -10px;
+  width: 26px;
+  height: 165px;
+  background-color: transparent; // 透明，仅作为热区
+  cursor: none;
+  z-index: 6; // 确保在唱臂实体之上
+}
+
+// 唱臂实体样式
+.tonearm {
+  width: 6px;
+  height: 145px;
+  background-color: transparent;
+  border: 1px solid #f6b2ff; // 默认边框颜色 (粉色)
+  border-radius: 3px;
+  position: absolute;
+  left: -3px; // 相对于 tonearmAssembly 定位 (使其中心对齐)
+  top: 0;
+  z-index: 5;
+
+  // 唱针头部分
+  &::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px;
+    height: 8px;
+    background-color: transparent;
+    border: 1px solid #f6b2ff;
+    border-radius: 2px;
+  }
+
+  // 唱臂底座 (旋转轴心外观)
+  &::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 16px;
+    background-color: transparent;
+    border: 1px solid #f6b2ff;
+    border-radius: 50%;
+    z-index: -1; // 在唱臂实体之下
+  }
+}
+
+// 低电量时唱臂样式 (边框、唱针、底座变为绿色)
+.tonearmLowPower {
+  border-color: var(--ark-highlight-green);
+  &::after, &::before {
+    border-color: var(--ark-highlight-green);
+  }
+}
+
+// 播放器主要内容区域 (抽屉内部，包含歌曲信息、进度条等)

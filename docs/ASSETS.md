@@ -13,7 +13,7 @@ realm/site-catalog/versions/<version>/assets.json
 
 The public manifest contains only object keys and display metadata. Missing manifests or entries remove optional decoration and never block content or navigation.
 
-The public bucket must allow `GET`/`HEAD` CORS requests from `https://arsvine.com`, its intended subdomains, and the documented local `http://dev.arsvine.com` origin. Keep the Referer allowlist aligned with the same origins.
+The public bucket must allow `GET`/`HEAD` CORS requests from `https://arsvine.com`, its intended subdomains, and the documented local `http://dev.arsvine.com` origin. Keep the Referer allowlist aligned with the same origins. If the CDN caches CORS responses, include the request `Origin` in its cache key (or honour `Vary: Origin`); otherwise a production response can poison the local manifest cache.
 
 ## Local workflow
 

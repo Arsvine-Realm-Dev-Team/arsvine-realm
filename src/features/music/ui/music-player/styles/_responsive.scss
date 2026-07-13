@@ -1,0 +1,50 @@
+@media (max-width: 767px) {
+  .playerContainer {
+    width: min(280px, 85vw);
+    top: auto;
+    bottom: 64px; // 在底部导航栏上方
+    transform: translateX(-100%);
+    max-height: 60vh;
+  }
+  .playerContainer.open {
+    transform: translateX(0);
+  }
+
+  // 增大触控热区
+  .tonearmHitbox {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .progressBarContainer {
+    height: 8px; // 加粗进度条便于触控
+    cursor: none;
+  }
+
+  .handle {
+    min-width: 32px;
+    min-height: 44px;
+  }
+
+  .handle.expanded {
+    min-height: 44px;
+    max-height: 100px;
+    padding: 5px 0;
+    justify-content: center;
+  }
+
+  .handleTrackInfo {
+    display: none;
+  }
+
+  .playlistItem {
+    min-height: 44px;
+    padding: 10px 15px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .playerContainer {
+    cursor: auto;
+  }
+}

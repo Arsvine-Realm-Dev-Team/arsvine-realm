@@ -1,0 +1,39 @@
+.inverted {
+  .contactIconRipple {
+    animation-name: contactRippleExpandShadowInverted;
+    animation-duration: 2.5s;
+  }
+
+  .radarDisplay .radarRipple {
+    border-color: rgba(var(--ark-primary-rgb), 0.9);
+    box-shadow: 0 0 0 0px rgba(var(--ark-primary-rgb), 0.5);
+    animation-name: contactRippleExpandShadowInverted;
+  }
+
+  .radarDisplay .radarRippleSmall {
+    border-color: rgba(var(--ark-primary-rgb), 0.9);
+    box-shadow: 0 0 0 0px rgba(var(--ark-primary-rgb), 0.5);
+    animation-name: contactRippleExpandShadowSmallInverted;
+  }
+
+  .radarDisplay .scanner {
+    background: conic-gradient(from 0deg,
+        rgba(var(--ark-primary-rgb), 0.6) 0deg,
+        rgba(var(--ark-primary-rgb), 0.1) 30deg,
+        transparent 30.1deg 360deg);
+  }
+
+  .aboutIconItem:hover {
+    .logIcon {
+      color: #ffffff;
+    }
+  }
+
+  .aboutNewImageNormal {
+    opacity: 0;
+  }
+
+  .aboutNewImageInverted {
+    opacity: 1;
+  }
+}

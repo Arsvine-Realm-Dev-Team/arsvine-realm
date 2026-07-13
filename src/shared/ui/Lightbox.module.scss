@@ -1,0 +1,187 @@
+/* shared/ui/Lightbox.module.scss */
+
+.lightboxOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85); 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999999; 
+  cursor: none; 
+  opacity: 0;
+  pointer-events: all !important; 
+}
+
+.lightboxOverlay.visible {
+  opacity: 1;
+  animation: fadeIn 0.3s ease;
+}
+
+.lightboxOverlay.fadeOut {
+  animation: fadeOut 0.45s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.lightboxContainer {
+  position: relative;
+  background-color: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: none;
+  pointer-events: all !important;
+}
+
+.lightboxImage {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: calc(90vw - 40px);
+  max-height: calc(90vh - 80px);
+  border: 2px solid var(--ark-border);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+  will-change: transform, opacity;
+}
+
+.lightboxCaption {
+  color: #ccc; 
+  font-family: var(--font-hud);
+  font-size: var(--fs-body);
+  margin-top: 10px;
+  text-align: center;
+  max-width: 80%; 
+}
+
+.lightboxButton {
+  position: fixed;
+  top: 50%;
+  width: 80px;
+  height: 20px;
+  background: rgba(var(--ark-secondary-rgb), 0.15);
+  border: 1px solid var(--ark-border);
+  color: var(--ark-text-secondary);
+  font-family: 'Dosis', monospace;
+  font-size: 0;
+  padding: 0;
+  cursor: none;
+  z-index: 999999;
+  pointer-events: all !important;
+  transition: opacity 0.3s ease-out, background-color 0.3s, color 0.3s, border-color 0.3s;
+  opacity: 0.7;
+
+  &::before {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.1rem;
+    line-height: 1;
+    color: inherit;
+    transition: color 0.3s;
+  }
+
+  &:hover {
+    background: var(--ark-primary);
+    border-color: var(--ark-primary);
+    opacity: 1;
+    &::before {
+      color: var(--ark-dark-blue);
+    }
+  }
+
+  :global(.inverted) & {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: var(--ark-border);
+    color: var(--ark-text-secondary);
+
+    &::before {
+      color: var(--ark-text-secondary);
+    }
+
+    &:hover {
+      background: var(--ark-primary);
+      border-color: var(--ark-primary);
+      &::before {
+        color: #ffffff;
+      }
+    }
+  }
+}
+
+.prevButton {
+  left: 30px;
+  transform: translateY(-50%);
+  &::before {
+    content: '←';
+  }
+}
+
+.nextButton {
+  right: 30px;
+  transform: translateY(-50%);
+  &::before {
+    content: '→';
+  }
+}
+
+@media (max-width: 768px) {
+  .prevButton {
+    left: 8px;
+    width: 44px;
+    min-height: 20px;
+  }
+  .nextButton {
+    right: 8px;
+    width: 44px;
+    min-height: 20px;
+  }
+  .lightboxCaption {
+    font-size: var(--fs-base);
+  }
+  .lightboxImage {
+    max-width: calc(95vw - 20px);
+    max-height: calc(95vh - 60px);
+  }
+  .lightboxOverlay {
+    touch-action: none;
+  }
+} 
+
+/* New styles for dots indicator */
+.dotsContainer {
+  position: absolute;
+  bottom: 0px; /* Significantly increased bottom value to move it clear of the image */
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center; 
+  gap: 8px; 
+}
+
+.dot {
+  width: 12px; 
+  height: 2px;  /* Made lines thinner */
+  border-radius: 0; /* Removed border-radius */
+  background-color: rgba(255, 255, 255, 0.4);
+  transition: background-color 0.3s ease, width 0.3s ease; 
+}
+
+.dot.activeDot {
+  width: 36px; 
+  background-color: rgba(255, 255, 255, 0.85); 
+  /* height will be inherited from .dot */
+}

@@ -4,7 +4,7 @@ This file records real project-specific pitfalls. Read it before editing route t
 
 ## 1. Do not use `reading-time`
 
-The project uses an in-house reading-time estimator in `lib/blog.ts`.
+The project uses an in-house reading-time estimator in `features/blog/server/blog.ts`.
 
 Reason: common packages such as `reading-time` are whitespace-oriented. CJK text has few spaces, so long Chinese posts collapse to extremely low estimates and often display as `1 min` after flooring.
 
@@ -93,7 +93,7 @@ Without this, navigating between protected posts in the same `access.group` can 
 
 ## 9. Protected-post `authResolved` must clear request state in both branches
 
-The reducer action in `lib/blog-post-state.ts` must clear `activeRequestKey` and `loadingLocale` whether auth resolves to granted or required.
+The reducer action in `features/blog/model/blogPostState.ts` must clear `activeRequestKey` and `loadingLocale` whether auth resolves to granted or required.
 
 If only the required branch clears request state, public → protected navigation can leave stale request keys behind. The next legitimate fetch may be deduped incorrectly and the page can hang.
 
@@ -194,11 +194,9 @@ Desktop-only Three.js effects are dynamically imported with SSR disabled and sho
 
 Repeated unmount/remount cycles can destroy and recreate GPU contexts during transitions, causing jank and instability.
 
-## 21. Do not assume `/[locale]/game` exists as a page
+## 21. `/[locale]/game` is not a route
 
-Several route-mode and prefetch matchers still include `/[locale]/game` as a standalone-pattern branch, but the current tree does not contain a corresponding `pages/[locale]/game` file.
-
-Treat that path as a legacy/internal matcher until the page exists for real. Do not add docs or links that imply it is already shippable without checking the route tree first.
+The stale `/[locale]/game` route matchers, prefetches, and redirects were removed during the source-root migration. Game projects render through the content hub's in-page detail mode; do not add links or route patterns for a page that does not exist.
 
 ## 22. GitHub content paths must be repo-relative only
 
@@ -215,7 +213,7 @@ Required behavior:
 
 ## 23. External links must be parsed, not substring-matched
 
-`WorkDetailView.tsx` and `components/detail/standalone/webDetailParagraphs.tsx` now use a shared helper that calls `new URL(...)`.
+`features/portfolio/ui/WorkDetailView.tsx` and `features/portfolio/ui/detail/webDetailParagraphs.tsx` now use a shared helper that calls `new URL(...)`.
 
 Do not classify links with `includes('github.com')` / `includes('bilibili.com')` or similar substring checks.
 
@@ -227,7 +225,7 @@ Required behavior:
 
 ## 24. Internal blog redirects must use validated helpers
 
-`components/blog/BlogDetailScaffold.tsx` now routes through helpers in `lib/blog-client.ts`.
+`features/blog/ui/blog/BlogDetailScaffold.tsx` now routes through helpers in `features/blog/model/blogClient.ts`.
 
 Do not pass arbitrary slug strings directly into `navigateTo()` or `Link href`.
 
@@ -239,7 +237,7 @@ Required behavior:
 
 ## 25. Locale fallback banners must use explicit dispatch
 
-`components/shared/LocaleFallbackBanner.tsx` now resolves copy with explicit locale branches.
+`shared/ui/LocaleFallbackBanner.tsx` now resolves copy with explicit locale branches.
 
 Do not call locale-keyed text maps with dynamic method selection.
 
@@ -269,9 +267,7 @@ Do not add new `.test.ts` or `.test.tsx` files next to source files.
 
 Required layout:
 
-- `tests/lib/...`
-- `tests/components/...`
-- `tests/hooks/...`
-- `tests/i18n/...`
-- `tests/pages/...`
-- `tests/repo/...`
+- `tests/features/<feature>/...`
+- `tests/shared/...`
+- `tests/app/...` (application composition)
+- `tests/repo/...` (repository-wide conventions)

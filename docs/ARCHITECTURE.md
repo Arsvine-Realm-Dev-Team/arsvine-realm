@@ -19,21 +19,17 @@ The project intentionally remains on Pages Router. Do not introduce App Router f
 
 ## Route model
 
-All user-facing pages live under `pages/[locale]/...`.
+All user-facing route adapters live under `src/pages/[locale]/...`. They parse route input and own SSG/ISR contracts; feature UI and server loaders live under `src/features/`.
 
 | Route | Purpose |
 |---|---|
 | `/[locale]` | HUD home page with primary navigation columns. |
 | `/[locale]/content` | Content aggregation page with hash sections such as `#works`, `#experience`, `#blog`, `#life`. |
-| `/[locale]/{works,experience,life,friends,about,contact,tweets,copyright}` | Section or standalone pages. |
-| `/[locale]/blog` | Temporary redirect alias to `/[locale]/content#blog`. |
+| `/[locale]/{works,experience,life,friends,about,contact,tweets,copyright}` | Canonical section or standalone pages. |
 | `/[locale]/blog/[slug]` | Blog detail page; SSG with `fallback: 'blocking'` and ISR. |
-| `/[locale]/posts` | Legacy temporary redirect to `/content#blog`. |
-| `/[locale]/posts/[slug]` | Legacy temporary redirect to `/blog/[slug]`. |
 | `/[locale]/web/[id]` | Work/project detail page. |
 | `/[locale]/life/[slug]` | Life detail page. |
 | `/[locale]/access/[group]` | Standalone TOTP gate. |
-| `/[locale]/license` | Redirects permanently to `/copyright`. |
 | `/[locale]/rss.xml` | Per-locale RSS. |
 | `/sitemap.xml` | Site-wide sitemap. |
 | `/robots.txt` | Dynamic robots response. |
@@ -51,11 +47,11 @@ Rules:
 5. Do not use IP-based geolocation for language selection.
 6. If the first segment looks like an unsupported BCP-47 locale, strip it before adding the selected locale to avoid paths like `/en/fr/web/1`.
 
-`i18n/config.ts` is the source of truth for supported locales, HTML language tags, Open Graph locales, and RSS language values.
+`src/app/i18n/config.ts` is the source of truth for supported locales, HTML language tags, Open Graph locales, and RSS language values.
 
 ## State and layout contexts
 
-### `contexts/AppContext.tsx`
+### `features/hud/model/HudProvider.tsx`
 
 Composes site-wide interactive state and effects:
 
@@ -65,7 +61,7 @@ Composes site-wide interactive state and effects:
 - home-page typing effects;
 - column hover copy/state.
 
-### `contexts/TransitionContext.tsx`
+### `features/navigation/model/TransitionProvider.tsx`
 
 Controls animated navigation. Internal navigation should use:
 
@@ -77,7 +73,7 @@ instead of `router.push()`. This preserves home/content/detail transitions, colu
 
 It also supports `setBackOverride()` so detail views and lightboxes can intercept BACK behavior.
 
-### `contexts/LayoutAnchorsContext.tsx`
+### `features/navigation/model/LayoutAnchorsContext.tsx`
 
 Registers the active scroll container. This is required because the layout uses a locked-height content container; deep-link scrolling must target that container rather than the document viewport.
 
@@ -98,16 +94,15 @@ The project has two content sources.
 
 ### 1. Bundled typed data
 
-Structured site data lives in `data/`:
+Structured site data is co-located with its owning feature, while global site
+configuration lives in `src/shared/config/`:
 
 ```text
-data/projects/
-data/experience/
-data/life/
-data/skills/
-data/friendLinks/
-data/site.ts
-data/music.ts
+src/features/portfolio/contracts/data/
+src/features/experience/contracts/data/
+src/features/life/contracts/data/
+src/features/profile/contracts/{skills,friendLinks}/
+src/shared/config/site.ts
 ```
 
 Each trilingual topic generally has:
@@ -118,7 +113,7 @@ en.ts
 zh-TW.ts
 ```
 
-`lib/i18n-data.ts` maps `(topic, locale)` to modules through an explicit static registry. This is intentional. Dynamic `require` is not used.
+`src/app/i18n/data.ts` maps `(topic, locale)` to modules through an explicit static registry. This is intentional. Dynamic `require` is not used.
 
 ### 2. External GitHub content repository
 
@@ -153,7 +148,7 @@ Tweet pages can also be rendered from synthetic stress data in development when 
 
 ## Blog parsing and reading time
 
-`lib/blog.ts` parses post frontmatter, MDX, translation fallback state, and reading-time estimates.
+`features/blog/server/blog.ts` parses post frontmatter, MDX, translation fallback state, and reading-time estimates.
 
 Reading time uses an in-house estimator tuned for mixed CJK and Latin text. It strips code, inline code, HTML/JSX tags, and MDX import/export lines before counting.
 
@@ -223,9 +218,9 @@ Mobile skips the WebGL canvas and uses simplified charging behavior.
 
 ## Styling system
 
-- Component styles use SCSS Modules.
-- Shared partials live in `styles/`.
-- Global tokens and font variables live in `styles/globals.scss`.
+- Feature UI owns its SCSS Modules; cross-feature primitives live with `shared/ui/`.
+- `src/app/styles/Shell.module.scss` is the application-shell style entrypoint; feature-specific section styles stay with their feature.
+- Global tokens and font variables live in `src/app/styles/globals.scss`.
 
 Important font variables:
 

@@ -1,6 +1,6 @@
 # Performance Guide
 
-The adaptive controller exposes four tiers and capability flags through `AppContext`.
+The adaptive controller exposes four tiers and capability flags through the HUD provider.
 
 | Tier | Logo motion | Ambient WebGL | Heavy CSS | Interactive WebGL | Custom cursor |
 |---|---:|---:|---:|---:|---:|

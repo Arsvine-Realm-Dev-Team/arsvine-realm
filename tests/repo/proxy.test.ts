@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { __internals } from '../../proxy';
+import { __internals } from '../../src/proxy';
 
 const { shouldBypass, pickLocaleFromHeader, coerceCookieLocale, LOOKS_LIKE_LOCALE } = __internals;
 

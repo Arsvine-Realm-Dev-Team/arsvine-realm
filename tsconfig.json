@@ -7,7 +7,7 @@
     ],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": false,
+    "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -18,38 +18,25 @@
     "incremental": true,
     "paths": {
       "@/*": [
-        "./*"
-      ],
-      "@/components/*": [
-        "./components/*"
-      ],
-      "@/styles/*": [
-        "./styles/*"
-      ],
-      "@/hooks/*": [
-        "./hooks/*"
-      ],
-      "@/contexts/*": [
-        "./contexts/*"
-      ],
-      "@/data/*": [
-        "./data/*"
-      ],
-      "@/types/*": [
-        "./types/*"
-      ],
-      "@/lib/*": [
-        "./lib/*"
+        "./src/*"
       ]
     },
-    "target": "ES2017"
+    "target": "ES2017",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "strictNullChecks": true
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
     "**/*.js",
-    "**/*.jsx"
+    "**/*.jsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

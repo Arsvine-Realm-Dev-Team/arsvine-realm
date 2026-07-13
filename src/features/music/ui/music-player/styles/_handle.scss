@@ -1,0 +1,97 @@
+// 抽屉把手样式
+.handle {
+  position: absolute;
+  right: -25px;
+  top: -1px;
+  width: 25px;
+  height: auto;
+  min-height: 100px;
+  max-height: 100px;
+  background-color: rgba(var(--ark-dark-blue-rgb), 0.92);
+  border: 1px solid var(--ark-border);
+  border-left: none;
+  cursor: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 3.5px;
+  transition: background-color 0.2s ease, max-height 0.5s ease-in-out;
+  overflow: hidden;
+  padding: 5px 0;
+}
+
+// 抽屉把手展开状态 (收起且播放时)
+.handle.expanded {
+  min-height: 168px;
+  max-height: 50vh;
+  padding: 8px 0 14px;
+  justify-content: flex-start;
+}
+
+.handle:hover { background-color: rgba(var(--ark-dark-blue-rgb), 0.98); } // 悬停时背景变深
+
+// 把手内部的动画线条 (单个)
+.handleBar {
+  width: 30%; // 默认宽度
+  height: 2px;
+  background-color: var(--ark-text-secondary);
+  opacity: 0.7;
+  transition: width 0.3s ease-in-out, opacity 0.2s ease-out; // 宽度和透明度变化动画
+  transform-origin: center; // 宽度变化时从中心扩展/收缩
+}
+
+// 把手内动画线条的容器
+.handleBarsContainer {
+  width: 100%;
+  height: 45px; // 固定高度，确保线条有足够空间
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 3.5px;
+  flex-shrink: 0; // 防止被父容器压缩
+}
+
+// 播放时，把手内的动画线条应用 waveEffect 动画
+.handle.playing .handleBar {
+  animation: waveEffect 0.8s ease-in-out infinite; // 应用波浪动画
+}
+
+// 为7个动画线条设置不同的随机动画延迟，形成交错效果
+.handle.playing .handleBar:nth-child(1) { animation-delay: 0.2s; }
+.handle.playing .handleBar:nth-child(2) { animation-delay: 0.7s; }
+.handle.playing .handleBar:nth-child(3) { animation-delay: 0.4s; }
+.handle.playing .handleBar:nth-child(4) { animation-delay: 0.9s; }
+.handle.playing .handleBar:nth-child(5) { animation-delay: 0.1s; }
+.handle.playing .handleBar:nth-child(6) { animation-delay: 1.1s; }
+.handle.playing .handleBar:nth-child(7) { animation-delay: 0.6s; }
+
+// 抽屉把手展开时显示的歌曲信息容器
+.handleTrackInfo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 150px;
+  margin-top: 8px; // 与上方动画线条的间距
+  padding: 0;
+  overflow: hidden;
+}
+
+// 抽屉把手展开时显示的歌曲标题文字
+.handleTrackTitle {
+  display: block;
+  max-width: 160px;
+  color: var(--ark-text);
+  font-size: 0.62rem;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  font-family: 'Times New Roman', Times, serif; // 特殊字体
+  white-space: nowrap;
+  text-align: center;
+  transform: rotate(90deg);
+  transform-origin: center;
+  opacity: 0.9;
+  text-shadow: 0 0 1px rgba(var(--ark-dark-blue-rgb), 0.35);
+}

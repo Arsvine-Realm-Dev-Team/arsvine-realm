@@ -24,4 +24,12 @@ if %ERRORLEVEL% equ 0 (
     powershell.exe -NoProfile -ExecutionPolicy Bypass -File "scripts\dev-host-setup.ps1" %*
 )
 
-exit /b %ERRORLEVEL%
+set "EXIT_CODE=%ERRORLEVEL%"
+if not "%EXIT_CODE%"=="0" (
+    echo.
+    echo Local dev launcher failed with exit code %EXIT_CODE%.
+    echo Review the error above before closing this window.
+    pause
+)
+
+exit /b %EXIT_CODE%

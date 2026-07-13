@@ -38,32 +38,32 @@ npx vitest run -t "name pattern"
 
 ## Hard rules
 
-1. **Use Pages Router, not App Router.** Routes are under `pages/`, not `app/`.
+1. **Use Pages Router, not App Router.** Routes are under `src/pages/`, not `app/`.
 2. **Do not replace `server.js`.** Development and production both run through the custom server.
 3. **Use `useTransition().navigateTo()` for internal navigation.** Direct `router.push()` breaks page transition behavior.
 4. **Do not use IP-based language selection.** Locale resolution is `NEXT_LOCALE cookie > Accept-Language > zh-CN`.
-5. **Do not dynamically require locale data.** `lib/i18n-data.ts` intentionally uses a static registry.
+5. **Do not dynamically require locale data.** `src/app/i18n/data.ts` intentionally uses a static registry.
 6. **Do not reintroduce `reading-time`.** The in-house estimator handles CJK; whitespace-based packages do not.
 7. **Do not use `--font-display` for translated/user content.** `ZELDA Free` is Latin-only and breaks CJK/accented text.
 8. **Use `coscli` only with temporary environment-provided credentials.** Never persist COS keys in a CLI config or commit `cos-workspace/`.
 9. **Do not ship protected MDX in static props.** Protected posts must remain runtime-gated through the API and signed access cookie.
-10. **Preserve the protected-post reducer/effect race fixes.** See `docs/GOTCHAS.md` before touching `useBlogPostState.ts` or `lib/blog-post-state.ts`.
+10. **Preserve the protected-post reducer/effect race fixes.** See `docs/GOTCHAS.md` before touching `src/features/blog/model/useBlogPostState.ts` or `src/features/blog/model/blogPostState.ts`.
 
 ## Where to edit common things
 
 | Need | Edit first |
 |---|---|
-| Site metadata, SEO, fonts, social links | `data/site.ts` |
-| Music playlist / cloud audio catalog | `pages/api/assets/audio`, `lib/assets/catalog-provider.ts`, `components/interactive/MusicPlayer.tsx` |
-| Projects / experience / life / skills / friend links | `data/<topic>/*.ts` |
-| UI copy | `locales/*.json` |
+| Site metadata, SEO, fonts, social links | `src/shared/config/site.ts` |
+| Music playlist / cloud audio catalog | `src/pages/api/assets/audio`, `src/features/assets/server/catalog/`, `src/features/music/` |
+| Projects / experience / life / skills / friend links | `src/features/<feature>/contracts/data/*.ts` |
+| UI copy | `src/app/locales/*.json` |
 | Remote image domains | `config/image-hosts.js` |
 | Blog fallback post | `content/blog/init/` |
 | Runtime blog/tweet source | `.env.local` external GitHub content repo variables |
-| Protected-post access | `ACCESS_GRANT_SECRET`, `TOTP_GROUPS_JSON`, access helpers under `lib/content/` |
-| Route transitions | `contexts/TransitionContext.tsx`, route mode hooks |
-| Global HUD / left panel / music player | `components/layout/`, `components/interactive/` |
-| MDX rendering | `components/mdx/`, `styles/MDXContent.module.scss` |
+| Protected-post access | `ACCESS_GRANT_SECRET`, `TOTP_GROUPS_JSON`, access helpers under `src/shared/lib/content/` |
+| Route transitions | `src/features/navigation/model/TransitionProvider.tsx`, route mode hooks |
+| Global HUD / left panel | `src/features/hud/`, `src/app/shell/MainLayout.tsx` |
+| MDX rendering | `src/features/blog/ui/mdx/`, `src/features/blog/styles/MDXContent.module.scss` |
 
 ## Validation expectation
 
@@ -81,7 +81,7 @@ For visual or interaction changes, also manually verify desktop and mobile layou
 
 Read [`docs/GOTCHAS.md`](./docs/GOTCHAS.md) before editing:
 
-- protected blog post auth state machine;
+- protected blog post auth state machine (`src/features/blog/model/useBlogPostState.ts`);
 - route loading overlay placement;
 - avatar parallax transform override;
 - blog reveal animation and `<Explain>` tooltip stacking;
