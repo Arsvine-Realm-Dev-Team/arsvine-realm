@@ -11,6 +11,7 @@ interface BlogSectionProps {
   locale: Locale;
   posts: BlogPostMeta[];
   handleBlogItemClick: (post: BlogPostMeta) => void;
+  handleBlogItemIntent?: (post: BlogPostMeta) => void;
 }
 
 export default function BlogSection({
@@ -18,6 +19,7 @@ export default function BlogSection({
   locale,
   posts,
   handleBlogItemClick,
+  handleBlogItemIntent,
 }: BlogSectionProps) {
   const t = useTranslations('sections.blog');
 
@@ -33,7 +35,15 @@ export default function BlogSection({
             tabIndex={0}
             data-cursor-no-magnetic
             onClick={() => handleBlogItemClick(post)}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleBlogItemClick(post); }}
+            onPointerDown={(event) => {
+              if (event.button === 0) handleBlogItemIntent?.(post);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                handleBlogItemIntent?.(post);
+                handleBlogItemClick(post);
+              }
+            }}
           >
             <div className={cardStyles.cardInner}>
               <span className={cardStyles.cardIndex}>

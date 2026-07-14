@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useCallback } from 'react';
 import { useHudAnimation, useHudColumnHover, useHudPower } from '../model/HudProvider';
 import { useTransition } from '../../navigation/model/TransitionProvider';
 import NavigationColumns from './layout/NavigationColumns';
 import type { Locale } from '@/shared/contracts/locale';
-import { useNavigationRuntime } from '@/features/navigation/model/NavigationRuntime';
+import useNavigationIntentPrefetch from '@/features/navigation/model/useNavigationIntentPrefetch';
 
 interface HomeProps {
   locale: Locale;
@@ -13,7 +13,7 @@ interface HomeProps {
 }
 
 export default function Home({ locale }: HomeProps) {
-  const { prefetch } = useNavigationRuntime();
+  const prefetchOnIntent = useNavigationIntentPrefetch();
   const { navigateTo } = useTransition();
   const {
     linesAnimated, pulsingNormalIndices, pulsingReverseIndices,
@@ -25,18 +25,9 @@ export default function Home({ locale }: HomeProps) {
     handleColumnMouseEnter, handleColumnMouseLeave,
   } = useHudColumnHover();
 
-  useEffect(() => {
-    if (process.env.NODE_ENV !== 'production') {
-      return;
-    }
-
-    const url = `/${locale}/content`;
-    void prefetch(url).catch((error) => {
-      if (process.env.NODE_ENV !== 'production') {
-        console.warn('[home] prefetch failed:', url, error);
-      }
-    });
-  }, [prefetch, locale]);
+  const handleColumnNavigateIntent = useCallback(() => {
+    prefetchOnIntent(`/${locale}/content`);
+  }, [locale, prefetchOnIntent]);
 
   const handleColumnClick = (columnIndex: number) => {
     if (!animationsComplete) return;
@@ -63,6 +54,7 @@ export default function Home({ locale }: HomeProps) {
           branchText3={branchText3}
           branchText4={branchText4}
           handleColumnClick={handleColumnClick}
+          handleColumnNavigateIntent={handleColumnNavigateIntent}
           handleColumnMouseEnter={handleColumnMouseEnter}
           handleColumnMouseLeave={handleColumnMouseLeave}
         />

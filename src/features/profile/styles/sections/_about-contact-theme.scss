@@ -23,6 +23,9 @@
         transparent 30.1deg 360deg);
   }
 
+}
+
+:global(html[data-theme-mode='inverted']) {
   .aboutIconItem:hover {
     .logIcon {
       color: #ffffff;

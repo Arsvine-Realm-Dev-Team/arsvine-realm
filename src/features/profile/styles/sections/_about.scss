@@ -56,12 +56,14 @@
   opacity: 0.8;
   transition: filter 0.5s ease-in-out;
 
-  .inverted & {
+  :global(html[data-theme-mode='inverted']) & {
     filter: grayscale(100%);
   }
 }
 
 .contentSection.aboutSection {
+  --about-panel-background: rgba(50, 50, 50, 0.8);
+
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -71,7 +73,7 @@
   margin-left: var(--content-offset);
   min-height: auto;
   padding: 30px var(--spacing-section-pad) 100px;
-  background-color: rgba(50, 50, 50, 0.8);
+  background-color: var(--about-panel-background);
   border-radius: 0;
   margin-bottom: 0;
   overflow: hidden;
@@ -88,6 +90,10 @@
     margin-left: 0;
     padding: 30px 20px 100px;
   }
+}
+
+:global(html[data-theme-mode='inverted']) .contentSection.aboutSection {
+  --about-panel-background: rgba(225, 225, 225, 0.88);
 }
 
 .siteStatsContainer {

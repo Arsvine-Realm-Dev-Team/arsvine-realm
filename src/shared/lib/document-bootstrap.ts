@@ -4,6 +4,7 @@ import {
   PERFORMANCE_CAPABILITY_ATTRIBUTES,
 } from './performance-tiers';
 import { resolveInitialPerformancePolicy } from './performance-policy';
+import { htmlLangMap } from '@/shared/contracts/locale';
 
 export const POWER_SYSTEM_STORAGE_KEY = 'arsvine:power-system';
 export const THEME_MODE_STORAGE_KEY = 'arsvine:theme-mode';
@@ -54,10 +55,16 @@ function buildPerformanceTierBootstrap() {
 export function buildDocumentBootstrapScript() {
   const xBlockedCountries = JSON.stringify(Array.from(HIDE_X_COUNTRIES));
   const bilibiliFriendlyCountries = JSON.stringify(Array.from(BILIBILI_FRIENDLY_COUNTRIES));
+  const documentLanguages = JSON.stringify(htmlLangMap);
 
   return `(() => {
     try {
       const html = document.documentElement;
+      const locale = (document.location?.pathname || '').split('/').filter(Boolean)[0] || '';
+      const documentLanguages = ${documentLanguages};
+      if (documentLanguages[locale]) {
+        html.lang = documentLanguages[locale];
+      }
       const powerRaw = sessionStorage.getItem('${POWER_SYSTEM_STORAGE_KEY}') || localStorage.getItem('${POWER_SYSTEM_STORAGE_KEY}');
       if (powerRaw) {
         const power = JSON.parse(powerRaw);

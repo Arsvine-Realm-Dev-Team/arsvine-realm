@@ -262,3 +262,13 @@ Required layout:
 - `tests/shared/...`
 - `tests/app/...` (application composition)
 - `tests/repo/...` (repository-wide conventions)
+
+## 28. The global shell must stay above the locale segment
+
+`src/app/layout.tsx` owns the document, client i18n provider, HUD providers, and
+`MainLayout`. `[locale]/layout.tsx` is deliberately a nested server layout.
+
+Do not move the global providers back under `[locale]`. A dynamic locale segment
+remount would reset music, HUD, WebGL, drawer, and transition state. Locale UI
+navigation must use `TransitionContext.switchLocale()`; regular internal routes
+continue to use `navigateTo()`.

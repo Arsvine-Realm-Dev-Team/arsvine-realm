@@ -7,9 +7,11 @@ function evaluateBootstrap(script: string, env: {
   effectiveType?: string;
   deviceMemory?: number;
   hardwareConcurrency?: number;
+  pathname?: string;
 } = {}) {
   const attrs = new Map<string, string>();
   const html = {
+    lang: '',
     setAttribute: vi.fn((key: string, value: string) => {
       attrs.set(key, value);
     }),
@@ -30,7 +32,7 @@ function evaluateBootstrap(script: string, env: {
 
   const fn = new Function('document', 'matchMedia', 'navigator', 'sessionStorage', 'localStorage', script);
   fn(
-    { documentElement: html, cookie: '' },
+    { documentElement: html, cookie: '', location: { pathname: env.pathname ?? '/zh-CN' } },
     matchMedia,
     {
       connection,
@@ -47,6 +49,11 @@ function evaluateBootstrap(script: string, env: {
 }
 
 describe('buildDocumentBootstrapScript performance tier', () => {
+  it('sets the document language from the locale-prefixed pathname before hydration', () => {
+    expect(evaluateBootstrap(buildDocumentBootstrapScript(), { pathname: '/en/copyright' }).html.lang).toBe('en-US');
+    expect(evaluateBootstrap(buildDocumentBootstrapScript(), { pathname: '/zh-TW/content' }).html.lang).toBe('zh-Hant-TW');
+  });
+
   it('does not lower visual effects for the browser network estimate alone', () => {
     const script = buildDocumentBootstrapScript();
     const { attrs } = evaluateBootstrap(script, { effectiveType: '3g' });

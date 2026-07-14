@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import styles from '../../../app/styles/Shell.module.scss';
 import contentStyles from '../styles/ContentPage.module.scss';
 import { useLayoutAnchors } from '../model/LayoutAnchorsContext';
@@ -24,10 +24,20 @@ import { markCursorTargetsDirty } from '@/shared/lib/cursor-targets';
 import { siteConfig } from '@/shared/config/site';
 import type { Locale } from '@/shared/contracts/locale';
 import type { BlogPostMeta, Project, LifeItem, ExperienceItem, SkillCategory } from '../../../shared/types';
-import { useNavigationRuntime } from '../model/NavigationRuntime';
+import useNavigationIntentPrefetch from '../model/useNavigationIntentPrefetch';
 import { CONTENT_DETAIL_EXIT_DELAY_MS } from '@/shared/lib/ui-timings';
+import {
+  useLocalePageStateStore,
+  useLocaleStableState,
+} from '../model/LocalePageState';
 
-type DetailMode =
+type DetailSelection =
+  | { type: 'none' }
+  | { type: 'work'; id: number }
+  | { type: 'experience'; id: string }
+  | { type: 'life'; id: string };
+
+type ResolvedDetail =
   | { type: 'none' }
   | { type: 'work'; item: Project }
   | { type: 'experience'; item: ExperienceItem }
@@ -65,18 +75,20 @@ export default function ContentPage({
   skillCategories,
   pageDescription,
 }: ContentPageProps) {
-  const { prefetch } = useNavigationRuntime();
+  const prefetchOnIntent = useNavigationIntentPrefetch();
   const { navigateTo, setBackOverride } = useTransition();
   const { registerScrollContainer } = useLayoutAnchors();
+  const pageStateStore = useLocalePageStateStore();
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const restoreScrollFrameRef = useRef<number | null>(null);
 
   const blogSectionRef = useRef<HTMLDivElement>(null);
   const worksSectionRef = useRef<HTMLDivElement>(null);
   const workContentAreaRef = useRef<HTMLDivElement>(null);
   const webTabRef = useRef<HTMLDivElement>(null);
   const gameTabRef = useRef<HTMLDivElement>(null);
-  const [activeWorkTab, setActiveWorkTab] = useState('web');
+  const [activeWorkTab, setActiveWorkTab] = useLocaleStableState('content.active-work-tab', 'web');
 
   const experienceSectionRef = useRef<HTMLDivElement>(null);
 
@@ -86,7 +98,7 @@ export default function ContentPage({
   const lifeTravelTabRef = useRef<HTMLDivElement>(null);
   const lifeArtTabRef = useRef<HTMLDivElement>(null);
   const lifeOtherTabRef = useRef<HTMLDivElement>(null);
-  const [activeLifeTab, setActiveLifeTab] = useState('game');
+  const [activeLifeTab, setActiveLifeTab] = useLocaleStableState('content.active-life-tab', 'game');
 
   const contactSectionRef = useRef<HTMLDivElement>(null);
   const [isEmailCopied, setIsEmailCopied] = useState(false);
@@ -94,14 +106,48 @@ export default function ContentPage({
   const aboutSectionRef = useRef<HTMLDivElement>(null);
   const aboutContentRef = useRef<HTMLDivElement>(null);
 
-  const [detail, setDetail] = useState<DetailMode>({ type: 'none' });
+  const [detailSelection, setDetailSelection] = useLocaleStableState<DetailSelection>(
+    'content.detail',
+    { type: 'none' },
+  );
   const [isClosing, setIsClosing] = useState(false);
   const isClosingRef = useRef(false);
   const detailCloseTimeoutRef = useRef<number | null>(null);
   const detailRef = useRef<HTMLDivElement>(null);
   const scrollPositionRef = useRef(0);
 
+  const detail = useMemo<ResolvedDetail>(() => {
+    if (detailSelection.type === 'work') {
+      const item = [...gameProjects, ...earlyProjects].find(({ id }) => id === detailSelection.id);
+      return item ? { type: 'work', item } : { type: 'none' };
+    }
+    if (detailSelection.type === 'experience') {
+      const item = experienceData.find(({ id }) => id === detailSelection.id);
+      return item ? { type: 'experience', item } : { type: 'none' };
+    }
+    if (detailSelection.type === 'life') {
+      const item = [...gameData, ...travelData, ...otherData].find(({ id }) => id === detailSelection.id);
+      return item ? { type: 'life', item } : { type: 'none' };
+    }
+    return { type: 'none' };
+  }, [detailSelection, earlyProjects, experienceData, gameData, gameProjects, otherData, travelData]);
   const isDetailMounted = detail.type !== 'none';
+
+  const setContentScrollContainer = useCallback((element: HTMLDivElement | null) => {
+    scrollContainerRef.current = element;
+    registerScrollContainer(element);
+    if (!element) return;
+
+    const savedScrollTop = pageStateStore.read<number>('content.scroll-top') ?? 0;
+    restoreScrollFrameRef.current = window.requestAnimationFrame(() => {
+      element.scrollTop = Math.min(savedScrollTop, Math.max(0, element.scrollHeight - element.clientHeight));
+      restoreScrollFrameRef.current = null;
+    });
+  }, [pageStateStore, registerScrollContainer]);
+
+  const handleContentScroll = useCallback(() => {
+    pageStateStore.write('content.scroll-top', scrollContainerRef.current?.scrollTop ?? 0);
+  }, [pageStateStore]);
 
   useEffect(() => {
     return () => {
@@ -109,55 +155,11 @@ export default function ContentPage({
       if (detailCloseTimeoutRef.current !== null) {
         window.clearTimeout(detailCloseTimeoutRef.current);
       }
+      if (restoreScrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(restoreScrollFrameRef.current);
+      }
     };
   }, [setBackOverride]);
-
-  useEffect(() => {
-    if (process.env.NODE_ENV !== 'production') {
-      return;
-    }
-
-    const prefetched = new Set<string>();
-    const publicBlogPosts = blogPosts.filter((post) => post.access.mode === 'public');
-    const immediateUrls = [
-      ...webProjects.slice(0, 2).map((project) => `/${locale}/web/${project.id}`),
-      ...publicBlogPosts.slice(0, 4).map((post) => buildBlogPostHref(locale, post.slug, locale)),
-    ];
-    const idleUrls = [
-      ...gameData.slice(0, 2).map((item) => `/${locale}/life/${item.id}`),
-      ...travelData.slice(0, 1).map((item) => `/${locale}/life/${item.id}`),
-      ...otherData.slice(0, 1).map((item) => `/${locale}/life/${item.id}`),
-      ...webProjects.slice(2).map((project) => `/${locale}/web/${project.id}`),
-      ...publicBlogPosts.slice(4).map((post) => buildBlogPostHref(locale, post.slug, locale)),
-    ];
-
-    const prefetchUrl = (url: string) => {
-      if (prefetched.has(url)) {
-        return;
-      }
-      prefetched.add(url);
-      void prefetch(url).catch((error) => {
-        if (process.env.NODE_ENV !== 'production') {
-          console.warn('[content] prefetch failed:', url, error);
-        }
-      });
-    };
-
-    immediateUrls.forEach(prefetchUrl);
-
-    let cancelled = false;
-    const scheduleIdle = window.setTimeout(() => {
-      if (cancelled) {
-        return;
-      }
-      idleUrls.forEach(prefetchUrl);
-    }, 400);
-
-    return () => {
-      cancelled = true;
-      window.clearTimeout(scheduleIdle);
-    };
-  }, [prefetch, blogPosts, gameData, travelData, otherData, webProjects, locale]);
 
   useEffect(() => {
     if (isClosing && scrollContainerRef.current) {
@@ -177,7 +179,7 @@ export default function ContentPage({
     };
   }, [isClosing, isDetailMounted]);
 
-  const openDetail = useCallback((mode: DetailMode) => {
+  const openDetail = useCallback((selection: DetailSelection) => {
     if (detailCloseTimeoutRef.current !== null) {
       window.clearTimeout(detailCloseTimeoutRef.current);
       detailCloseTimeoutRef.current = null;
@@ -187,12 +189,12 @@ export default function ContentPage({
     if (scrollContainerRef.current) {
       scrollPositionRef.current = scrollContainerRef.current.scrollTop;
     }
-    setDetail(mode);
-  }, []);
+    setDetailSelection(selection);
+  }, [setDetailSelection]);
 
   const handleWorkTabClick = useCallback((tabName: string) => {
     setActiveWorkTab(tabName);
-  }, []);
+  }, [setActiveWorkTab]);
 
   const handleWorkItemClick = useCallback((item: Project) => {
     const coverImg = resolveImageUrl(item.imageUrl, 'large');
@@ -204,17 +206,23 @@ export default function ContentPage({
     if (isWeb) {
       navigateTo(`/${locale}/web/${item.id}`);
     } else {
-      openDetail({ type: 'work', item });
+      openDetail({ type: 'work', id: item.id });
     }
   }, [openDetail, navigateTo, webProjects, locale]);
 
+  const handleWorkItemIntent = useCallback((item: Project) => {
+    if (webProjects.some((project) => project.id === item.id)) {
+      prefetchOnIntent(`/${locale}/web/${item.id}`);
+    }
+  }, [locale, prefetchOnIntent, webProjects]);
+
   const handleExperienceItemClick = useCallback((item: ExperienceItem) => {
-    openDetail({ type: 'experience', item });
+    openDetail({ type: 'experience', id: item.id });
   }, [openDetail]);
 
   const handleLifeTabClick = useCallback((tabName: string) => {
     setActiveLifeTab(tabName);
-  }, []);
+  }, [setActiveLifeTab]);
 
   const handleLifeItemClick = useCallback((item: LifeItem) => {
     const coverImg = resolveImageUrl(item.imageUrl, 'large');
@@ -224,6 +232,10 @@ export default function ContentPage({
     }
     navigateTo(`/${locale}/life/${item.id}`);
   }, [navigateTo, locale]);
+
+  const handleLifeItemIntent = useCallback((item: LifeItem) => {
+    prefetchOnIntent(`/${locale}/life/${item.id}`);
+  }, [locale, prefetchOnIntent]);
 
   const handleCopyEmail = useCallback(() => {
     navigator.clipboard.writeText(siteConfig.email).then(() => {
@@ -240,18 +252,24 @@ export default function ContentPage({
     navigateTo(buildBlogPostHref(locale, post.slug, locale));
   }, [navigateTo, locale]);
 
+  const handleBlogItemIntent = useCallback((post: BlogPostMeta) => {
+    if (post.access.mode === 'public') {
+      prefetchOnIntent(buildBlogPostHref(locale, post.slug, locale));
+    }
+  }, [locale, prefetchOnIntent]);
+
   const handleBackFromDetail = useCallback(() => {
     if (isClosingRef.current) return;
     isClosingRef.current = true;
     setIsClosing(true);
     setBackOverride(null);
     detailCloseTimeoutRef.current = window.setTimeout(() => {
-      setDetail({ type: 'none' });
+      setDetailSelection({ type: 'none' });
       setIsClosing(false);
       isClosingRef.current = false;
       detailCloseTimeoutRef.current = null;
     }, CONTENT_DETAIL_EXIT_DELAY_MS);
-  }, [setBackOverride]);
+  }, [setBackOverride, setDetailSelection]);
 
   useEffect(() => {
     if (isDetailMounted && !isClosing) {
@@ -266,19 +284,17 @@ export default function ContentPage({
         window.clearTimeout(detailCloseTimeoutRef.current);
         detailCloseTimeoutRef.current = null;
       }
-      setDetail({ type: 'none' });
+      setDetailSelection({ type: 'none' });
       setIsClosing(false);
       isClosingRef.current = false;
     }
-  }, []);
+  }, [setDetailSelection]);
 
   return (
     <>
       <div
-        ref={(element) => {
-          scrollContainerRef.current = element;
-          registerScrollContainer(element);
-        }}
+        ref={setContentScrollContainer}
+        onScroll={handleContentScroll}
         className={`${styles.contentWrapper}${
           isDetailMounted && !isClosing ? ` ${styles.detailOpen}` : ''
         }${
@@ -297,6 +313,7 @@ export default function ContentPage({
             gameProjects={gameProjects}
             earlyProjects={earlyProjects}
             handleWorkItemClick={handleWorkItemClick}
+            handleWorkItemIntent={handleWorkItemIntent}
             skillCategories={skillCategories}
           />
         </div>
@@ -315,6 +332,7 @@ export default function ContentPage({
             locale={locale}
             posts={blogPosts}
             handleBlogItemClick={handleBlogItemClick}
+            handleBlogItemIntent={handleBlogItemIntent}
           />
         </div>
 
@@ -335,6 +353,7 @@ export default function ContentPage({
             alsoPlayGames={alsoPlayGames}
             artPlaceholderText={artPlaceholderText}
             handleLifeItemClick={handleLifeItemClick}
+            handleLifeItemIntent={handleLifeItemIntent}
           />
         </div>
 

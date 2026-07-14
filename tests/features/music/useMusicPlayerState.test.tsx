@@ -123,6 +123,22 @@ describe('useMusicPlayerState audio loading', () => {
     expect(screen.getByTestId('playing-state').textContent).toBe('false');
   });
 
+  it('does not overwrite a persisted resume position before an audio source is loaded', () => {
+    window.sessionStorage.setItem('arsvine:music-player', JSON.stringify({
+      currentTrackIndex: 1,
+      currentTime: 42,
+      trackId: 'track-two',
+    }));
+
+    render(<MusicPlayerStateHarness />);
+
+    expect(JSON.parse(window.sessionStorage.getItem('arsvine:music-player') ?? '{}')).toMatchObject({
+      currentTime: 42,
+      trackId: 'track-two',
+    });
+    expect((screen.getByTestId('audio') as HTMLAudioElement).getAttribute('src')).toBeNull();
+  });
+
   it('ignores a stale play rejection after a newer track starts playing', async () => {
     let rejectFirstPlay: ((reason?: unknown) => void) | undefined;
     playMock

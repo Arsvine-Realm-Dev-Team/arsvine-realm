@@ -19,6 +19,7 @@ import useLayoutRouteMode from '../../features/navigation/model/useLayoutRouteMo
 import useMobileTesseractCharge from '@/features/hud/model/useMobileTesseractCharge';
 import useRouteLoadingKind from '../../features/navigation/model/useRouteLoadingKind';
 import useStandalonePanelState from '../../features/navigation/model/useStandalonePanelState';
+import { useNotFoundPresence } from '../../features/navigation/model/notFoundPresence';
 import { resolveLocale, type Locale } from '@/app/i18n/config';
 import {
   useContentHashAlignment,
@@ -58,10 +59,11 @@ const CustomCursor = dynamic(
 
 interface MainLayoutProps {
   children: ReactNode;
+  /** @deprecated Locale is resolved from the live App Router pathname. */
   appLocale?: Locale;
 }
 
-export default function MainLayout({ children, appLocale }: MainLayoutProps) {
+export default function MainLayout({ children }: MainLayoutProps) {
   const { pathname, asPath, query } = useNavigationRuntime();
   const tNav = useTranslations('mainNav');
   const tCommon = useTranslations('common');
@@ -88,7 +90,7 @@ export default function MainLayout({ children, appLocale }: MainLayoutProps) {
   } = useHudPerformance();
 
   // 当前 URL 的 locale，所有内部跳转都要带上前缀
-  const locale: Locale = appLocale ?? resolveLocale(query.locale, asPath);
+  const locale: Locale = resolveLocale(query.locale, asPath);
 
   const {
     drawerOpen,
@@ -108,8 +110,10 @@ export default function MainLayout({ children, appLocale }: MainLayoutProps) {
     pathname,
     forceHomeSection,
   );
+  const isNotFound = useNotFoundPresence();
+  const effectiveStandalone = isStandalone && !isNotFound;
   const { localPanelAnimated, localLeversVisible } = useStandalonePanelState({
-    isStandalone,
+    isStandalone: effectiveStandalone,
     leftPanelAnimated,
     leversVisible,
   });
@@ -174,7 +178,7 @@ export default function MainLayout({ children, appLocale }: MainLayoutProps) {
     ? tTweets('loading')
     : tCommon('decoding');
 
-  useHudRouteVisibility(isStandalone);
+  useHudRouteVisibility(effectiveStandalone);
   useCursorTargetInvalidation(asPath, mainVisible);
   useContentHashAlignment(pathname, asPath);
 
@@ -187,7 +191,7 @@ export default function MainLayout({ children, appLocale }: MainLayoutProps) {
         {clientEffectsReady && isDesktop && allowCustomCursor && <CustomCursor />}
         {clientEffectsReady && webglReady && isDesktop && allowAmbientWebGL && <RainMorimeEffect />}
         <HomeLoadingScreen onComplete={handleLoadingComplete} />
-        {clientEffectsReady && isTesseractActivated && allow3DTesseract && !isStandalone && (
+        {clientEffectsReady && isTesseractActivated && allow3DTesseract && !effectiveStandalone && (
           <TesseractExperience
             chargeBattery={chargeBattery}
             isActivated={isTesseractActivated}
@@ -226,7 +230,7 @@ export default function MainLayout({ children, appLocale }: MainLayoutProps) {
           <>
             <GlobalHud
               currentTime={currentTime}
-              hudVisible={hudVisible || isStandalone}
+              hudVisible={hudVisible || effectiveStandalone}
               isGamePage={false}
               locale={locale}
             />
@@ -252,7 +256,7 @@ export default function MainLayout({ children, appLocale }: MainLayoutProps) {
               envArtifactStage={envArtifactStage}
               isInverted={isInverted}
                drawerOpen={drawerOpen}
-               isStandalone={isStandalone}
+               isStandalone={effectiveStandalone}
                isTesseractDragging={displayedTesseractDragging}
                powerDisplayRef={powerDisplayRef}
                batteryIconRef={batteryIconRef}
@@ -266,7 +270,7 @@ export default function MainLayout({ children, appLocale }: MainLayoutProps) {
           opacity: mainVisible ? 1 : 0,
           pointerEvents: mainVisible ? 'auto' : 'none',
           transition: 'opacity 0.4s ease-out',
-          zIndex: isStandalone ? 15 : 2,
+          zIndex: effectiveStandalone ? 15 : 2,
         }}>
           {children}
         </div>

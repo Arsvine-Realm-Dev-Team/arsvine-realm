@@ -14,4 +14,4 @@ minimumReleaseAgeExclude:
 overrides:
   postcss: 8.5.10
   three-mesh-bvh: ^0.8.3
-patchedDependencies: {}
+patchedDependencies: { '@react-three/fiber@9.6.1': patches/@react-three__fiber@9.6.1.patch }

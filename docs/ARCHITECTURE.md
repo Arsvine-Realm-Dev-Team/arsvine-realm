@@ -21,6 +21,11 @@ The project uses App Router. Keep routes, layouts, metadata, and Route Handlers 
 
 User-facing route adapters live under `src/app/[locale]/...`. Server Components own route parameters, metadata, and SSG/ISR contracts; feature UI and server loaders live under `src/features/`.
 
+`src/app/layout.tsx` is the stable document and client-shell boundary. The nested
+`[locale]/layout.tsx` validates locale, configures server-side `next-intl`, and
+owns locale metadata, but it must not mount the global HUD/providers. This keeps
+music, power, WebGL, and navigation state alive while locale page data changes.
+
 | Route | Purpose |
 |---|---|
 | `/[locale]` | HUD home page with primary navigation columns. |
@@ -71,11 +76,21 @@ useTransition().navigateTo(url)
 
 instead of `router.push()`. This preserves home/content/detail transitions, column retract/expand behavior, and blog-detail fade behavior.
 
+UI locale changes use `switchLocale()` from the same context. That path updates
+the locale route without running page-exit or HUD animations.
+
 It also supports `setBackOverride()` so detail views and lightboxes can intercept BACK behavior.
 
 ### `features/navigation/model/LayoutAnchorsContext.tsx`
 
 Registers the active scroll container. This is required because the layout uses a locked-height content container; deep-link scrolling must target that container rather than the document viewport.
+
+### `features/navigation/model/LocalePageState.tsx`
+
+Keeps explicitly selected, non-sensitive page state across locale changes for
+the same locale-independent route. It is document-memory-only and clears when
+the user navigates to a different route. Authentication inputs, pending actions,
+and errors must not be stored there.
 
 ## Route loading overlay
 

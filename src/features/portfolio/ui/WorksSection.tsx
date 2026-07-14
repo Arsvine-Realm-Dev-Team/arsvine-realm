@@ -6,6 +6,7 @@ import ProjectCard from '../../../shared/ui/ProjectCard';
 import SkillTree from '../../../shared/ui/SkillTree';
 import type { Project, SkillCategory } from '../../../shared/types';
 import { useHudPower } from '../../hud/model/HudProvider';
+import { useLocaleStableState } from '@/features/navigation/model/LocalePageState';
 
 const WORK_TAB_TRANSITION_MS = 180;
 
@@ -20,6 +21,7 @@ interface WorksSectionProps {
   gameProjects: Project[];
   earlyProjects: Project[];
   handleWorkItemClick: (project: Project, e: React.MouseEvent) => void;
+  handleWorkItemIntent?: (project: Project) => void;
   skillCategories: SkillCategory[];
 }
 
@@ -34,11 +36,12 @@ function WorksSection({
   gameProjects,
   earlyProjects,
   handleWorkItemClick,
+  handleWorkItemIntent,
   skillCategories,
 }: WorksSectionProps) {
   const { isInverted } = useHudPower();
-  const [earlyExpanded, setEarlyExpanded] = useState(false);
-  const [skillsExpanded, setSkillsExpanded] = useState(false);
+  const [earlyExpanded, setEarlyExpanded] = useLocaleStableState('content.works.early-expanded', false);
+  const [skillsExpanded, setSkillsExpanded] = useLocaleStableState('content.works.skills-expanded', false);
   const [displayedWorkTab, setDisplayedWorkTab] = useState(activeWorkTab);
   const [tabTransitionStage, setTabTransitionStage] = useState<'idle' | 'fadeOut' | 'fadeIn'>('idle');
   const safeTimers = useSafeTimeouts();
@@ -101,6 +104,7 @@ function WorksSection({
                 key={project.id}
                 project={project}
                 onClick={handleWorkItemClick}
+                onNavigateIntent={handleWorkItemIntent}
                 isInverted={isInverted}
               />
             ))}
@@ -126,6 +130,7 @@ function WorksSection({
                   key={project.id}
                   project={project}
                   onClick={handleWorkItemClick}
+                  onNavigateIntent={handleWorkItemIntent}
                   isInverted={isInverted}
                 />
               ))}

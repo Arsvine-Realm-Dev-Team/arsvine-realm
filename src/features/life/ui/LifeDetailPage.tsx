@@ -3,9 +3,11 @@
 import React, { useCallback, useMemo, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import styles from '../../../shared/ui/detail/StandaloneDetailView.module.scss';
+import { useLocaleStableScroll } from '@/features/navigation/model/LocalePageState';
 import hudStyles from '../../../app/styles/Shell.module.scss';
 import { useHudPower } from '../../../features/hud/model/HudProvider';
 import { useTransition } from '../../../features/navigation/model/TransitionProvider';
+import useNavigationIntentPrefetch from '../../../features/navigation/model/useNavigationIntentPrefetch';
 import LazyImage from '../../../shared/ui/LazyImage';
 import Lightbox from '../../../shared/ui/Lightbox';
 import LocaleFallbackBanner from '../../../shared/ui/LocaleFallbackBanner';
@@ -45,7 +47,7 @@ export default function LifeDetailPage({
 }: LifeDetailPageProps) {
   return (
     <LifeDetailContent
-      key={`${locale}-${item.id}`}
+      key={item.id}
       locale={locale}
       item={item}
       allItems={allItems}
@@ -66,6 +68,7 @@ function LifeDetailContent({
 }: Omit<LifeDetailPageProps, 'messages'>) {
   const { isInverted } = useHudPower();
   const { navigateTo } = useTransition();
+  const prefetchOnIntent = useNavigationIntentPrefetch();
   const tCommon = useTranslations('common');
   const tNav = useTranslations('nav');
   const tDetail = useTranslations('detail');
@@ -75,6 +78,7 @@ function LifeDetailContent({
   const nextItem = currentIndex < allItems.length - 1 ? allItems[currentIndex + 1] : null;
 
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const handleWrapperScroll = useLocaleStableScroll('detail.scroll-top', wrapperRef);
   const heroBgRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitle = useTypingSubtitle(item.description, 120, 2200);
@@ -138,7 +142,11 @@ function LifeDetailContent({
   const galleryRevealIndices = galleryImages.map(() => revealCursor++);
 
   return (
-    <div ref={wrapperRef} className={`${styles.pageWrapper} ${isInverted ? hudStyles.inverted : ''}`}>
+    <div
+      ref={wrapperRef}
+      className={`${styles.pageWrapper} ${isInverted ? hudStyles.inverted : ''}`}
+      onScroll={handleWrapperScroll}
+    >
       <div className={styles.mainContent}>
         {translationStatus !== 'source' && (
           <LocaleFallbackBanner
@@ -231,6 +239,7 @@ function LifeDetailContent({
                 href: `/${locale}/life/${prevItem.id}`,
                 title: prevItem.title,
                 cursorLabel: 'PREVIOUS',
+                onNavigateIntent: () => prefetchOnIntent(`/${locale}/life/${prevItem.id}`),
                 onClick: (event) => {
                   event.preventDefault();
                   navigateTo(`/${locale}/life/${prevItem.id}`);
@@ -242,6 +251,7 @@ function LifeDetailContent({
                 href: `/${locale}/life/${nextItem.id}`,
                 title: nextItem.title,
                 cursorLabel: 'NEXT',
+                onNavigateIntent: () => prefetchOnIntent(`/${locale}/life/${nextItem.id}`),
                 onClick: (event) => {
                   event.preventDefault();
                   navigateTo(`/${locale}/life/${nextItem.id}`);
@@ -252,6 +262,7 @@ function LifeDetailContent({
             href: `/${locale}/content#life`,
             title: tCommon('returnToMain'),
             cursorLabel: 'BACK',
+            onNavigateIntent: () => prefetchOnIntent(`/${locale}/content#life`),
             onClick: handleBack as React.MouseEventHandler<HTMLAnchorElement>,
           }}
         />

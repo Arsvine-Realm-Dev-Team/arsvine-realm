@@ -6,6 +6,7 @@ import { HudProvider } from '../../features/hud/model/HudProvider';
 import { SiteAssetsProvider } from '../../features/assets/model/SiteAssetsProvider';
 import { TransitionProvider } from '../../features/navigation/model/TransitionProvider';
 import { LayoutAnchorsProvider } from '../../features/navigation/model/LayoutAnchorsContext';
+import { LocalePageStateProvider } from '@/features/navigation/model/LocalePageState';
 
 interface AppProvidersProps {
   children: ReactNode;
@@ -15,11 +16,13 @@ export default function AppProviders({ children }: AppProvidersProps) {
   return (
     <SiteAssetsProvider>
       <HudProvider>
-        <LayoutAnchorsProvider>
-          <TransitionProvider>
-            {children}
-          </TransitionProvider>
-        </LayoutAnchorsProvider>
+        <LocalePageStateProvider>
+          <LayoutAnchorsProvider>
+            <TransitionProvider>
+              {children}
+            </TransitionProvider>
+          </LayoutAnchorsProvider>
+        </LocalePageStateProvider>
       </HudProvider>
     </SiteAssetsProvider>
   );

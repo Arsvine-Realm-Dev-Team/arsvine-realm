@@ -1,10 +1,13 @@
 import React from 'react';
-import { act, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const useAppMock = vi.fn();
 const useResponsiveMock = vi.fn();
+const layoutRouteModeMock = vi.fn();
+const useNotFoundPresenceMock = vi.fn();
 const recordMobileTesseractChargeCall = vi.fn();
+const recordLeftPanelProps = vi.fn();
 
 vi.mock('@/features/navigation/model/NavigationRuntime', () => ({
   useNavigationRuntime: () => ({
@@ -75,12 +78,11 @@ vi.mock('@/features/navigation/model/useDrawerNavigation', () => ({
 }));
 
 vi.mock('@/features/navigation/model/useLayoutRouteMode', () => ({
-  default: () => ({
-    isHome: false,
-    isContentPage: true,
-    isStandalone: false,
-    activeSection: 'content',
-  }),
+  default: () => layoutRouteModeMock(),
+}));
+
+vi.mock('@/features/navigation/model/notFoundPresence', () => ({
+  useNotFoundPresence: () => useNotFoundPresenceMock(),
 }));
 
 vi.mock('@/features/navigation/model/useStandalonePanelState', () => ({
@@ -114,7 +116,10 @@ vi.mock('@/features/hud/ui/layout/GlobalHud', () => ({
 }));
 
 vi.mock('@/features/hud/ui/layout/LeftPanel', () => ({
-  default: () => <div data-testid="left-panel" />,
+  default: (props: unknown) => {
+    recordLeftPanelProps(props);
+    return <div data-testid="left-panel" />;
+  },
 }));
 
 vi.mock('@/features/hud/ui/layout/RouteLoadingOverlay', () => ({
@@ -158,10 +163,19 @@ describe('MainLayout adaptive performance gates', () => {
     vi.useFakeTimers();
     useResponsiveMock.mockReturnValue({ isMobile: false, isTablet: false, isDesktop: true });
     useAppMock.mockReturnValue(buildAppState());
+    layoutRouteModeMock.mockReturnValue({
+      isHome: false,
+      isContentPage: true,
+      isStandalone: false,
+      activeSection: 'content',
+    });
+    useNotFoundPresenceMock.mockReturnValue(false);
     recordMobileTesseractChargeCall.mockReset();
+    recordLeftPanelProps.mockReset();
   });
 
   afterEach(() => {
+    cleanup();
     vi.useRealTimers();
   });
 
@@ -203,6 +217,55 @@ describe('MainLayout adaptive performance gates', () => {
     expect(screen.getByTestId('tesseract-experience')).toBeTruthy();
     expect(recordMobileTesseractChargeCall).toHaveBeenCalledWith(expect.objectContaining({
       shouldUseAutoChargeFallback: false,
+    }));
+  });
+
+  it('restores the full shell when a standalone-shaped route renders not-found', () => {
+    layoutRouteModeMock.mockReturnValue({
+      isHome: false,
+      isContentPage: false,
+      isStandalone: true,
+      activeSection: 'content',
+    });
+    useNotFoundPresenceMock.mockReturnValue(true);
+
+    render(
+      <MainLayout appLocale="zh-CN">
+        <div>not found</div>
+      </MainLayout>,
+    );
+
+    act(() => {
+      vi.runOnlyPendingTimers();
+    });
+
+    expect(screen.getByTestId('tesseract-experience')).toBeTruthy();
+    expect(recordLeftPanelProps).toHaveBeenLastCalledWith(expect.objectContaining({
+      isStandalone: false,
+    }));
+  });
+
+  it('keeps the full shell hidden on a valid standalone detail route', () => {
+    layoutRouteModeMock.mockReturnValue({
+      isHome: false,
+      isContentPage: false,
+      isStandalone: true,
+      activeSection: 'content',
+    });
+
+    render(
+      <MainLayout appLocale="zh-CN">
+        <div>detail</div>
+      </MainLayout>,
+    );
+
+    act(() => {
+      vi.runOnlyPendingTimers();
+    });
+
+    expect(screen.queryByTestId('tesseract-experience')).toBeNull();
+    expect(recordLeftPanelProps).toHaveBeenLastCalledWith(expect.objectContaining({
+      isStandalone: true,
     }));
   });
 });

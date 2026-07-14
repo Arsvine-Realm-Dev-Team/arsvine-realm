@@ -17,6 +17,7 @@ import { NAVIGATION_COMMIT_TIMEOUT_MS } from '@/shared/lib/ui-timings';
 
 interface TransitionContextValue {
   navigateTo: (url: string, options?: { scroll?: boolean }) => void;
+  switchLocale: (url: string) => Promise<void>;
   setBackOverride: (handler: (() => void) | null) => void;
   handleBack: () => void;
   isDetailOpen: () => boolean;
@@ -26,6 +27,7 @@ interface TransitionContextValue {
 
 const TransitionContext = createContext<TransitionContextValue>({
   navigateTo: () => {},
+  switchLocale: async () => {},
   setBackOverride: () => {},
   handleBack: () => {},
   isDetailOpen: () => false,
@@ -345,6 +347,21 @@ export function TransitionProvider({ children }: TransitionProviderProps) {
     backOverrideRef.current = handler;
   }, []);
 
+  const switchLocale = useCallback(async (url: string) => {
+    pendingCommitRef.current?.();
+    runControllerRef.current.cancel();
+
+    const wrapper = transitionSurfaceRef.current;
+    if (wrapper) {
+      wrapper.style.opacity = '';
+      wrapper.style.transform = '';
+      wrapper.style.clipPath = '';
+      wrapper.style.transition = '';
+    }
+
+    await push(url, { scroll: false });
+  }, [push]);
+
   const handleBack = useCallback(() => {
     if (backOverrideRef.current) {
       backOverrideRef.current();
@@ -363,7 +380,15 @@ export function TransitionProvider({ children }: TransitionProviderProps) {
   }, []);
 
   return (
-    <TransitionContext.Provider value={{ navigateTo, setBackOverride, handleBack, isDetailOpen, registerTransitionSurface, pendingUrl }}>
+    <TransitionContext.Provider value={{
+      navigateTo,
+      switchLocale,
+      setBackOverride,
+      handleBack,
+      isDetailOpen,
+      registerTransitionSurface,
+      pendingUrl,
+    }}>
       {children}
     </TransitionContext.Provider>
   );
