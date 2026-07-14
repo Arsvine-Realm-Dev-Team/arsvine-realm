@@ -23,6 +23,8 @@ function MusicPlayerStateHarness() {
   const {
     audioRef,
     currentTrack,
+    handleNext,
+    handlePrev,
     isPlaying,
     selectTrack,
     syncPlayState,
@@ -38,6 +40,15 @@ function MusicPlayerStateHarness() {
       </button>
       <button type="button" onClick={() => selectTrack(1)}>
         track-two
+      </button>
+      <button type="button" onClick={() => selectTrack(0)}>
+        track-one
+      </button>
+      <button type="button" onClick={handlePrev}>
+        previous
+      </button>
+      <button type="button" onClick={handleNext}>
+        next
       </button>
     </div>
   );
@@ -102,6 +113,49 @@ describe('useMusicPlayerState audio loading', () => {
     expect(audio.getAttribute('src')).toBe(playlist[1].src);
     expect(loadMock).toHaveBeenCalledTimes(1);
     expect(playMock).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('current-track').textContent).toBe('Track Two');
+  });
+
+  it('allows a user selection to replace the restored track id', () => {
+    window.sessionStorage.setItem('arsvine:music-player', JSON.stringify({
+      currentTrackIndex: 1,
+      currentTime: 42,
+      trackId: 'track-two',
+    }));
+
+    render(<MusicPlayerStateHarness />);
+
+    expect(screen.getByTestId('current-track').textContent).toBe('Track Two');
+    fireEvent.click(screen.getByRole('button', { name: 'track-one' }));
+
+    const audio = screen.getByTestId('audio') as HTMLAudioElement;
+    expect(audio.getAttribute('src')).toBe(playlist[0].src);
+    expect(screen.getByTestId('current-track').textContent).toBe('Track One');
+  });
+
+  it('allows previous and next to replace the restored track id', () => {
+    window.sessionStorage.setItem('arsvine:music-player', JSON.stringify({
+      currentTrackIndex: 1,
+      trackId: 'track-two',
+    }));
+
+    render(<MusicPlayerStateHarness />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'next' }));
+    expect(screen.getByTestId('current-track').textContent).toBe('Track One');
+
+    fireEvent.click(screen.getByRole('button', { name: 'previous' }));
+    expect(screen.getByTestId('current-track').textContent).toBe('Track Two');
+  });
+
+  it('falls back to the persisted index when the persisted track id is stale', () => {
+    window.sessionStorage.setItem('arsvine:music-player', JSON.stringify({
+      currentTrackIndex: 1,
+      trackId: 'removed-track',
+    }));
+
+    render(<MusicPlayerStateHarness />);
+
     expect(screen.getByTestId('current-track').textContent).toBe('Track Two');
   });
 

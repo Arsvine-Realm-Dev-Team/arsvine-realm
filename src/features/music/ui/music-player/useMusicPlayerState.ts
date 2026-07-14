@@ -46,6 +46,7 @@ export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
   const desiredPlayingRef = useRef(false);
   const hasUserInteractedRef = useRef(false);
   const resumeTimeRef = useRef<number | null>(initialPersistedState?.currentTime ?? null);
+  const hasRestoredPersistedTrackRef = useRef(false);
   const playAttemptRef = useRef(0);
   const lastPersistedAtRef = useRef(0);
   const stateRef = useRef({ currentTrackIndex: 0, currentTime: 0, isPlaying: false });
@@ -57,17 +58,25 @@ export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
   const [currentTime, setCurrentTime] = useState(initialPersistedState?.currentTime ?? 0);
   const [duration, setDuration] = useState(0);
 
+  useEffect(() => {
+    if (!playlist.length || hasRestoredPersistedTrackRef.current) return;
+
+    hasRestoredPersistedTrackRef.current = true;
+    const persistedTrackIndex = initialPersistedState?.trackId
+      ? playlist.findIndex((track) => track.id === initialPersistedState.trackId)
+      : -1;
+
+    setCurrentTrackIndex(
+      persistedTrackIndex >= 0
+        ? persistedTrackIndex
+        : initialPersistedState?.currentTrackIndex ?? 0,
+    );
+  }, [initialPersistedState?.currentTrackIndex, initialPersistedState?.trackId, playlist]);
+
   const resolvedTrackIndex = useMemo(() => {
     if (!playlist.length) return 0;
-
-    const persistedTrackId = initialPersistedState?.trackId;
-    if (persistedTrackId) {
-      const matchedIndex = playlist.findIndex((track) => track.id === persistedTrackId);
-      if (matchedIndex !== -1) return matchedIndex;
-    }
-
     return Math.max(0, Math.min(currentTrackIndex, playlist.length - 1));
-  }, [currentTrackIndex, initialPersistedState?.trackId, playlist]);
+  }, [currentTrackIndex, playlist.length]);
 
   useEffect(() => {
     stateRef.current = { currentTrackIndex: resolvedTrackIndex, currentTime, isPlaying };
