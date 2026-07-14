@@ -1,32 +1,26 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
 import { getTweetMonthGroupsPage } from './github';
+import { jsonResponse } from '@/shared/server/http';
 
-function parsePositiveInt(rawValue: string | string[] | undefined, fallback: number) {
-  const value = Array.isArray(rawValue) ? rawValue[0] : rawValue;
+function parsePositiveInt(value: string | null, fallback: number) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed < 0) return fallback;
   return Math.floor(parsed);
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'GET') {
-    res.setHeader('Allow', 'GET');
-    return res.status(405).json({ error: 'method_not_allowed' });
-  }
-
+export default async function handler(request: Request) {
   try {
-    const offset = parsePositiveInt(req.query.offset, 0);
-    const limit = parsePositiveInt(req.query.limit, 1);
+    const searchParams = new URL(request.url).searchParams;
+    const offset = parsePositiveInt(searchParams.get('offset'), 0);
+    const limit = parsePositiveInt(searchParams.get('limit'), 1);
     const result = await getTweetMonthGroupsPage(offset, limit);
-    res.setHeader('Cache-Control', 'private, no-store, must-revalidate');
-    return res.status(200).json({
+    return jsonResponse({
       ...result,
       generatedAt: new Date().toISOString(),
-    });
+    }, { headers: { 'Cache-Control': 'private, no-store, must-revalidate' } });
   } catch (error) {
     console.error('[api/tweets/months] source unavailable:', error);
-    return res.status(500).json({
+    return jsonResponse({
       error: 'tweets_source_unavailable',
-    });
+    }, { status: 500 });
   }
 }

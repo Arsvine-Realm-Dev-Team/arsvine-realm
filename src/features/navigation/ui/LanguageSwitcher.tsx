@@ -28,7 +28,9 @@ export default function LanguageSwitcher({ currentLocale: currentLocaleProp }: L
     const nextPath = currentLocale
       ? currentVisiblePath.replace(new RegExp(`^/${currentLocale}(?=/|$)`), `/${nextLocale}`)
       : `/${nextLocale}${pathWithoutQuery === '/' ? '' : pathWithoutQuery}`;
-    void push(nextPath, { scroll: false });
+    void push(nextPath, { scroll: false }).catch((error) => {
+      console.error('[locale] navigation failed:', error);
+    });
   }, [asPath, currentLocale, pathWithoutQuery, push]);
 
   return (

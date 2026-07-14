@@ -1,3 +1,4 @@
+@use '../../../../styles/breakpoints';
 /* ==================== META SECTION (Game) ==================== */
 
 .metaSection {
@@ -6,7 +7,7 @@
   padding-left: calc(7.5vw + clamp(16px, 2vw, 30px));
   max-width: 1400px;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     padding-left: clamp(20px, 5vw, 40px);
   }
 }
@@ -121,7 +122,7 @@
   padding-left: calc(7.5vw + clamp(16px, 2vw, 30px));
   max-width: 1100px;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     padding-left: clamp(20px, 5vw, 40px);
   }
 }
@@ -145,7 +146,7 @@
   cursor: none;
   position: relative;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     cursor: pointer;
   }
 
@@ -222,7 +223,7 @@
   gap: clamp(12px, 2vw, 24px);
   border-top: 1px solid var(--ark-border);
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     padding-left: clamp(20px, 5vw, 40px);
   }
 }
@@ -244,7 +245,7 @@
   transition: background-color 0.3s, color 0.3s, border-color 0.3s, opacity 0.3s;
   cursor: none;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     cursor: pointer;
   }
 

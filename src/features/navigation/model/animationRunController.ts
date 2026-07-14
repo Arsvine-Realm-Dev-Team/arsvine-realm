@@ -3,6 +3,10 @@ export interface QueuedNavigation {
   options?: { scroll?: boolean };
 }
 
+export function isAnimationCancellation(error: unknown) {
+  return error instanceof DOMException && error.name === 'AbortError';
+}
+
 export class AnimationRunController {
   private running = false;
   private queued: QueuedNavigation | null = null;
@@ -24,6 +28,13 @@ export class AnimationRunController {
   setAnimation(animation: Animation | null) {
     this.animation?.cancel();
     this.animation = animation;
+  }
+
+  runAnimation(animation: Animation, onFinished: () => void, onFailed: (error: unknown) => void) {
+    this.setAnimation(animation);
+    void animation.finished.then(onFinished).catch((error) => {
+      if (!isAnimationCancellation(error)) onFailed(error);
+    });
   }
 
   addCleanup(cleanup: () => void) {

@@ -1,20 +1,3 @@
-@keyframes floatUpFadeOut {
-  0% {
-    transform: translate(-50%, 5px);
-    opacity: 0.8;
-  }
-
-  80% {
-    transform: translate(-50%, -15px);
-    opacity: 0.8;
-  }
-
-  100% {
-    transform: translate(-50%, -20px);
-    opacity: 0;
-  }
-}
-
 @keyframes scrollArrows {
   from {
     transform: translateY(-30px);

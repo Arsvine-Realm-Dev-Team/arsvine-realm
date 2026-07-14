@@ -7,6 +7,6 @@ describe('ProjectCard desktop cursor contract', () => {
     const source = await readFile(path.join(process.cwd(), 'src/shared/ui/ProjectCard.module.scss'), 'utf8');
     const cardRule = source.slice(source.indexOf('.projectCard'), source.indexOf('.cardBorderTopLeft'));
     expect(cardRule).toContain('cursor: none');
-    expect(cardRule).toMatch(/@media \(max-width: 1023px\)[\s\S]*cursor: default/);
+    expect(cardRule).toMatch(/@include breakpoints\.tablet-down[\s\S]*cursor: default/);
   });
 });

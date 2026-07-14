@@ -167,7 +167,7 @@
     height: 80%;
     border-color: var(--ark-highlight-green);
     opacity: 1;
-    box-shadow: 0 0 8px rgba(178, 242, 187, 0.4); // Add glow at the end
+    box-shadow: 0 0 8px rgba(var(--ark-highlight-green-rgb), 0.4); // Add glow at the end
   }
 }
 
@@ -227,7 +227,7 @@
                 inset -10px 10px 0 -8px var(--ark-highlight-green),
                 inset 10px -10px 0 -8px var(--ark-highlight-green),
                 inset -10px -10px 0 -8px var(--ark-highlight-green),
-                0 0 10px rgba(178, 242, 187, 0.4); // Final glow
+                0 0 10px rgba(var(--ark-highlight-green-rgb), 0.4); // Final glow
   }
 }
 

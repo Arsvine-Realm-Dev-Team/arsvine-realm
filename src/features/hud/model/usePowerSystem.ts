@@ -1,5 +1,5 @@
 import { startTransition, useState, useEffect, useRef, useCallback } from 'react';
-import type { PowerSystemState } from '../../../shared/types';
+import type { PowerSystemState } from '@/features/hud/contracts/state';
 import { POWER_SYSTEM_STORAGE_KEY, THEME_MODE_STORAGE_KEY } from '@/shared/lib/document-bootstrap';
 
 // CHARGE_STEP: 每次 chargeBattery() 调用的电量增加百分点。

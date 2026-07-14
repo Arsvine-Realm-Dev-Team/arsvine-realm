@@ -1,3 +1,4 @@
+@use '../../../../shared/styles/breakpoints';
 .friendLinkSection {
   width: var(--content-width);
   margin-left: var(--content-offset);
@@ -10,7 +11,7 @@
   position: relative;
   color: var(--ark-text);
 
-  @media (max-width: 767px) {
+  @include breakpoints.mobile {
     width: 100%;
     margin-left: 0;
     scroll-margin-top: var(--mobile-section-scroll-offset);
@@ -40,7 +41,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(12px, 2vw, 20px);
 
-  @media (max-width: 767px) {
+  @include breakpoints.mobile {
     grid-template-columns: 1fr;
   }
 }

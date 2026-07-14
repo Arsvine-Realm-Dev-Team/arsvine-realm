@@ -1,3 +1,4 @@
+@use '../styles/breakpoints';
 @use '../styles/motion-keyframes';
 
 .worksSection {
@@ -23,7 +24,7 @@
   // re-enable the OS cursor over the cover image and expose two cursors.
   cursor: none;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     cursor: default;
   }
 
@@ -269,7 +270,7 @@
   cursor: none;
   z-index: 3;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     cursor: pointer;
   }
 }

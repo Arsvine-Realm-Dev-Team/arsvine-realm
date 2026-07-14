@@ -1,3 +1,4 @@
+@use '../../../../shared/styles/breakpoints';
 .experienceSection {
   display: flex;
   flex-direction: column;
@@ -291,7 +292,7 @@
   pointer-events: none;
 }
 
-@media (max-width: 1023px) {
+@include breakpoints.tablet-down {
   .experienceTimeline::before {
     left: 8px;
     transform: none;
@@ -333,7 +334,7 @@
   }
 }
 
-@media (max-width: 767px) {
+@include breakpoints.mobile {
   .experienceTimeline::before {
     left: 16px;
   }

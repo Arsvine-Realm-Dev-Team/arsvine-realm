@@ -1,3 +1,4 @@
+@use '../../../../shared/styles/breakpoints';
 .worksSection {
   align-items: stretch;
   content-visibility: visible;
@@ -261,7 +262,7 @@
   cursor: none;
   z-index: 3;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     cursor: pointer;
   }
 }

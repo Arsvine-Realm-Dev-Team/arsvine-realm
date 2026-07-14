@@ -77,6 +77,8 @@ UPSTASH_REDIS_REST_TOKEN=your-token
 
 Never prefix secrets with `NEXT_PUBLIC_`.
 
+On Vercel, the runtime sets `VERCEL=1` and the API rate limiter trusts Vercel-managed forwarding headers automatically. For self-hosting, set `TRUST_PROXY=1` only when a trusted reverse proxy overwrites `X-Forwarded-For` / `X-Real-IP`; leave it unset for direct exposure.
+
 ## External content repository
 
 Blog posts and tweets can be served from a private GitHub repository. The production server reads it through GitHub Contents API using `GITHUB_READ_TOKEN`.
@@ -189,7 +191,7 @@ Localhost and empty Referer are rejected. Use the local `dev.arsvine.com` hosts 
 
 Font refresh flow:
 
-1. edit `data/site.ts` font URL configuration;
+1. edit `src/shared/config/site.ts` font URL configuration;
 2. run `node scripts/fetch-google-fonts.mjs`;
 3. upload `public/_fonts-staging/` to COS `shared/fonts/` with `coscli`;
 4. set object metadata exactly;

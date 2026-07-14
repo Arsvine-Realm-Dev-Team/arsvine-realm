@@ -1,4 +1,7 @@
-require('dotenv').config({ path: '.env.local' });
+const environment = process.env.NODE_ENV === 'production' ? 'production' : 'development';
+require('dotenv').config({
+  path: [`.env.${environment}.local`, '.env.local', `.env.${environment}`, '.env'],
+});
 
 const { createServer } = require('http');
 const next = require('next');
@@ -8,20 +11,11 @@ const app = next({
   dev,
 });
 const handle = app.getRequestHandler();
-// Optional: external-service proxy routes may be added here when required.
-// const ANALYTICS_TARGET = 'http://127.0.0.1:3001';
-// Uncomment and configure if you use a self-hosted analytics service.
 
 async function main() {
   await app.prepare();
 
   const httpServer = createServer(async (req, res) => {
-    // Optional: Analytics proxy route
-    // if ((req.url || '').startsWith('/analytics/')) {
-    //   proxyToAnalytics(req, res);
-    //   return;
-    // }
-
     handle(req, res);
   });
 
@@ -49,7 +43,7 @@ async function main() {
     });
 }
 
-main().catch(ex => {
-    console.error(ex.stack);
-    process.exit(1);
+main().catch((error) => {
+  console.error(error.stack);
+  process.exit(1);
 });

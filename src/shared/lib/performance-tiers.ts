@@ -2,7 +2,7 @@ import type {
   AdaptivePerformanceState,
   PerformanceReason,
   PerformanceTier,
-} from '../types';
+} from '@/shared/contracts/performance';
 
 type PerformanceCapabilities = Omit<
   AdaptivePerformanceState,

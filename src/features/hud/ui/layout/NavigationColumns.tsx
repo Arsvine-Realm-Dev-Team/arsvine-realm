@@ -5,7 +5,7 @@ import VerticalShinyText from '../../../../shared/ui/VerticalShinyText';
 import ActivationLever from '../ActivationLever';
 import { useHudAnimation, useHudPower, useHudTyping } from '../../model/HudProvider';
 import { useResponsive } from '@/shared/hooks/useMediaQuery';
-import type { ColumnPhase } from '../../../../shared/types';
+import type { ColumnPhase } from '@/features/hud/contracts/state';
 
 const sectionNames = ["PORTFOLIO", "EXPERIENCE", "BLOG", "LIFE", "CONTACT", "ABOUT"];
 

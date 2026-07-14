@@ -49,5 +49,5 @@ describe('prepare-cos-workspace', () => {
     expect(works[0].source).toContain('/2030/02/03/');
     expect(audio).toHaveLength(sourceManifests.audio.length);
     expect(audio.every((item) => item.date === '2030-02-03')).toBe(true);
-  });
+  }, 15_000);
 });

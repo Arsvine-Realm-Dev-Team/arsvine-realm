@@ -1,3 +1,4 @@
+@use '../../../shared/styles/breakpoints';
 // Shared shell layout styles composed by app/styles/Shell.module.scss
 
 
@@ -54,7 +55,7 @@
   overflow: visible;
   pointer-events: none;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     // 重置桌面端的 skew/绝对定位，改为流式纵向布局
     position: relative;
     left: auto;
@@ -70,7 +71,7 @@
     pointer-events: auto;
   }
 
-  @media (max-width: 767px) {
+  @include breakpoints.mobile {
     padding: 44px 12px calc(56px + 12px) 12px;
     overflow: hidden;
     gap: 6px;
@@ -104,12 +105,12 @@
   }
 
   // 平板端缩小HUD
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     font-size: var(--fs-xs);
     padding: 6px;
   }
 
-  @media (max-width: 767px) {
+  @include breakpoints.mobile {
     font-size: var(--fs-2xs);
     padding: 4px 6px;
 
@@ -192,7 +193,7 @@
       border-left-width: 1px;
     }
 
-    @media (max-width: 767px) {
+    @include breakpoints.mobile {
       bottom: calc(56px + var(--spacing-hud) + env(safe-area-inset-bottom, 0));
     }
   }

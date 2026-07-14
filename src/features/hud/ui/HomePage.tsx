@@ -30,7 +30,12 @@ export default function Home({ locale }: HomeProps) {
       return;
     }
 
-    void prefetch(`/${locale}/content`);
+    const url = `/${locale}/content`;
+    void prefetch(url).catch((error) => {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('[home] prefetch failed:', url, error);
+      }
+    });
   }, [prefetch, locale]);
 
   const handleColumnClick = (columnIndex: number) => {

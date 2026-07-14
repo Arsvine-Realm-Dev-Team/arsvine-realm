@@ -8,7 +8,8 @@ import {
   performanceTierIndex,
 } from '@/shared/lib/performance-tiers';
 import { resolveInitialPerformancePolicy } from '@/shared/lib/performance-policy';
-import type { AdaptivePerformanceState, PerformanceReason, PerformanceTier } from '../../../shared/types';
+import type { AdaptivePerformanceState } from '@/features/hud/contracts/state';
+import type { PerformanceReason, PerformanceTier } from '@/shared/contracts/performance';
 
 const MAX_SAMPLE_FRAMES = 120;
 const MAX_SAMPLE_DURATION_MS = 2500;
@@ -42,12 +43,17 @@ function resolveRecoveryCeiling(
 export default function useAdaptivePerformance(animationsComplete: boolean): AdaptivePerformanceState {
   const reducedMotion = useReducedMotion();
   const [state, setState] = useState(() => buildPerformanceState('full', null));
+  const stateRef = useRef(state);
   const [isPageVisible, setIsPageVisible] = useState(() => typeof document === 'undefined' || !document.hidden);
   const [policyReady, setPolicyReady] = useState(false);
   const preferenceTierRef = useRef<PerformanceTier>('full');
   const preferenceReasonRef = useRef<PerformanceReason>(null);
   const runtimeCeilingRef = useRef<PerformanceTier>('full');
   const lastTierChangeRef = useRef(0);
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   useEffect(() => {
     const onVisibilityChange = () => setIsPageVisible(!document.hidden);
@@ -111,23 +117,23 @@ export default function useAdaptivePerformance(animationsComplete: boolean): Ada
       else if (healthy) { goodWindows += 1; badWindows = 0; }
       else { badWindows = 0; goodWindows = 0; }
 
-      setState((current) => {
-        const index = performanceTierIndex(current.performanceTier);
-        const sinceChange = timestamp - lastTierChangeRef.current;
-        if (poor && current.performanceTier === 'full') {
-          badWindows = 0;
-          runtimeCeilingRef.current = 'logo-reduced';
-          lastTierChangeRef.current = timestamp;
-          return buildPerformanceState('logo-reduced', 'runtime-fps');
-        }
-        if (badWindows >= BAD_WINDOWS_TO_DEGRADE
-          && index < PERFORMANCE_TIERS.length - 1
-          && sinceChange >= DEGRADE_COOLDOWN_MS) {
-          badWindows = 0;
-          lastTierChangeRef.current = timestamp;
-          const nextTier = PERFORMANCE_TIERS[index + 1];
-          return buildPerformanceState(nextTier, 'runtime-fps');
-        }
+      const current = stateRef.current;
+      const index = performanceTierIndex(current.performanceTier);
+      const sinceChange = timestamp - lastTierChangeRef.current;
+      let next = current;
+
+      if (poor && current.performanceTier === 'full') {
+        badWindows = 0;
+        runtimeCeilingRef.current = 'logo-reduced';
+        lastTierChangeRef.current = timestamp;
+        next = buildPerformanceState('logo-reduced', 'runtime-fps');
+      } else if (badWindows >= BAD_WINDOWS_TO_DEGRADE
+        && index < PERFORMANCE_TIERS.length - 1
+        && sinceChange >= DEGRADE_COOLDOWN_MS) {
+        badWindows = 0;
+        lastTierChangeRef.current = timestamp;
+        next = buildPerformanceState(PERFORMANCE_TIERS[index + 1], 'runtime-fps');
+      } else {
         const ceiling = resolveRecoveryCeiling(
           preferenceTierRef.current,
           preferenceReasonRef.current,
@@ -137,14 +143,17 @@ export default function useAdaptivePerformance(animationsComplete: boolean): Ada
         if (goodWindows >= GOOD_WINDOWS_TO_RECOVER && index > maxIndex && sinceChange >= RECOVER_COOLDOWN_MS) {
           goodWindows = 0;
           lastTierChangeRef.current = timestamp;
-          const previousTier = PERFORMANCE_TIERS[index - 1];
-          return buildPerformanceState(
-            previousTier,
+          next = buildPerformanceState(
+            PERFORMANCE_TIERS[index - 1],
             index - 1 === maxIndex ? ceiling.reason : 'runtime-fps',
           );
         }
-        return current;
-      });
+      }
+
+      if (next !== current) {
+        stateRef.current = next;
+        setState(next);
+      }
     };
 
     const sample = (timestamp: number) => {

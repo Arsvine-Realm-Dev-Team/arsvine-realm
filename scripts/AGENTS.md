@@ -40,7 +40,7 @@ $env:PORT=80; pnpm dev
 
 ## `fetch-google-fonts` 详细
 
-读 `data/site.ts` 的 `siteConfig.fonts.googleStylesheet`，用现代 Chrome User-Agent 抓 CSS（否则 Google 返回 `.ttf`），下载所有 woff2，把 `url()` 改写为 `cdn.arsvine.com/shared/fonts/<family>/<file>`，写入 `public/_fonts-staging/`（gitignored）。
+读 `src/shared/config/site.ts` 的 `siteConfig.fonts.googleStylesheet`，用现代 Chrome User-Agent 抓 CSS（否则 Google 返回 `.ttf`），下载所有 woff2，把 `url()` 改写为 `cdn.arsvine.com/shared/fonts/<family>/<file>`，写入 `public/_fonts-staging/`（gitignored）。`--check-config` 只验证配置路径与 URL，不访问网络。
 
 生产分发使用 `cos-workspace/coscli-windows-amd64.exe` 上传到 `shared/fonts/`；凭据仅从当前环境传入，不保存到 CLI 配置。脚本输出的 Content-Type 与 Cache-Control 要求仍然适用。
 

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import type { ColumnHoverState } from '../../../shared/types';
+import type { ColumnHoverState } from '@/features/hud/contracts/state';
 
 export default function useColumnHover(): ColumnHoverState {
   const initialRandomTexts = [

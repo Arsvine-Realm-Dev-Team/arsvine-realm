@@ -1,4 +1,4 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { jsonResponse } from './http';
 
 /**
  * 一言代理 (https://developer.hitokoto.cn/sentence/)
@@ -31,10 +31,11 @@ const FETCH_TIMEOUT_MS = 5_000;
 // 进程内缓存：开发热重载会重置；生产 Vercel serverless 冷启动也会重置 — 都可接受
 let cache: { text: string; expiresAt: number } | null = null;
 
-export default async function handler(_req: NextApiRequest, res: NextApiResponse) {
+export default async function handler() {
   if (cache && cache.expiresAt > Date.now()) {
-    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
-    return res.status(200).json({ text: cache.text });
+    return jsonResponse({ text: cache.text }, {
+      headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600' },
+    });
   }
 
   const controller = new AbortController();
@@ -48,12 +49,13 @@ export default async function handler(_req: NextApiRequest, res: NextApiResponse
     const text = typeof data?.hitokoto === 'string' ? data.hitokoto.trim() : '';
     if (!text) throw new Error('empty hitokoto');
     cache = { text, expiresAt: Date.now() + CACHE_TTL_MS };
-    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
-    return res.status(200).json({ text });
+    return jsonResponse({ text }, {
+      headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600' },
+    });
   } catch (err) {
     clearTimeout(timeoutId);
     // 仅记录摘要，避免 Vercel 日志噪音
     console.warn('[hitokoto] upstream failed:', (err as Error).message);
-    return res.status(502).json({ error: 'upstream_unavailable' });
+    return jsonResponse({ error: 'upstream_unavailable' }, { status: 502 });
   }
 }

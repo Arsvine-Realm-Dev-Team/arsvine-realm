@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import {
   buildBlogIndexHref,
   buildBlogPostHref,
-  buildBlogVariantRequestKey,
   getRequestedContentLocaleFromPath,
   isSafeBlogSlugSegment,
   isBlogContentLocale,
@@ -30,9 +29,8 @@ describe('blog-client helpers', () => {
     expect(getRequestedContentLocaleFromPath('/en/blog/init?lang=invalid')).toBeNull();
   });
 
-  it('validates locales and request key generation', () => {
+  it('validates content locales', () => {
     expect(isBlogContentLocale('fr')).toBe(true);
     expect(isBlogContentLocale('de')).toBe(false);
-    expect(buildBlogVariantRequestKey('init', 'fr', 'granted')).toBe('init:fr:granted');
   });
 });

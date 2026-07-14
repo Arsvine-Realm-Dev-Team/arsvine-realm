@@ -1,8 +1,9 @@
-import React, { useRef, useImperativeHandle } from 'react';
+import React, { useEffect, useRef, useImperativeHandle } from 'react';
 import { useTranslations } from 'next-intl';
 import styles from '../HomeLoadingScreen.module.scss';
 import gsap from 'gsap';
 import { siteConfig } from '@/shared/config/site';
+import { animateTitleCharacters } from '@/shared/lib/title-reveal';
 
 export interface LogoTitleRef {
   container: HTMLDivElement | null;
@@ -14,27 +15,24 @@ function LogoTitle({ ref }: { ref?: React.Ref<LogoTitleRef> }) {
   const tSite = useTranslations('pages.site');
   const logoAreaRef = useRef<HTMLDivElement>(null);
   const mainTitleRef = useRef<HTMLHeadingElement>(null);
+  const animationCleanupRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => () => animationCleanupRef.current?.(), []);
 
   useImperativeHandle(ref, () => ({
     container: logoAreaRef.current,
     mainTitle: mainTitleRef.current,
     animateIn: (delay = 0.8) => {
       if (!mainTitleRef.current) return;
-      const charWrappers = mainTitleRef.current.querySelectorAll(`.${styles.char_wrapper}`);
-      const inners = mainTitleRef.current.querySelectorAll(`.${styles.char_inner}`);
-      
-      charWrappers.forEach((wrapper, i) => {
-        const inner = inners[i];
-        gsap.set(wrapper, { overflow: 'hidden', display: 'inline-block', position: 'relative', verticalAlign: 'top' });
-        gsap.set(inner, { y: '110%', opacity: 0, display: 'inline-block' });
-
-        gsap.to(inner, { 
-          y: '0%', 
-          opacity: 0.8,
-          duration: 0.6,
-          delay: delay + i * 0.12,
-          ease: 'power3.out' 
-        });
+      animationCleanupRef.current?.();
+      const cleanupTitle = animateTitleCharacters({
+        root: mainTitleRef.current,
+        wrapperSelector: `.${styles.char_wrapper}`,
+        innerSelector: `.${styles.char_inner}`,
+        startDelayMs: 0,
+        revealDelay: delay,
+        stagger: 0.12,
+        opacity: 0.8,
       });
 
       // Animate subtitle
@@ -45,6 +43,10 @@ function LogoTitle({ ref }: { ref?: React.Ref<LogoTitleRef> }) {
           { opacity: 1, duration: 1.5, delay: delay + 0.3, ease: 'power2.inOut', onStart: () => { gsap.set(subTitle, { visibility: 'visible' }) } }
         );
       }
+      animationCleanupRef.current = () => {
+        cleanupTitle();
+        if (subTitle) gsap.killTweensOf(subTitle);
+      };
     }
   }));
 

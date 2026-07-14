@@ -1,3 +1,4 @@
+@use 'breakpoints';
 .contentSection {
   width: var(--content-width);
   margin-left: var(--content-offset);
@@ -45,7 +46,7 @@
   scroll-margin-top: 0;
 }
 
-@media (max-width: 1023px) {
+@include breakpoints.tablet-down {
   .contentSection {
     width: 100%;
     margin-left: 0;
@@ -53,7 +54,7 @@
   }
 }
 
-@media (max-width: 767px) {
+@include breakpoints.mobile {
   .sectionAnchor {
     scroll-margin-top: var(--mobile-section-scroll-offset);
   }

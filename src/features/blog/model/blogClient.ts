@@ -114,11 +114,3 @@ export function buildPostVariantApiPath(locale: BlogContentLocale, slug: string)
   });
   return `/api/post-variant?${search.toString()}`;
 }
-
-export function buildBlogVariantRequestKey(
-  slug: string,
-  requestedContentLocale: BlogContentLocale,
-  authState: string,
-) {
-  return `${slug}:${requestedContentLocale}:${authState}`;
-}

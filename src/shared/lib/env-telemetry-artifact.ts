@@ -1,4 +1,5 @@
-import type { EnvArtifactStage, EnvData } from '@/shared/types';
+import type { EnvArtifactStage, EnvData } from '@/shared/contracts/environment';
+import { hashStringFnv1a } from './hash';
 
 export type ArtifactGainReason = 'dwell' | 'route' | 'visibility-return' | 'scroll';
 
@@ -161,17 +162,8 @@ function clampLoad(load: number) {
   return Math.max(0, Math.min(100, Math.round(load)));
 }
 
-function hashString(value: string) {
-  let hash = 2166136261;
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
-}
-
 function createSeededRandom(seed: string) {
-  let state = hashString(seed) || 0x9e3779b9;
+  let state = hashStringFnv1a(seed) || 0x9e3779b9;
   return () => {
     state = (state + 0x6d2b79f5) | 0;
     let t = Math.imul(state ^ (state >>> 15), 1 | state);

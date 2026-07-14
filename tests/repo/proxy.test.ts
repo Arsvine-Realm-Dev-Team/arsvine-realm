@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 
 import {
   coerceCookieLocale,
@@ -117,5 +119,14 @@ describe('LOCALE_PATH_PATTERN regex', () => {
     expect(LOCALE_PATH_PATTERN.test('zh-VERYLONG')).toBe(false);
     // 多 dash 段（多段 BCP-47 形式，不应被当成短 locale）
     expect(LOCALE_PATH_PATTERN.test('zh-cn-hans-cn')).toBe(false);
+  });
+});
+
+describe('locale redirect cache contract', () => {
+  it('varies bare-path redirects by cookie and accepted language', () => {
+    const source = readFileSync(path.join(process.cwd(), 'src/proxy.ts'), 'utf8');
+
+    expect(source).toContain("response.headers.set('Vary', 'Cookie, Accept-Language')");
+    expect(source).not.toContain('void locales');
   });
 });

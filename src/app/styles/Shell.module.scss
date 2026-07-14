@@ -1,3 +1,4 @@
+@use '../../shared/styles/breakpoints';
 // Shared motion must be composed by each CSS Module that consumes it so
 // keyframe names and animation references receive the same module scope.
 @use '../../shared/styles/motion-keyframes';
@@ -82,11 +83,11 @@
     padding: 0;
   }
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     padding: var(--spacing-section-top) 20px clamp(40px, 5vw, 80px);
   }
 
-  @media (max-width: 767px) {
+  @include breakpoints.mobile {
     padding: var(--mobile-detail-top-offset) 16px calc(60px + 56px + env(safe-area-inset-bottom, 0px));
   }
 }
@@ -319,7 +320,7 @@
   opacity: 0.6;
   z-index: 1;
 
-  @media (max-width: 767px) {
+  @include breakpoints.mobile {
     display: none;
   }
 }
@@ -357,11 +358,11 @@
   pointer-events: none;
   z-index: 6;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     padding-right: var(--spacing-section-pad);
   }
 
-  @media (max-width: 767px) {
+  @include breakpoints.mobile {
     width: 100%;
     padding: var(--spacing-section-top) 16px calc(56px + 32px);
   }
@@ -377,14 +378,14 @@
     margin-left: clamp(20px, 15vw, 320px);
   }
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     .routeLoadingCard {
       margin-left: auto;
       margin-right: auto;
     }
   }
 
-  @media (max-width: 767px) {
+  @include breakpoints.mobile {
     padding: clamp(180px, 24vh, 240px) 16px 0;
   }
 }
@@ -414,10 +415,10 @@
   color: var(--ark-text-secondary);
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  animation: loadingPulse 1.8s ease-in-out infinite;
+  animation: shellLoadingPulse 1.8s ease-in-out infinite;
 }
 
-@keyframes loadingPulse {
+@keyframes shellLoadingPulse {
   0%, 100% { opacity: 0.28; }
   50% { opacity: 0.8; }
 }

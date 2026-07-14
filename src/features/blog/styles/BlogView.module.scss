@@ -1,3 +1,4 @@
+@use '../../../shared/styles/breakpoints';
 /* styles/BlogView.module.scss */
 
 // 博客视图容器
@@ -19,7 +20,7 @@
       color: var(--ark-text);
     }
 
-    @media (max-width: 1023px) {
+    @include breakpoints.tablet-down {
       position: relative;
       top: 0;
       width: 100%;
@@ -27,7 +28,7 @@
       padding: var(--spacing-section-top) 20px 80px 20px;
     }
 
-    @media (max-width: 767px) {
+    @include breakpoints.mobile {
       padding: 80px 16px calc(56px + 30px) 16px;
     }
 }

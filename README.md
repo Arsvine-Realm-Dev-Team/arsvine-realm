@@ -80,7 +80,7 @@ src/app/             # Next.js App Router pages and Route Handlers
 src/features/        # feature UI, state, server loaders/contracts/styles and public entrypoints
 public/              # static assets, icons, local music test folder
 scripts/             # image, font, favicon, and local-host helpers
-src/shared/          # cross-feature hooks, UI primitives, server adapters, types and styles
+src/shared/          # cross-feature contracts, hooks, UI primitives, server utilities and styles
 server.js            # local-development / optional self-hosted entry; not used by Vercel
 ```
 

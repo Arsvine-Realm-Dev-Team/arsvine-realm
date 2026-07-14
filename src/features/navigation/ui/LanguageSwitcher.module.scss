@@ -1,3 +1,4 @@
+@use '../../../shared/styles/breakpoints';
 .switcher {
   display: inline-flex;
   align-items: center;
@@ -9,7 +10,7 @@
   opacity: 0.85;
   cursor: none;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     cursor: auto;
   }
 }
@@ -31,7 +32,7 @@
   opacity: 0.55;
   transition: opacity 0.15s ease, color 0.15s ease;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     cursor: auto;
   }
 
@@ -51,7 +52,7 @@
   padding: 0 1px;
   cursor: none;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     cursor: auto;
   }
 }

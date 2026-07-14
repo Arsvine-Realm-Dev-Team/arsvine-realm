@@ -1,13 +1,10 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
 import { getLinkAssets } from '../catalog/catalog-provider';
+import { jsonResponse } from '@/shared/server/http';
+import { withAssetCatalogHandler } from '../catalog/catalog-handler';
 
-export default async function handler(_req: NextApiRequest, res: NextApiResponse) {
-  try {
+export default async function handler() {
+  return withAssetCatalogHandler('links', async () => {
     const items = await getLinkAssets();
-    res.setHeader('Cache-Control', 'no-store');
-    return res.status(200).json({ items });
-  } catch (error) {
-    console.error('[api/assets/links] failed:', error);
-    return res.status(200).json({ items: [] });
-  }
+    return jsonResponse({ items }, { headers: { 'Cache-Control': 'no-store' } });
+  });
 }

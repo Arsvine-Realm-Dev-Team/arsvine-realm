@@ -1,3 +1,4 @@
+@use '../../../../shared/styles/breakpoints';
 $c: rgba(200, 200, 200, 0.85);
 $c-dim: rgba(200, 200, 200, 0.25);
 
@@ -5,10 +6,10 @@ $c-dim: rgba(200, 200, 200, 0.25);
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 2147483647;
+  z-index: var(--z-custom-cursor);
   overflow: hidden;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     display: none;
   }
 }

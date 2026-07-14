@@ -1,4 +1,4 @@
-import type { MusicTrack } from '../../../../shared/types';
+import type { MusicTrack } from '@/features/music/contracts/musicTrack';
 import styles from '../MusicPlayer.module.scss';
 
 interface PlaylistPanelProps {

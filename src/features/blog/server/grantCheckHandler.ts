@@ -1,27 +1,19 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
 import { hasValidAccessGrant } from '@/shared/lib/content/access-grant';
-import type { GrantCheckResponse } from '@/shared/lib/content/access-api';
+import { jsonResponse, parseCookieHeader } from '@/shared/server/http';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<GrantCheckResponse>) {
-  res.setHeader('Cache-Control', 'private, no-store');
-  res.setHeader('Vary', 'Cookie');
-
-  if (req.method !== 'GET') {
-    res.setHeader('Allow', 'GET');
-    return res.status(405).json({
-      ok: false,
-      error: { code: 'METHOD_NOT_ALLOWED', message: 'Method not allowed.' },
-    });
-  }
-
-  const group = typeof req.query.group === 'string' ? req.query.group.trim() : '';
+export default function handler(request: Request) {
+  const group = new URL(request.url).searchParams.get('group')?.trim() ?? '';
   if (!group) {
-    return res.status(400).json({
+    return jsonResponse({
       ok: false,
       error: { code: 'VALIDATION_FAILED', message: 'Missing group parameter.' },
-    });
+    }, { status: 400, headers: { 'Cache-Control': 'private, no-store', Vary: 'Cookie' } });
   }
 
-  const granted = hasValidAccessGrant(req, group);
-  return res.status(200).json({ ok: true, granted });
+  const granted = hasValidAccessGrant({
+    cookies: parseCookieHeader(request.headers.get('cookie')),
+  }, group);
+  return jsonResponse({ ok: true, granted }, {
+    headers: { 'Cache-Control': 'private, no-store', Vary: 'Cookie' },
+  });
 }

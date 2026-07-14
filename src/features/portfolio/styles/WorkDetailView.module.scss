@@ -1,35 +1,21 @@
+@use '../../../shared/styles/breakpoints';
 /* features/portfolio/styles/WorkDetailView.module.scss */
-/* 基于 LifeDetailView.module.scss */
-
 @use '../../../shared/styles/motion-keyframes';
+@use '../../../shared/styles/hud-contact-keyframes';
+@use '../../../shared/styles/feature-detail';
+@use '../../../shared/ui/detail/styles/detail-standalone/inline-interactive';
 
-.detailContainer {
-  width: 100%;
-  padding: 20px 0;
-  position: relative;
-}
-
-
-.detailTitle {
-  font-family: var(--font-hud);
-  font-size: var(--fs-title);
-  font-weight: bold;
-  color: var(--ark-primary);
-  margin-bottom: 30px;
-  margin-top: 0; // 调整，因为没有返回按钮
-  text-align: left;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--ark-border);
-}
+@include feature-detail.container;
+@include feature-detail.title;
+@include feature-detail.thumbnail-grid;
+@include inline-interactive.styles;
 
 .detailContent {
   display: flex;
   flex-direction: column;
   gap: 30px;
 
-  @media (min-width: 768px) {
+  @include breakpoints.tablet-up {
     flex-direction: row;
   }
 }
@@ -39,7 +25,7 @@
   max-width: 450px;
   margin: 0 auto;
 
-  @media (min-width: 768px) {
+  @include breakpoints.tablet-up {
     margin: 0;
     max-width: none;
   }
@@ -194,13 +180,6 @@
   letter-spacing: 1px;
 }
 
-.thumbnailGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  align-items: start;
-  gap: 15px;
-}
-
 .thumbnailButton {
   background: none;
   border: none;
@@ -280,197 +259,12 @@
   }
 }
 
-.inlineIconLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3em;
-  color: var(--ark-primary);
-  text-decoration: none;
-  position: relative; // 需要为 ripple 定位
-  vertical-align: middle;
-  padding: 0.1em 0.3em; // 添加链接本身的填充
-  border-radius: 2px;
-  transition: background-color 0.2s ease, color 0.2s ease; // 链接背景和颜色的过渡
-  background-color: transparent; // 默认透明背景
-
-  &:hover {
-    text-decoration: none; // 悬停时删除下划线
-    background-color: var(--ark-primary); // 应用纯色主背景
-    color: var(--ark-dark-blue);
-
-    .inlineIcon {
-      color: var(--ark-dark-blue);
-    }
-
-    .inlineIconText {
-      background-color: transparent;
-      color: inherit;
-    }
-
-    .inlineIconSvgContainer {
-      background-color: transparent;
-    }
-  }
-}
-
-.inlineIcon {
-  width: 1.4em;
-  height: 1.4em;
-  fill: currentColor;
-  vertical-align: middle;
-  transition: color 0.2s ease;
-}
-
-// --- ADD: SVG 图标容器 --- 
-.inlineIconSvgContainer {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.2em;
-  border-radius: 2px;
-  background-color: transparent;
-  transition: background-color 0.2s ease;
-  vertical-align: middle;
-  margin-right: -0.2em;
-}
-
-.inlineIconText {
-  // 保持文本样式与周围段落一致
-  transition: color 0.2s ease; // 仅过渡颜色
-  padding: 0.1em 0.3em;
-  margin: -0.1em -0.3em;
-  border-radius: 2px;
-  background-color: transparent;
-  color: inherit; // 继承链接颜色
-}
-
-// --- ADD 图标波纹效果样式 --- 
-.iconLinkContainer {
-  display: inline-block; // 允许相对定位以实现波纹效果
-  position: relative;
-  vertical-align: middle; // 与文本对齐
-}
-
-.iconRipple {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0.1);
-  width: 16px; // 更小的波纹效果
-  height: 16px; // 更小的波纹效果
-  border-radius: 50%;
-  border: 2px solid rgba(178, 242, 187, 0);
-  box-shadow: 0 0 0 0px rgba(178, 242, 187, 0);
-  opacity: 0;
-  pointer-events: none;
-  z-index: -1;
-  transition: opacity 0.3s ease-out;
-
-  // 在链接容器悬停时触发动画
-  .iconLinkContainer:hover & {
-    animation: contactRippleExpandShadowInline 1.5s ease-out forwards; // 使用新的动画名称
-    opacity: 1; // 开始可见以实现动画
-  }
-}
-
-// --- ADD 内联波纹动画关键帧 --- 
-@keyframes contactRippleExpandShadowInline {
-  0% {
-    border: 2px solid rgba(178, 242, 187, 1);
-    box-shadow: 0 0 6px 2px rgba(178, 242, 187, 0.9);
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(0.1);
-  }
-
-  100% {
-    border: 1px solid rgba(178, 242, 187, 0);
-    box-shadow: 0 0 0 15px rgba(178, 242, 187, 0);
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(1.5);
-  }
-}
-
-// --- ADD 标准内联链接悬停样式 ---
-.inlineLink {
-  color: var(--ark-primary);
-  text-decoration: none;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-
-  &:hover {
-    background-color: var(--ark-primary);
-    color: var(--ark-dark-blue);
-    border-bottom-color: transparent;
-    padding: 2px 4px;
-    margin: -2px -4px;
-  }
-}
-
-
-@media (max-width: 768px) {
+@include breakpoints.mobile {
   .detailDescription {
     font-size: var(--fs-xl);
   }
 
   .articleSection p {
     font-size: var(--fs-lg);
-  }
-}
-
-// --- ADD 可复制文本样式 --- 
-.copyableTextContainer {
-  display: inline-block;
-  position: relative;
-}
-
-.copyableTextButton {
-  background: none;
-  border: none;
-  padding: 0;
-  margin: 0;
-  font: inherit;
-  color: var(--ark-primary);
-  cursor: none;
-  transition: color 0.2s, background-color 0.2s;
-  vertical-align: baseline;
-  padding: 0.1em 0.3em;
-  margin: -0.1em -0.3em;
-  border-radius: 2px;
-  font-weight: bold;
-
-  &:hover {
-    background-color: var(--ark-primary);
-    color: var(--ark-dark-blue);
-  }
-}
-
-.copyFeedback {
-  position: absolute;
-  bottom: 105%;
-  left: 50%;
-  color: var(--ark-primary);
-  padding: 3px 8px;
-  font-size: var(--fs-caption);
-  font-family: var(--font-hud);
-  white-space: nowrap;
-  opacity: 0;
-  z-index: 5;
-  pointer-events: none;
-  animation: floatUpFadeOut 1.5s ease-out forwards;
-}
-
-@keyframes floatUpFadeOut {
-  0% {
-    transform: translate(-50%, 5px);
-    opacity: 0.8;
-  }
-
-  80% {
-    transform: translate(-50%, -15px);
-    opacity: 0.8;
-  }
-
-  100% {
-    transform: translate(-50%, -20px);
-    opacity: 0;
   }
 }

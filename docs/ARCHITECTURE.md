@@ -200,10 +200,14 @@ Important invariant: neither the HTML nor the RSC payload may contain protected 
 | `GET /api/post-variant?slug=&locale=` | Returns serialized MDX for a specific post variant; protected posts require grant. |
 | `POST /api/protected-verify` | Verifies TOTP and signs the access-grant cookie; rate-limited by client/group. |
 | `GET /api/tweet-months?offset=&limit=` | Paginates tweet months from the external content repository. |
-| `POST /api/revalidate` | Revalidates `/<locale>/tweets` for all locales. Guarded by `REVALIDATE_SECRET`. |
+| `POST /api/revalidate` | Revalidates `/<locale>/tweets` for all locales. Guarded by `REVALIDATE_SECRET`; legacy `GET ?secret=` remains supported for older admin clients. |
 | `POST /api/revalidate-content` | Revalidates `/<locale>/content` and, when provided, `/<locale>/blog/<slug>` for all locales. Guarded by `REVALIDATE_SECRET`. |
+| `GET /api/assets/{audio,home,links,works}` | Reads the current COS asset catalog; catalog failures return `502` rather than an ambiguous empty success. |
+| `GET /api/assets/collections/<slug>` | Reads a paginated collection from the current COS catalog. |
 
-The revalidation routes can optionally trust `X-Forwarded-For` when `TRUST_PROXY=1|true|yes` is set. Otherwise they fall back to the socket address for rate limiting.
+All API routes are native App Router Route Handlers using Web `Request` and `Response`; there is no Pages API compatibility adapter. Unsupported methods are not exported, so Next.js returns `405`.
+
+Rate-limited routes use one client-address policy. Vercel-managed forwarding headers are trusted automatically when `VERCEL=1`. Self-hosted deployments must set `TRUST_PROXY=1|true|yes` only when their reverse proxy overwrites forwarding headers; otherwise the limiter uses the shared `unknown` key rather than trusting caller-supplied IP headers.
 
 ## Desktop 3D effects
 
@@ -221,6 +225,8 @@ Mobile skips the WebGL canvas and uses simplified charging behavior.
 - Feature UI owns its SCSS Modules; cross-feature primitives live with `shared/ui/`.
 - `src/app/styles/Shell.module.scss` is the application-shell style entrypoint; feature-specific section styles stay with their feature.
 - Global tokens and font variables live in `src/app/styles/globals.scss`.
+- Global overlay ordering uses the semantic `--z-*` tokens in `globals.scss`; do not introduce escalating literal values.
+- The mobile/desktop boundary is `max-width: 767px` / `min-width: 768px`.
 
 Important font variables:
 

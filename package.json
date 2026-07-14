@@ -14,7 +14,8 @@
     "assets:build": "node scripts/assets-build.mjs",
     "assets:publish": "node scripts/assets-publish.mjs",
     "env:sync": "node scripts/sync-env-files.mjs",
-    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+    "maintenance:check": "node scripts/fetch-google-fonts.mjs --check-config",
+    "check": "pnpm maintenance:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
   "keywords": [],
   "author": "Arsvine Zhu",
@@ -42,7 +43,6 @@
     "next-intl": "^4.13.2",
     "next-mdx-remote": "^6.0.0",
     "react": "^19.2.7",
-    "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^19.2.7",
     "sass": "^1.72.0",
     "three": "^0.185.1",
@@ -61,7 +61,6 @@
     "globals": "^17.7.0",
     "jsdom": "^29.1.1",
     "sharp": "^0.35.3",
-    "simple-icons": "^16.23.0",
     "typescript": "^5.9.3",
     "vitest": "^4.1.10"
   }

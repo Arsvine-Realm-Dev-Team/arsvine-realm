@@ -1,3 +1,4 @@
+@use '../../../../styles/breakpoints';
 /* ==================== TIMELINE SECTION ==================== */
 
 .timelineSection {
@@ -6,7 +7,7 @@
   padding-left: calc(7.5vw + clamp(16px, 2vw, 30px));
   max-width: 1400px;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     padding-left: clamp(20px, 5vw, 40px);
   }
 }
@@ -42,7 +43,7 @@
   padding-left: calc(7.5vw + clamp(16px, 2vw, 30px));
   max-width: 1400px;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     padding-left: clamp(20px, 5vw, 40px);
   }
 }
@@ -66,7 +67,7 @@
   cursor: none;
   transition: border-color 0.4s ease;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     cursor: pointer;
   }
 
@@ -88,7 +89,7 @@
     }
   }
 
-  @media (max-width: 767px) {
+  @include breakpoints.mobile {
     border-color: rgba(255, 255, 255, 0.12);
 
     .galleryCornerTL,
@@ -177,7 +178,7 @@
   display: flex;
   flex-direction: column;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     padding-left: clamp(20px, 5vw, 40px);
   }
 }
@@ -235,7 +236,7 @@
   overflow: hidden;
   cursor: none;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     cursor: pointer;
   }
 

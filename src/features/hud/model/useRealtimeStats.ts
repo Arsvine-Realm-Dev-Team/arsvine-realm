@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import type { RealtimeStatsState } from '../../../shared/types';
+import type { RealtimeStatsState } from '@/features/hud/contracts/state';
 
 const SYSTEM_LAUNCH_AT = new Date('2026-06-10T02:00:00+08:00').getTime();
 

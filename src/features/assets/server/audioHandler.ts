@@ -1,13 +1,10 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
 import { getAudioAssets } from './catalog/catalog-provider';
+import { jsonResponse } from '@/shared/server/http';
+import { withAssetCatalogHandler } from './catalog/catalog-handler';
 
-export default async function handler(_req: NextApiRequest, res: NextApiResponse) {
-  try {
+export default async function handler() {
+  return withAssetCatalogHandler('audio', async () => {
     const items = await getAudioAssets();
-    res.setHeader('Cache-Control', 'no-store');
-    return res.status(200).json({ items });
-  } catch (error) {
-    console.error('[api/assets/audio] failed:', error);
-    return res.status(200).json({ items: [] });
-  }
+    return jsonResponse({ items }, { headers: { 'Cache-Control': 'no-store' } });
+  });
 }

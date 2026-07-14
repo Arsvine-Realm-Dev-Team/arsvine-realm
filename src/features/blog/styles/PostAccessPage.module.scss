@@ -1,3 +1,4 @@
+@use '../../../shared/styles/breakpoints';
 .page {
   --access-primary-rgb: 200, 200, 200;
   --access-border-rgb: 255, 255, 255;
@@ -32,11 +33,11 @@
   flex-direction: column;
   align-items: flex-start;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     padding-right: var(--spacing-section-pad);
   }
 
-  @media (max-width: 767px) {
+  @include breakpoints.mobile {
     padding: var(--spacing-section-top) 16px calc(56px + 32px);
   }
 }
@@ -48,11 +49,11 @@
   padding: clamp(28px, 4vw, 40px) 0 clamp(40px, 6vw, 64px);
   display: block;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     padding-right: 0;
   }
 
-  @media (max-width: 767px) {
+  @include breakpoints.mobile {
     padding: 24px 0 40px;
   }
 }
@@ -111,7 +112,7 @@
   max-width: 100%;
   cursor: none;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     cursor: text;
   }
 }
@@ -135,7 +136,7 @@
   grid-template-columns: repeat(6, minmax(0, var(--access-slot-width)));
   gap: var(--access-slot-gap);
 
-  @media (max-width: 767px) {
+  @include breakpoints.mobile {
     --access-slot-width: 30px;
     --access-slot-height: 52px;
     --access-slot-gap: 6px;

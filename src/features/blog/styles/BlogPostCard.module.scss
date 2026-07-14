@@ -1,3 +1,4 @@
+@use '../../../shared/styles/breakpoints';
 /* styles/BlogPostCard.module.scss — Signal Fragment Card */
 
 .card {
@@ -248,7 +249,7 @@
 }
 
 // ===== Responsive =====
-@media (max-width: 767px) {
+@include breakpoints.mobile {
   .cardInner {
     padding: 16px 16px 16px 14px;
     gap: 12px;

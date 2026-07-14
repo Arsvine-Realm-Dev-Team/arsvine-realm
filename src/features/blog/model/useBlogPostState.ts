@@ -7,6 +7,7 @@ import type { BlogContentLocale } from '../server/blog';
 import {
   blogPostMachine,
   getBlogPostViewState,
+  shouldSuppressFallbackBanner,
   type BlogPostArticleInput,
   type BlogPostViewState,
 } from './blogPostState';
@@ -120,10 +121,11 @@ export default function useBlogPostState({
   const state = snapshot.context;
   const selectedVariant = state.variants[state.displayedContentLocale] ?? null;
   const viewState = getBlogPostViewState(snapshot, state);
-  const suppressFallbackBanner = (
-    state.displayedContentLocale !== actualContentLocale
-    || state.requestedContentLocale !== actualContentLocale
-  );
+  const suppressFallbackBanner = shouldSuppressFallbackBanner({
+    displayedContentLocale: state.displayedContentLocale,
+    requestedContentLocale: state.requestedContentLocale,
+    actualContentLocale,
+  });
   const effectiveStatus: TranslationStatus = suppressFallbackBanner ? 'source' : translationStatus;
   const effectiveOriginLocale: Locale = ((selectedVariant?.meta.originLocale)
     ?? meta.originLocale

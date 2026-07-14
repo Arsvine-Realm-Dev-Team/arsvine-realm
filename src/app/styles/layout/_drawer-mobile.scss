@@ -1,5 +1,6 @@
+@use '../../../shared/styles/breakpoints';
 // ===== 响应式: 移动端抽屉进一步精简 (<768px) =====
-@media (max-width: 767px) {
+@include breakpoints.mobile {
   .leftPanel {
     padding: 56px 16px calc(56px + env(safe-area-inset-bottom, 0) + 16px) 16px;
   }
@@ -91,7 +92,7 @@
 .bottomBar {
   display: none;
 
-  @media (max-width: 767px) {
+  @include breakpoints.mobile {
     display: flex;
     position: fixed;
     bottom: 0;
@@ -100,7 +101,7 @@
     height: 56px;
     background: rgba(20, 20, 20, 0.95);
     border-top: 1px solid var(--ark-border);
-    z-index: 1002;
+    z-index: var(--z-mobile-navigation);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     padding-bottom: env(safe-area-inset-bottom, 0);
@@ -128,12 +129,12 @@
       height: 2px;
       background: linear-gradient(90deg,
           transparent 0%,
-          rgba(178, 242, 187, 0.02) 15%,
-          rgba(178, 242, 187, 0.06) 35%,
-          rgba(178, 242, 187, 0.15) 55%,
-          rgba(178, 242, 187, 0.4) 78%,
+          rgba(var(--ark-highlight-green-rgb), 0.02) 15%,
+          rgba(var(--ark-highlight-green-rgb), 0.06) 35%,
+          rgba(var(--ark-highlight-green-rgb), 0.15) 55%,
+          rgba(var(--ark-highlight-green-rgb), 0.4) 78%,
           var(--ark-highlight-green) 95%,
-          rgba(178, 242, 187, 0.6) 100%);
+          rgba(var(--ark-highlight-green-rgb), 0.6) 100%);
       filter: drop-shadow(0 0 3px var(--ark-highlight-green));
       animation: scanBottomBar 4s cubic-bezier(0.25, 0.8, 0.25, 1) infinite;
       pointer-events: none;
@@ -174,7 +175,7 @@
 
   &:active {
     transform: scale(0.92);
-    background: rgba(178, 242, 187, 0.08);
+    background: rgba(var(--ark-highlight-green-rgb), 0.08);
     color: var(--ark-highlight-green);
     text-shadow: 0 0 8px var(--ark-highlight-green);
   }
@@ -212,7 +213,7 @@
 .bottomBarIndicator {
   display: none;
 
-  @media (max-width: 767px) {
+  @include breakpoints.mobile {
     display: block;
     width: 12px;
     height: 1.5px;
@@ -256,7 +257,7 @@
   flex-direction: column;
 }
 
-@media (max-width: 767px) {
+@include breakpoints.mobile {
   .hudTopLeftContent {
     align-items: center;
     gap: 10px;

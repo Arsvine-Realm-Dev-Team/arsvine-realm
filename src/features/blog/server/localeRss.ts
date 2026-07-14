@@ -1,7 +1,6 @@
-import type { GetServerSideProps } from 'next';
 import { getPostBySlugAndLocale, getPublicPostsForLocale } from './blog';
 import { getSiteUrl } from '@/shared/config/site';
-import { locales, rssLanguageMap, isLocale, type Locale } from '@/shared/contracts/locale';
+import { rssLanguageMap, type Locale } from '@/shared/contracts/locale';
 import { loadMessages } from '@/app/i18n/data';
 import type { BlogPostMeta } from '../../../shared/types';
 
@@ -106,14 +105,7 @@ ${itemsXml}
 </rss>`;
 }
 
-export const getLocaleRssServerSideProps: GetServerSideProps = async ({ res, params }) => {
-  const rawLocale = params?.locale as string | undefined;
-  if (!isLocale(rawLocale)) {
-    res.statusCode = 404;
-    res.end();
-    return { props: {} };
-  }
-  const locale = rawLocale;
+export async function buildLocaleRssResponse(locale: Locale) {
   const messages = await loadMessages(locale);
 
   // 按 updated ?? date 排序，新文章在前；与之前按 date 排序的行为基本一致，
@@ -150,13 +142,10 @@ export const getLocaleRssServerSideProps: GetServerSideProps = async ({ res, par
     siteMessages.rssDescription ?? '',
   );
 
-  res.setHeader('Content-Type', 'application/rss+xml; charset=utf-8');
-  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600');
-  res.write(xml);
-  res.end();
-
-  return { props: {} };
-};
-
-// 静默引用 locales 让 webpack 不 tree-shake
-void locales;
+  return new Response(xml, {
+    headers: {
+      'Content-Type': 'application/rss+xml; charset=utf-8',
+      'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+    },
+  });
+}

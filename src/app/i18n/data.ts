@@ -37,6 +37,8 @@ import enMessages from '../locales/en.json';
 import zhCNMessages from '../locales/zh-CN.json';
 import zhTWMessages from '../locales/zh-TW.json';
 
+export type MessageSchema = typeof zhCNMessages;
+
 interface ProjectsModule {
   webProjects: Project[];
   gameProjects: Project[];
@@ -97,10 +99,10 @@ const skillModules: LocalizedModuleMap<SkillsModule> = {
   en: skillsEN as SkillsModule,
 };
 
-const messageModules: LocalizedModuleMap<Record<string, unknown>> = {
-  'zh-CN': zhCNMessages as Record<string, unknown>,
-  'zh-TW': zhTWMessages as Record<string, unknown>,
-  en: enMessages as Record<string, unknown>,
+const messageModules: LocalizedModuleMap<MessageSchema> = {
+  'zh-CN': zhCNMessages,
+  'zh-TW': zhTWMessages,
+  en: enMessages,
 };
 
 function loadLocalizedModule<T>(registry: LocalizedModuleMap<T>, locale: Locale): T {
@@ -229,6 +231,6 @@ export function loadServices(): { heading: string; items: ServiceCredit[] } | un
 }
 
 /** 加载 locale 对应的 messages（locales/<locale>.json） */
-export async function loadMessages(locale: Locale): Promise<Record<string, unknown>> {
+export async function loadMessages(locale: Locale): Promise<MessageSchema> {
   return loadLocalizedModule(messageModules, locale);
 }

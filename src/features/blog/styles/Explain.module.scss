@@ -1,3 +1,4 @@
+@use '../../../shared/styles/breakpoints';
 /* Explain 句级注解 tooltip 样式
  *
  * 与 MDX 共用一份；推文卡片在打字机结束后挂载这些节点，
@@ -121,7 +122,7 @@
 
 // ===== Mobile =====
 
-@media (max-width: 767px) {
+@include breakpoints.mobile {
   .explainTooltip {
     // 移动端：absolute + left:0 会让 tooltip 锚在触发器左缘往右展开，
     // 触发器靠近右边时直接顶出视口右侧。改用 fixed 横向锁视口左右 12px；
@@ -134,7 +135,7 @@
     bottom: auto;
     width: auto;
     max-width: none;
-    z-index: 1100; // 高于 _layout.scss .bottomBar 的 1002
+    z-index: 1100; // 高于全局 bottom bar，并低于 lightbox/cursor 层级
     font-size: var(--fs-caption);
     padding: 12px 14px;
     // 长 note 不顶出可视区；tooltip 内可滚

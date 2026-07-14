@@ -1,32 +1,20 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
 import { getCollectionAssets } from '../catalog/catalog-provider';
+import { jsonResponse } from '@/shared/server/http';
+import { withAssetCatalogHandler } from '../catalog/catalog-handler';
 
-function parsePage(page: string | string[] | undefined) {
-  const value = Array.isArray(page) ? page[0] : page;
-  const parsed = Number.parseInt(value || '1', 10);
+function parsePage(page: string | null) {
+  const parsed = Number.parseInt(page || '1', 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const slug = Array.isArray(req.query.slug) ? req.query.slug[0] : req.query.slug;
+export default async function handler(request: Request, slug: string) {
   if (!slug) {
-    return res.status(400).json({ error: 'missing_slug' });
+    return jsonResponse({ error: 'missing_slug' }, { status: 400 });
   }
 
-  try {
-    const page = parsePage(req.query.page);
+  return withAssetCatalogHandler('collections', async () => {
+    const page = parsePage(new URL(request.url).searchParams.get('page'));
     const result = await getCollectionAssets(slug, page);
-    res.setHeader('Cache-Control', 'no-store');
-    return res.status(200).json({ slug, ...result });
-  } catch (error) {
-    console.error('[api/assets/collections] failed:', error);
-    return res.status(200).json({
-      slug,
-      items: [],
-      page: 1,
-      pageSize: 12,
-      total: 0,
-      totalPages: 1,
-    });
-  }
+    return jsonResponse({ slug, ...result }, { headers: { 'Cache-Control': 'no-store' } });
+  });
 }

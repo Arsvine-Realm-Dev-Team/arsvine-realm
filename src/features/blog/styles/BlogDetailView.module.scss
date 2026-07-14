@@ -1,3 +1,4 @@
+@use '../../../shared/styles/breakpoints';
 /* Blog detail standalone reading page — centered magazine layout */
 
 .pageWrapper {
@@ -11,7 +12,7 @@
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
 
-  @media (max-width: 767px) {
+  @include breakpoints.mobile {
     padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
   }
 }
@@ -24,7 +25,7 @@
   margin-left: clamp(20px, 15vw, 320px);
   margin-right: auto;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     margin-left: auto;
     margin-right: auto;
   }
@@ -161,7 +162,7 @@
   transition: border-color 0.25s ease, background-color 0.25s ease, color 0.25s ease, opacity 0.25s ease;
   cursor: none;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     cursor: pointer;
   }
 
@@ -208,7 +209,7 @@
     opacity: 0.45;
   }
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     cursor: pointer;
   }
 }
@@ -257,10 +258,10 @@
   color: var(--ark-text-secondary);
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  animation: loadingPulse 2s ease-in-out infinite;
+  animation: blogLoadingPulse 2s ease-in-out infinite;
 }
 
-@keyframes loadingPulse {
+@keyframes blogLoadingPulse {
   0%, 100% { opacity: 0.2; }
   50% { opacity: 0.5; }
 }
@@ -327,7 +328,7 @@
   transition: background-color 0.3s, color 0.3s, border-color 0.3s, opacity 0.3s;
   cursor: none;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     cursor: pointer;
   }
 
@@ -384,7 +385,7 @@
     pointer-events: auto;
   }
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     display: none;
   }
 }
@@ -462,14 +463,14 @@
     padding-left: 14px;
   }
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     cursor: pointer;
   }
 }
 
 /* ==================== RESPONSIVE ==================== */
 
-@media (max-width: 767px) {
+@include breakpoints.mobile {
   .headerSection {
     padding-top: clamp(60px, 8vh, 90px);
   }

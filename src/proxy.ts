@@ -1,7 +1,7 @@
 // Next.js discovers this App Router convention file from src/.
 import { NextResponse, type NextRequest } from 'next/server';
 import { geolocation } from '@vercel/functions';
-import { locales, isLocale, type Locale } from './app/i18n/config';
+import { isLocale, type Locale } from './app/i18n/config';
 import {
   coerceCookieLocale,
   LOCALE_PATH_PATTERN,
@@ -106,7 +106,9 @@ export function proxy(request: NextRequest) {
   const url = request.nextUrl.clone();
   url.pathname = `/${targetLocale}${rest === '/' ? '' : rest}`;
   // 保留覆盖参数（?_geo=...），让 redirect 之后的 SSR 也走同一套覆盖逻辑
-  return attachGeo(NextResponse.redirect(url, 308), request, country, overrideAction);
+  const response = NextResponse.redirect(url, 308);
+  response.headers.set('Vary', 'Cookie, Accept-Language');
+  return attachGeo(response, request, country, overrideAction);
 }
 
 export const config = {
@@ -114,6 +116,3 @@ export const config = {
   // shouldBypass 中按扩展名兜底，这里只排除常见前缀以减少 proxy 调用。
   matcher: ['/((?!_next|_vercel|api|.*\\.[a-z0-9]+$).*)'],
 };
-
-// 静默引用 locales 让 tree-shake 不去掉它
-void locales;

@@ -10,7 +10,7 @@
 |---|---|
 | `blog.ts` | 服务端：从外置内容仓库读 `blog-index.json` 与 `blog/<slug>/<locale>.mdx`，解析 frontmatter，估算阅读时长 |
 | `blog-client.ts` | 客户端 + 服务端共用类型与 URL 构造（`buildBlogPostHref`、`buildPostVariantApiPath`、`getRequestedContentLocaleFromPath` 等） |
-| `blog-post-state.ts` | 客户端状态机 reducer + `BlogPostViewState` 联合类型。**所有变体都被 `useBlogPostState` 消费**，不要在组件里直接 `dispatch` |
+| `features/blog/model/blogPostState.ts` | XState v5 文章状态机；grant check 与 variant load 是可取消 invoked actors。**所有变体都被 `useBlogPostState` 消费**，不要在组件里自行复制请求状态 |
 | `format-reading-time.ts` | 把 `readingMinutes: number` 渲染为 locale-aware UI 字符串（`约 N 分钟` / `約 N 分鐘` / `N min read`） |
 
 ### 内容仓库 + 鉴权
@@ -19,7 +19,7 @@
 |---|---|
 | `content/github.ts` | GitHub Contents API 客户端（`Accept: application/vnd.github.raw`）+ 60s in-process 缓存 |
 | `content/types.ts` | `ContentBlogIndex`、`ContentPostAccess`、`TotpGroupConfig` 等共享类型 |
-| `content/access-grant.ts` | HMAC-签名授权 cookie：`createAccessGrant` / `verifyAccessGrant` / `setAccessGrantCookie`（HttpOnly, 1h TTL） |
+| `content/access-grant.ts` | HMAC-签名授权 cookie：`createAccessGrant` / `verifyAccessGrant` / `createAccessGrantCookie`（HttpOnly, 1h TTL） |
 | `content/access-api.ts` | `/api/protected-verify` / `/api/grant-check` 的 response 类型 |
 | `content/totp.ts` | RFC 6238 TOTP 校验，支持 previous secret window（密钥轮换期内宽限） |
 | `content/rate-limit.ts` | in-process 滑动窗口限流，由 `/api/protected-verify` 按 (client-ip, group) 调用 |
@@ -54,7 +54,7 @@
 测试位于仓库根目录的 `tests/lib/`。当前覆盖包括：
 
 - `tests/features/blog/blog-client.test.ts` — URL / locale 解析
-- `tests/features/blog/blog-post-state.test.ts` — reducer 状态转移（**两个并发竞态修复在这里有回归测试**：`authResolved` 在 granted 分支必须清 activeRequestKey；resetArticle 必须把 authState 拉回 checking）
+- `tests/features/blog/blog-post-state.test.ts` — XState 状态转移与 actor 取消（文章切换重置、切 locale 取消旧请求、403 回到 authRequired、AUTH_GRANTED 继续加载）
 - `tests/lib/content/access-api.test.ts` — protected-verify response 形状
 - `tests/lib/tesseract-geometry.test.ts` — 4D 投影矩阵
 
@@ -63,12 +63,12 @@
 ```bash
 pnpm test
 pnpm vitest run tests/features/blog/blog-post-state.test.ts
-pnpm vitest run -t "authResolved"
+pnpm vitest run tests/features/blog/blog-post-state.test.ts
 ```
 
 ## 写新文件时
 
-- **服务端代码**（读 GitHub、解析 MDX、签 cookie、调外部 API）放这里 ——**不要**进 `pages/api/*` 直接堆，`pages/api` 只做 HTTP 适配（参数校验、响应码、`res.json`），业务逻辑下沉到 `lib/`。
+- **服务端代码**（读 GitHub、解析 MDX、签 cookie、调外部 API）放 feature 的 `server/` 或 shared server/lib 边界；`src/app/api/**/route.ts` 只做 App Router HTTP 适配，业务逻辑不要堆进 route 文件。
 - **跨页面/组件复用的常量**（动画时长、storage key、配额）抽到 `lib/ui-timings.ts` 或新建专用模块；不要在组件文件里散落 magic number。
 - **不要把 React hooks 写在这里**。hooks 在 `hooks/`，UI 在 `features/` 或 `shared/ui/`。lib 是非 React 的。
 - **测试边界**：算法层（reducer、解析、URL 构造、几何）必须测；I/O 边界（GitHub API、TOTP）按 fixture 思路测；UI 不在 lib 范围内。

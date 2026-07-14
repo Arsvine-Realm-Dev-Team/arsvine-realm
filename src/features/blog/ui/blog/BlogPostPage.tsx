@@ -1,7 +1,6 @@
 'use client';
 
 import { startTransition, useState, useEffect, useRef, useCallback } from 'react';
-import gsap from 'gsap';
 import { useTranslations } from 'next-intl';
 import { MDXRemote, type MDXRemoteSerializeResult } from 'next-mdx-remote';
 import MDXComponents from '../mdx/MDXComponents';
@@ -23,6 +22,7 @@ import BlogStateShell from './BlogStateShell';
 import type { Locale } from '@/shared/contracts/locale';
 import { formatReadingTime } from '../../model/formatReadingTime';
 import { useNavigationRuntime } from '@/features/navigation/model/NavigationRuntime';
+import { animateTitleCharacters } from '@/shared/lib/title-reveal';
 
 export interface BlogPostPageProps {
   locale: Locale;
@@ -201,48 +201,28 @@ function BlogDetailContent({
   const titleRef = useRef<HTMLHeadingElement>(null);
   const contentBodyRef = useRef<HTMLDivElement>(null);
   const [entered, setEntered] = useState(false);
-  const [titleDone, setTitleDone] = useState(false);
+  const titleAnimationKey = `${meta.title}\u0000${selectedContentLocale}`;
+  const [completedTitleKey, setCompletedTitleKey] = useState<string | null>(null);
+  const titleDone = completedTitleKey === titleAnimationKey;
 
   useEffect(() => {
     if (!titleRef.current) {
       startTransition(() => {
-        setTitleDone(true);
+        setCompletedTitleKey(titleAnimationKey);
       });
       return;
     }
-    const timer = setTimeout(() => {
-      if (!titleRef.current) {
-        startTransition(() => {
-          setTitleDone(true);
-        });
-        return;
-      }
-      const wrappers = titleRef.current.querySelectorAll(`.${styles.charWrapper}`);
-      const inners = titleRef.current.querySelectorAll(`.${styles.charInner}`);
-      if (inners.length === 0) {
-        startTransition(() => {
-          setTitleDone(true);
-        });
-        return;
-      }
-      wrappers.forEach((wrapper, i) => {
-        const inner = inners[i];
-        gsap.set(wrapper, { overflow: 'hidden', display: 'inline-block', position: 'relative', verticalAlign: 'top' });
-        gsap.set(inner, { y: '110%', opacity: 0, display: 'inline-block' });
-        gsap.to(inner, {
-          y: '0%',
-          opacity: 1,
-          duration: 0.6,
-          delay: 0.4 + i * 0.06,
-          ease: 'power3.out',
-          onComplete: i === inners.length - 1 ? () => startTransition(() => {
-            setTitleDone(true);
-          }) : undefined,
-        });
-      });
-    }, 50);
-    return () => clearTimeout(timer);
-  }, [meta.title, selectedContentLocale]);
+    return animateTitleCharacters({
+      root: titleRef.current,
+      wrapperSelector: `.${styles.charWrapper}`,
+      innerSelector: `.${styles.charInner}`,
+      revealDelay: 0.4,
+      stagger: 0.06,
+      onComplete: () => startTransition(() => {
+        setCompletedTitleKey(titleAnimationKey);
+      }),
+    });
+  }, [titleAnimationKey]);
 
   useEffect(() => {
     const timer = setTimeout(() => {

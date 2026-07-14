@@ -2,10 +2,10 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
   createAccessGrant,
+  createAccessGrantCookie,
+  createClearedAccessGrantCookie,
   getAccessGrantCookieName,
   hasValidAccessGrant,
-  setAccessGrantCookie,
-  clearAccessGrantCookie,
   verifyAccessGrant,
 } from '@/shared/lib/content/access-grant';
 
@@ -115,30 +115,14 @@ describe('hasValidAccessGrant', () => {
   });
 });
 
-describe('setAccessGrantCookie / clearAccessGrantCookie', () => {
-  function mockResponse() {
-    const headers: Record<string, string | string[]> = {};
-    return {
-      headers,
-      getHeader(name: string) {
-        return headers[name];
-      },
-      setHeader(name: string, value: string | string[]) {
-        headers[name] = value;
-      },
-    } as unknown as Parameters<typeof setAccessGrantCookie>[0];
-  }
-
-  it('writes a Set-Cookie header with HttpOnly, SameSite=Lax, Path=/', () => {
-    const res = mockResponse();
-    setAccessGrantCookie(res, 'friends-a', 60_000);
-    const setCookie = res.getHeader('Set-Cookie');
-    expect(typeof setCookie).toBe('string');
-    expect(setCookie as string).toMatch(/^arsvine_post_access=/);
-    expect(setCookie as string).toContain('Path=/');
-    expect(setCookie as string).toContain('HttpOnly');
-    expect(setCookie as string).toContain('SameSite=Lax');
-    expect(setCookie as string).toContain('Max-Age=60');
+describe('access grant cookie serialization', () => {
+  it('builds a cookie with HttpOnly, SameSite=Lax, Path=/', () => {
+    const cookie = createAccessGrantCookie('friends-a', 60_000);
+    expect(cookie).toMatch(/^arsvine_post_access=/);
+    expect(cookie).toContain('Path=/');
+    expect(cookie).toContain('HttpOnly');
+    expect(cookie).toContain('SameSite=Lax');
+    expect(cookie).toContain('Max-Age=60');
   });
 
   it('omits Secure in non-production', () => {
@@ -146,9 +130,7 @@ describe('setAccessGrantCookie / clearAccessGrantCookie', () => {
     // ProcessEnv 字段在 TS 类型里是 readonly；测试临时改 NODE_ENV 触发 secure 开关。
     (process.env as Record<string, string | undefined>)['NODE_ENV'] = 'development';
     try {
-      const res = mockResponse();
-      setAccessGrantCookie(res, 'friends-a');
-      expect(res.getHeader('Set-Cookie') as string).not.toContain('Secure');
+      expect(createAccessGrantCookie('friends-a')).not.toContain('Secure');
     } finally {
       (process.env as Record<string, string | undefined>)['NODE_ENV'] = previous;
     }
@@ -158,19 +140,15 @@ describe('setAccessGrantCookie / clearAccessGrantCookie', () => {
     const previous = process.env['NODE_ENV'];
     (process.env as Record<string, string | undefined>)['NODE_ENV'] = 'production';
     try {
-      const res = mockResponse();
-      setAccessGrantCookie(res, 'friends-a');
-      expect(res.getHeader('Set-Cookie') as string).toContain('Secure');
+      expect(createAccessGrantCookie('friends-a')).toContain('Secure');
     } finally {
       (process.env as Record<string, string | undefined>)['NODE_ENV'] = previous;
     }
   });
 
-  it('clearAccessGrantCookie writes Max-Age=0', () => {
-    const res = mockResponse();
-    clearAccessGrantCookie(res);
-    const setCookie = res.getHeader('Set-Cookie') as string;
-    expect(setCookie).toContain('arsvine_post_access=');
-    expect(setCookie).toContain('Max-Age=0');
+  it('builds an expired cookie for logout', () => {
+    const cookie = createClearedAccessGrantCookie();
+    expect(cookie).toContain('arsvine_post_access=');
+    expect(cookie).toContain('Max-Age=0');
   });
 });

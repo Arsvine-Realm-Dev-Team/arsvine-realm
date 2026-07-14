@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { MusicTrack } from '../../../../shared/types';
+import type { MusicTrack } from '@/features/music/contracts/musicTrack';
 import { DRAG_THRESHOLD } from './constants';
 
 interface UseVinylDragOptions {

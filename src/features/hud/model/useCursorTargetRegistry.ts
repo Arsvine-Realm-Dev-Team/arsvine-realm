@@ -4,6 +4,7 @@ import {
   collectInteractiveElements,
   getInteractiveCursorTarget,
 } from '../ui/cursor/customCursorShared';
+import { subscribeCursorTargetsDirty } from '@/shared/lib/cursor-targets';
 
 interface UseCursorTargetRegistryOptions {
   hoverElRef: RefObject<HTMLElement | null>;
@@ -51,13 +52,13 @@ export default function useCursorTargetRegistry({
     document.addEventListener('mouseover', handleEnter, true);
     document.addEventListener('mouseout', handleLeave, true);
     window.addEventListener('resize', refreshTargets);
-    window.addEventListener('arsvine:cursor-targets-dirty', refreshTargets as EventListener);
+    const unsubscribeDirty = subscribeCursorTargetsDirty(refreshTargets);
 
     return () => {
       document.removeEventListener('mouseover', handleEnter, true);
       document.removeEventListener('mouseout', handleLeave, true);
       window.removeEventListener('resize', refreshTargets);
-      window.removeEventListener('arsvine:cursor-targets-dirty', refreshTargets as EventListener);
+      unsubscribeDirty();
     };
   }, [hoverElRef, onEnter, onHoverTargetRemoved, onLeave]);
 

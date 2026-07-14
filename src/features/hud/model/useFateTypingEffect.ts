@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { FateTypingState } from '../../../shared/types';
+import type { FateTypingState } from '@/features/hud/contracts/state';
 import {
   formatFateTextForWrap,
   getTypingDelays,

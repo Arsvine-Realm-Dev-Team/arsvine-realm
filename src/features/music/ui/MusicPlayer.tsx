@@ -10,7 +10,7 @@ import PlaylistPanel from './music-player/PlaylistPanel';
 import { useMusicPlayerState } from './music-player/useMusicPlayerState';
 import { useVinylDrag } from './music-player/useVinylDrag';
 import VinylDeck from './music-player/VinylDeck';
-import type { MusicTrack } from '../../../shared/types';
+import type { MusicTrack } from '@/features/music/contracts/musicTrack';
 import { useNavigationRuntime } from '@/features/navigation/model/NavigationRuntime';
 
 const commonLabelFallbacks: Record<Locale, Record<'expandPlaylist' | 'collapsePlaylist', string>> = {
@@ -45,17 +45,18 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
   const [idleNudge, setIdleNudge] = useState(0);
   const [playlist, setPlaylist] = useState<MusicTrack[]>([]);
   const handleRef = useRef<HTMLDivElement | null>(null);
+  const handleBarTimerIdsRef = useRef<Set<number>>(new Set());
 
   const {
     audioRef,
     currentTrack,
     currentTrackIndex,
+    handleAudioError,
     handleNext,
     handlePrev,
     isPlaying,
     progressPercent,
     selectTrack,
-    setIsPlaying,
     shouldPreloadMetadata,
     syncPlayState,
   } = useMusicPlayerState({ playlist });
@@ -137,14 +138,17 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
       return;
     }
 
+    const handleBarTimerIds = handleBarTimerIdsRef.current;
     const bars = handleElement.querySelectorAll(`.${styles.handleBar}`);
     const handleAnimationIteration = (event: Event) => {
       const bar = event.target as HTMLElement;
       bar.style.animationPlayState = 'paused';
       const randomDelay = Math.random() * 900 + 300;
-      safeTimers.setTimeout(() => {
+      const timerId = safeTimers.setTimeout(() => {
+        handleBarTimerIds.delete(timerId);
         bar.style.animationPlayState = 'running';
       }, randomDelay);
+      handleBarTimerIds.add(timerId);
     };
 
     if (isPlaying) {
@@ -159,6 +163,8 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
     }
 
     return () => {
+      handleBarTimerIds.forEach((timerId) => safeTimers.clearTimeout(timerId));
+      handleBarTimerIds.clear();
       bars.forEach((bar) => {
         bar.removeEventListener('animationiteration', handleAnimationIteration);
       });
@@ -212,9 +218,7 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
       <audio
         ref={audioRef}
         preload={shouldPreloadMetadata ? 'metadata' : 'none'}
-        onError={() => {
-          setIsPlaying(false);
-        }}
+        onError={handleAudioError}
       />
 
       <VinylDeck

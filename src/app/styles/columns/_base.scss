@@ -125,7 +125,7 @@
   &:hover {
     &:not(.nonInteractive) {
       &:not(.worksColumn) {
-        background-color: rgba(178, 242, 187, 0.08);
+        background-color: rgba(var(--ark-highlight-green-rgb), 0.08);
 
         &::after,
         &::before {
@@ -231,7 +231,7 @@
     background-image: linear-gradient(
       to bottom,
       var(--ark-highlight-green) 0%,
-      rgba(178, 242, 187, 0.5) 15%,
+      rgba(var(--ark-highlight-green-rgb), 0.5) 15%,
       transparent 40%
     );
     background-size: 100% 200%;
@@ -311,8 +311,8 @@
       to bottom,
       transparent,
       transparent 2px,
-      rgba(178, 242, 187, 0.2) 2px,
-      rgba(178, 242, 187, 0.2) 3px
+      rgba(var(--ark-highlight-green-rgb), 0.2) 2px,
+      rgba(var(--ark-highlight-green-rgb), 0.2) 3px
     );
     background-size: 100% 6px;
     filter: blur(0.3px);
@@ -388,13 +388,13 @@
   color: var(--ark-highlight-green);
   letter-spacing: 1px;
   font-weight: bold;
-  text-shadow: 0 0 3px rgba(178, 242, 187, 0.5);
+  text-shadow: 0 0 3px rgba(var(--ark-highlight-green-rgb), 0.5);
   transition: color 0.5s ease-in-out, text-shadow 0.5s ease-in-out;
 }
 
 // --- 通用列悬停效果 ---
 .column:hover:not(.nonInteractive) {
-  background-color: rgba(178, 242, 187, 0.08);
+  background-color: rgba(var(--ark-highlight-green-rgb), 0.08);
 
   .verticalText .charItem > div {
     transform: scale(1.15);
@@ -422,7 +422,7 @@
   width: 35px;
   height: 35px;
   border-radius: 50%;
-  border: 1px solid rgba(178, 242, 187, 0.9);
+  border: 1px solid rgba(var(--ark-highlight-green-rgb), 0.9);
   opacity: 0;
   pointer-events: none;
   transform: translate(-50%, -50%) scale(0.1);

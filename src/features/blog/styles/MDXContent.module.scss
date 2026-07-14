@@ -1,3 +1,4 @@
+@use '../../../shared/styles/breakpoints';
 /* MDX 文章内容样式 — 信号碎片阅读视图 */
 
 .h1 {
@@ -459,7 +460,7 @@
 
 // ===== Responsive =====
 
-@media (max-width: 767px) {
+@include breakpoints.mobile {
   .p {
     font-size: var(--fs-lg);
     line-height: 1.9;

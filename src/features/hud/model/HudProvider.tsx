@@ -11,7 +11,7 @@ import type {
   FateTypingState,
   PowerSystemState,
   RealtimeStatsState,
-} from '@/shared/types';
+} from '@/features/hud/contracts/state';
 import useAdaptivePerformance from './useAdaptivePerformance';
 import useAnimationSequence from './useAnimationSequence';
 import useColumnHover from './useColumnHover';

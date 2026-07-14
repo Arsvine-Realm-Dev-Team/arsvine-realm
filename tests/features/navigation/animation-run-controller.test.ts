@@ -48,4 +48,29 @@ describe('AnimationRunController', () => {
     vi.advanceTimersByTime(500);
     expect(cancelled).not.toHaveBeenCalled();
   });
+
+  it('ignores normal WAAPI cancellation but surfaces unexpected animation failures', async () => {
+    const controller = new AnimationRunController();
+    const finished = vi.fn();
+    const failed = vi.fn();
+    let rejectAnimation: ((reason?: unknown) => void) | undefined;
+    const animation = {
+      cancel: vi.fn(),
+      finished: new Promise<void>((_resolve, reject) => {
+        rejectAnimation = reject;
+      }),
+    } as unknown as Animation;
+
+    controller.runAnimation(animation, finished, failed);
+    rejectAnimation?.(new DOMException('cancelled', 'AbortError'));
+    await Promise.resolve();
+    expect(failed).not.toHaveBeenCalled();
+
+    const brokenAnimation = {
+      cancel: vi.fn(),
+      finished: Promise.reject(new Error('animation engine failed')),
+    } as unknown as Animation;
+    controller.runAnimation(brokenAnimation, finished, failed);
+    await vi.waitFor(() => expect(failed).toHaveBeenCalledWith(expect.any(Error)));
+  });
 });

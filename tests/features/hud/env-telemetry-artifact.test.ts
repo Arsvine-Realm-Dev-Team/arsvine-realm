@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { EnvData } from '@/shared/types';
+import type { EnvData } from '@/shared/contracts/environment';
 import {
   advanceArtifactLoad,
   buildTelemetryArtifactText,

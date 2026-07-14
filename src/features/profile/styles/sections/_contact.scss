@@ -1,3 +1,4 @@
+@use '../../../../shared/styles/breakpoints';
 .contentSection.contactSection {
   display: flex;
   flex-direction: column;
@@ -50,8 +51,8 @@
   height: 100%;
   border-radius: 50%;
   background: conic-gradient(from 0deg,
-      rgba(178, 242, 187, 0.6) 0deg,
-      rgba(178, 242, 187, 0.1) 30deg,
+      rgba(var(--ark-highlight-green-rgb), 0.6) 0deg,
+      rgba(var(--ark-highlight-green-rgb), 0.1) 30deg,
       transparent 30.1deg 360deg);
   animation: rotateScanner 4s linear infinite;
   animation-direction: reverse;
@@ -123,7 +124,7 @@
   opacity: 0;
   z-index: 5;
   pointer-events: none;
-  animation: floatUpFadeOut 1.5s ease-out forwards;
+  animation: floatUpFade 1.5s ease-out forwards;
 }
 
 .radarDisplay {
@@ -175,8 +176,8 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  border: 1px solid rgba(178, 242, 187, 0.9);
-  box-shadow: 0 0 0 0px rgba(178, 242, 187, 0.5);
+  border: 1px solid rgba(var(--ark-highlight-green-rgb), 0.9);
+  box-shadow: 0 0 0 0px rgba(var(--ark-highlight-green-rgb), 0.5);
   opacity: 0;
   pointer-events: none;
   transform: translate(-50%, -50%) scale(0.1);
@@ -272,8 +273,8 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  border: 2px solid rgba(178, 242, 187, 1);
-  box-shadow: 0 0 3px 1px rgba(178, 242, 187, 0.6);
+  border: 2px solid rgba(var(--ark-highlight-green-rgb), 1);
+  box-shadow: 0 0 3px 1px rgba(var(--ark-highlight-green-rgb), 0.6);
   opacity: 1;
   pointer-events: none;
   z-index: -1;
@@ -304,7 +305,7 @@
   animation-delay: 1.2s;
 }
 
-@media (max-width: 1023px) {
+@include breakpoints.tablet-down {
   .contentSection.contactSection {
     margin-bottom: 0;
     padding-bottom: 30px;
@@ -358,7 +359,7 @@
   }
 }
 
-@media (max-width: 767px) {
+@include breakpoints.mobile {
   .contentSection.contactSection {
     margin-bottom: 0;
   }

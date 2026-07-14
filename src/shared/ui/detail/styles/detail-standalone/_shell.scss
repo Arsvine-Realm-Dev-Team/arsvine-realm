@@ -1,3 +1,4 @@
+@use '../../../../styles/breakpoints';
 /* Life detail standalone showcase page */
 
 .pageWrapper {
@@ -11,7 +12,7 @@
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
 
-  @media (max-width: 767px) {
+  @include breakpoints.mobile {
     padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
   }
 }

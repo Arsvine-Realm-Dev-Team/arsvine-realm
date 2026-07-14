@@ -1,20 +1,26 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { revalidatePath } from 'next/cache';
 import { locales } from '@/shared/contracts/locale';
 import { webProjects, gameProjects, earlyProjects } from '@/features/portfolio/contracts/data';
 import { gameData, travelData, otherData } from '@/features/life/contracts/data';
+import { enforceRateLimit } from '@/shared/lib/content/rate-limit';
+import { getClientAddress, jsonResponse } from '@/shared/server/http';
+import { authenticateRevalidation } from '@/shared/server/revalidation';
 
-function equal(left: string, right: string) {
-  if (left.length !== right.length) return false;
-  let mismatch = 0;
-  for (let index = 0; index < left.length; index += 1) mismatch |= left.charCodeAt(index) ^ right.charCodeAt(index);
-  return mismatch === 0;
-}
+export default async function handler(request: Request) {
+  const limiter = await enforceRateLimit(
+    `revalidate-assets:${getClientAddress(request)}`,
+    30,
+    60_000,
+  );
+  if (!limiter.ok) {
+    return jsonResponse({ message: 'Too many requests' }, {
+      status: 429,
+      headers: { 'Retry-After': String(Math.ceil(limiter.retryAfterMs / 1000)) },
+    });
+  }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return res.status(405).json({ message: 'Method not allowed' }); }
-  const expected = process.env.REVALIDATE_SECRET?.trim() || '';
-  const provided = typeof req.body?.secret === 'string' ? req.body.secret : '';
-  if (!expected || !provided || !equal(provided, expected)) return res.status(401).json({ message: 'Invalid token' });
+  const auth = await authenticateRevalidation(request);
+  if (!auth.ok) return auth.response;
 
   const projects = [...webProjects, ...gameProjects, ...earlyProjects];
   const lifeItems = [...gameData, ...travelData, ...otherData];
@@ -23,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ...projects.map((project) => `/${locale}/web/${project.id}`),
     ...lifeItems.map((item) => `/${locale}/life/${item.id}`),
   ]);
-  const results = await Promise.allSettled(paths.map((route) => res.revalidate(route)));
+  const results = await Promise.allSettled(paths.map(async (route) => revalidatePath(route)));
   const failed: string[] = [];
   results.forEach((result, index) => {
     if (result.status === 'rejected') {
@@ -34,10 +40,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   });
 
   if (failed.length === paths.length) {
-    return res.status(500).json({ revalidated: false, paths, failed, message: 'All revalidations failed' });
+    return jsonResponse({ revalidated: false, paths, failed, message: 'All revalidations failed' }, { status: 500 });
   }
   if (failed.length > 0) {
-    return res.status(200).json({ revalidated: false, paths, failed, partial: true });
+    return jsonResponse({ revalidated: false, paths, failed, partial: true });
   }
-  return res.status(200).json({ revalidated: true, paths, failed: [] });
+  return jsonResponse({ revalidated: true, paths, failed: [] });
 }

@@ -1,8 +1,8 @@
 import React from 'react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useMusicPlayerState } from '@/features/music/ui/music-player/useMusicPlayerState';
-import type { MusicTrack } from '@/shared/types';
+import type { MusicTrack } from '@/features/music/contracts/musicTrack';
 
 const playlist: MusicTrack[] = [
   {
@@ -121,5 +121,43 @@ describe('useMusicPlayerState audio loading', () => {
     expect(playMock).not.toHaveBeenCalled();
     expect(screen.getByTestId('current-track').textContent).toBe('Track Two');
     expect(screen.getByTestId('playing-state').textContent).toBe('false');
+  });
+
+  it('ignores a stale play rejection after a newer track starts playing', async () => {
+    let rejectFirstPlay: ((reason?: unknown) => void) | undefined;
+    playMock
+      .mockImplementationOnce(() => new Promise<void>((_resolve, reject) => {
+        rejectFirstPlay = reject;
+      }))
+      .mockResolvedValue(undefined);
+    render(<MusicPlayerStateHarness />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'play' }));
+    fireEvent.click(screen.getByRole('button', { name: 'track-two' }));
+    await waitFor(() => expect(playMock).toHaveBeenCalledTimes(2));
+
+    const audio = screen.getByTestId('audio') as HTMLAudioElement;
+    fireEvent.play(audio);
+    expect(screen.getByTestId('playing-state').textContent).toBe('true');
+
+    await act(async () => {
+      rejectFirstPlay?.(new DOMException('superseded', 'AbortError'));
+      await Promise.resolve();
+    });
+    expect(screen.getByTestId('playing-state').textContent).toBe('true');
+  });
+
+  it('does not write storage on every timeupdate event', () => {
+    const setItem = vi.spyOn(Storage.prototype, 'setItem');
+    render(<MusicPlayerStateHarness />);
+    const writesAfterMount = setItem.mock.calls.length;
+    const audio = screen.getByTestId('audio') as HTMLAudioElement;
+
+    for (let second = 1; second <= 20; second += 1) {
+      audio.currentTime = second / 4;
+      fireEvent.timeUpdate(audio);
+    }
+
+    expect(setItem.mock.calls.length).toBeLessThanOrEqual(writesAfterMount + 2);
   });
 });

@@ -1,10 +1,11 @@
+@use '../../../shared/styles/breakpoints';
 // Mobile-only panel that ports the desktop LeftPanel into the home card layout.
 
 .mobilePanel {
   display: none;
 }
 
-@media (max-width: 767px) {
+@include breakpoints.mobile {
   .mobilePanel {
     display: flex;
     flex-direction: column;
@@ -97,8 +98,8 @@
         to bottom,
         transparent,
         transparent 3px,
-        rgba(178, 242, 187, 0.03) 3px,
-        rgba(178, 242, 187, 0.03) 4px
+        rgba(var(--ark-highlight-green-rgb), 0.03) 3px,
+        rgba(var(--ark-highlight-green-rgb), 0.03) 4px
       );
       animation: mobileScanlineScroll 4s linear infinite;
       pointer-events: none;

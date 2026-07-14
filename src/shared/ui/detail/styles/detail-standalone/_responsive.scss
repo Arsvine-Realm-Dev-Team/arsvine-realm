@@ -1,6 +1,7 @@
+@use '../../../../styles/breakpoints';
 /* ==================== RESPONSIVE: MOBILE ==================== */
 
-@media (max-width: 767px) {
+@include breakpoints.mobile {
   .timelineText {
     font-size: var(--fs-xl);
   }

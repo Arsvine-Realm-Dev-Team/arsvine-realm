@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import '@/app/styles/globals.scss';
 import { htmlLangMap, isLocale, locales, ogLocaleMap, type Locale } from '@/app/i18n/config';
 import { loadMessages } from '@/app/i18n/data';
+import DocumentBootstrapScript from '@/app/providers/DocumentBootstrapScript';
 import { siteConfig, getSiteUrl } from '@/shared/config/site';
 import { buildDocumentBootstrapScript } from '@/shared/lib/document-bootstrap';
 import LocaleClientProviders from '@/app/providers/LocaleClientProviders';
@@ -88,9 +89,9 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
           />
         ))}
         <link href={siteConfig.fonts.cdnStylesheet} rel="stylesheet" />
+        <DocumentBootstrapScript script={buildDocumentBootstrapScript()} />
       </head>
       <body>
-        <script dangerouslySetInnerHTML={{ __html: buildDocumentBootstrapScript() }} />
         <LocaleClientProviders locale={locale} messages={messages}>{children}</LocaleClientProviders>
       </body>
     </html>

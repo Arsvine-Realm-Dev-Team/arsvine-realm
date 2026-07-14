@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { MusicTrack } from '../../../../shared/types';
-import { useSafeTimeouts } from '../../../../shared/hooks/useSafeTimeouts';
+import type { MusicTrack } from '@/features/music/contracts/musicTrack';
 import { MUSIC_PLAYER_STORAGE_KEY } from './constants';
 import { readPersistedPlayerStateFromStorage } from './persistence';
 import { buildManagedAssetUrl } from '@/shared/lib/cdn';
@@ -9,10 +8,10 @@ interface UseMusicPlayerStateOptions {
   playlist: MusicTrack[];
 }
 
+const PERSIST_INTERVAL_MS = 1_000;
+
 function getTrackSrc(track: MusicTrack) {
-  if (track.src) {
-    return track.src;
-  }
+  if (track.src) return track.src;
   if (!track.objectKey) {
     throw new Error(`Music track "${track.id}" is missing both objectKey and src`);
   }
@@ -25,9 +24,7 @@ function getAudioPath(src: string) {
 
 function syncAudioSource(audio: HTMLAudioElement, src: string) {
   const currentSrcPath = audio.src ? getAudioPath(audio.src) : null;
-  if (currentSrcPath === getAudioPath(src)) {
-    return false;
-  }
+  if (currentSrcPath === getAudioPath(src)) return false;
 
   audio.src = src;
   audio.load();
@@ -35,12 +32,8 @@ function syncAudioSource(audio: HTMLAudioElement, src: string) {
 }
 
 export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
-  const safeTimers = useSafeTimeouts();
   const initialPersistedState = useMemo(() => {
-    if (typeof window === 'undefined') {
-      return null;
-    }
-
+    if (typeof window === 'undefined') return null;
     return readPersistedPlayerStateFromStorage(
       window.sessionStorage,
       window.localStorage,
@@ -50,209 +43,157 @@ export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
   }, [playlist.length]);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const playbackIntentRef = useRef(false);
+  const desiredPlayingRef = useRef(false);
   const hasUserInteractedRef = useRef(false);
   const resumeTimeRef = useRef<number | null>(initialPersistedState?.currentTime ?? null);
+  const playAttemptRef = useRef(0);
+  const lastPersistedAtRef = useRef(0);
+  const stateRef = useRef({ currentTrackIndex: 0, currentTime: 0, isPlaying: false });
+  const [playRequest, setPlayRequest] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(initialPersistedState?.currentTrackIndex ?? 0);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(
+    initialPersistedState?.currentTrackIndex ?? 0,
+  );
   const [currentTime, setCurrentTime] = useState(initialPersistedState?.currentTime ?? 0);
   const [duration, setDuration] = useState(0);
+
   const resolvedTrackIndex = useMemo(() => {
-    if (!playlist.length) {
-      return 0;
-    }
+    if (!playlist.length) return 0;
 
     const persistedTrackId = initialPersistedState?.trackId;
     if (persistedTrackId) {
       const matchedIndex = playlist.findIndex((track) => track.id === persistedTrackId);
-      if (matchedIndex !== -1) {
-        return matchedIndex;
-      }
+      if (matchedIndex !== -1) return matchedIndex;
     }
 
     return Math.max(0, Math.min(currentTrackIndex, playlist.length - 1));
   }, [currentTrackIndex, initialPersistedState?.trackId, playlist]);
 
-  const persistPlayerState = useCallback((overrides: Partial<{
-    currentTrackIndex: number;
-    currentTime: number;
-    isPlaying: boolean;
-    trackId: string | undefined;
-  }> = {}) => {
-    if (typeof window === 'undefined') {
-      return;
-    }
+  useEffect(() => {
+    stateRef.current = { currentTrackIndex: resolvedTrackIndex, currentTime, isPlaying };
+  }, [currentTime, isPlaying, resolvedTrackIndex]);
 
+  const persistPlayerState = useCallback((force = false) => {
+    if (typeof window === 'undefined') return;
+    const now = Date.now();
+    if (!force && now - lastPersistedAtRef.current < PERSIST_INTERVAL_MS) return;
+
+    const snapshot = stateRef.current;
+    const audio = audioRef.current;
     const nextState = {
-      currentTrackIndex: resolvedTrackIndex,
-      currentTime,
-      isPlaying: playbackIntentRef.current || isPlaying,
-      trackId: playlist[resolvedTrackIndex]?.id,
-      ...overrides,
+      currentTrackIndex: snapshot.currentTrackIndex,
+      currentTime: audio?.currentTime ?? snapshot.currentTime,
+      trackId: playlist[snapshot.currentTrackIndex]?.id,
     };
-
     const serialized = JSON.stringify(nextState);
     window.sessionStorage.setItem(MUSIC_PLAYER_STORAGE_KEY, serialized);
     window.localStorage.setItem(MUSIC_PLAYER_STORAGE_KEY, serialized);
-  }, [currentTime, isPlaying, playlist, resolvedTrackIndex]);
+    lastPersistedAtRef.current = now;
+  }, [playlist]);
+
+  const requestPlayback = useCallback(() => {
+    desiredPlayingRef.current = true;
+    setPlayRequest((request) => request + 1);
+  }, []);
 
   const syncPlayState = useCallback((shouldPlay: boolean) => {
-    const audio = audioRef.current;
-    if (!audio) {
-      return;
-    }
-
     hasUserInteractedRef.current = true;
-    playbackIntentRef.current = shouldPlay;
-    if (!shouldPlay) {
-      audio.pause();
+    if (shouldPlay) {
+      requestPlayback();
       return;
     }
 
-    const track = playlist[resolvedTrackIndex];
-    if (track) {
-      const nextSrc = getTrackSrc(track);
-      syncAudioSource(audio, nextSrc);
-    } else {
-      playbackIntentRef.current = false;
-      setIsPlaying(false);
-      return;
-    }
-
-    const playPromise = audio.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(() => {
-        playbackIntentRef.current = false;
-        setIsPlaying(false);
-      });
-    }
-  }, [playlist, resolvedTrackIndex]);
+    desiredPlayingRef.current = false;
+    playAttemptRef.current += 1;
+    audioRef.current?.pause();
+    setIsPlaying(false);
+    persistPlayerState(true);
+  }, [persistPlayerState, requestPlayback]);
 
   const handlePrev = useCallback(() => {
-    if (playlist.length === 0) {
-      return;
-    }
+    if (!playlist.length) return;
     hasUserInteractedRef.current = true;
     resumeTimeRef.current = 0;
     setCurrentTrackIndex((previous) => (previous - 1 + playlist.length) % playlist.length);
   }, [playlist.length]);
 
   const handleNext = useCallback(() => {
-    if (playlist.length === 0) {
-      return;
-    }
+    if (!playlist.length) return;
     hasUserInteractedRef.current = true;
     resumeTimeRef.current = 0;
     setCurrentTrackIndex((previous) => (previous + 1) % playlist.length);
   }, [playlist.length]);
 
   const selectTrack = useCallback((index: number) => {
-    if (index < 0 || index >= playlist.length) {
-      return;
-    }
-    if (index !== currentTrackIndex) {
-      hasUserInteractedRef.current = true;
-      playbackIntentRef.current = true;
-      resumeTimeRef.current = 0;
-      setCurrentTrackIndex(index);
-      return;
-    }
+    if (index < 0 || index >= playlist.length) return;
+    hasUserInteractedRef.current = true;
+    resumeTimeRef.current = 0;
+    desiredPlayingRef.current = true;
 
-    if (!isPlaying) {
-      syncPlayState(true);
+    if (index !== resolvedTrackIndex) {
+      setCurrentTrackIndex(index);
     }
-  }, [currentTrackIndex, isPlaying, playlist.length, syncPlayState]);
+    requestPlayback();
+  }, [playlist.length, requestPlayback, resolvedTrackIndex]);
+
+  const handleAudioError = useCallback(() => {
+    desiredPlayingRef.current = false;
+    playAttemptRef.current += 1;
+    setIsPlaying(false);
+    persistPlayerState(true);
+  }, [persistPlayerState]);
 
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = 0.7;
-    }
+    if (audioRef.current) audioRef.current.volume = 0.7;
   }, []);
 
   useEffect(() => {
     const audio = audioRef.current;
     const track = playlist[resolvedTrackIndex];
-    if (!audio || !track) {
-      return;
-    }
+    if (!audio || !track || !hasUserInteractedRef.current) return;
 
-    const nextSrc = getTrackSrc(track);
-    if (!hasUserInteractedRef.current && !playbackIntentRef.current) {
-      return;
-    }
+    syncAudioSource(audio, getTrackSrc(track));
+    if (!desiredPlayingRef.current) return;
 
-    if (!syncAudioSource(audio, nextSrc)) {
-      return;
-    }
-    if (!playbackIntentRef.current) {
-      return;
-    }
-
+    const attempt = ++playAttemptRef.current;
     const playPromise = audio.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(() => {
-        safeTimers.setTimeout(() => {
-          const retryPromise = audioRef.current?.play();
-          if (retryPromise !== undefined) {
-            retryPromise.catch(() => {
-              playbackIntentRef.current = false;
-              setIsPlaying(false);
-              persistPlayerState({ isPlaying: false, trackId: track.id });
-            });
-          }
-        }, 120);
-      });
-    }
-  }, [persistPlayerState, playlist, resolvedTrackIndex, safeTimers]);
+    playPromise?.catch(() => {
+      if (playAttemptRef.current !== attempt) return;
+      desiredPlayingRef.current = false;
+      setIsPlaying(false);
+      persistPlayerState(true);
+    });
+  }, [persistPlayerState, playRequest, playlist, resolvedTrackIndex]);
 
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio) {
-      return;
-    }
-    const activeTrack = playlist[resolvedTrackIndex];
+    if (!audio) return;
 
     const updateProgress = () => {
       setCurrentTime(audio.currentTime);
+      persistPlayerState();
     };
-
     const setAudioData = () => {
       if (resumeTimeRef.current !== null) {
-        const clampedTime = audio.duration > 0
+        audio.currentTime = audio.duration > 0
           ? Math.min(resumeTimeRef.current, audio.duration)
           : resumeTimeRef.current;
-        audio.currentTime = clampedTime;
         resumeTimeRef.current = null;
       }
-
-      setDuration(audio.duration);
+      setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
       setCurrentTime(audio.currentTime);
-
-      if (!playbackIntentRef.current) {
-        return;
-      }
-
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          playbackIntentRef.current = false;
-          setIsPlaying(false);
-          persistPlayerState({ isPlaying: false, currentTime: audio.currentTime, trackId: activeTrack?.id });
-        });
-      }
     };
-
     const setAudioPlaying = () => {
-      playbackIntentRef.current = true;
+      desiredPlayingRef.current = true;
       setIsPlaying(true);
+      persistPlayerState(true);
     };
-
     const setAudioPaused = () => {
       setIsPlaying(false);
+      persistPlayerState(true);
     };
-
     const handleEnded = () => {
-      playbackIntentRef.current = true;
+      desiredPlayingRef.current = true;
       handleNext();
     };
 
@@ -261,7 +202,6 @@ export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
     audio.addEventListener('play', setAudioPlaying);
     audio.addEventListener('pause', setAudioPaused);
     audio.addEventListener('ended', handleEnded);
-
     return () => {
       audio.removeEventListener('timeupdate', updateProgress);
       audio.removeEventListener('loadedmetadata', setAudioData);
@@ -269,25 +209,17 @@ export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
       audio.removeEventListener('pause', setAudioPaused);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [handleNext, persistPlayerState, playlist, resolvedTrackIndex]);
+  }, [handleNext, persistPlayerState]);
 
   useEffect(() => {
-    persistPlayerState();
-  }, [currentTime, isPlaying, persistPlayerState, resolvedTrackIndex]);
+    persistPlayerState(true);
+  }, [isPlaying, persistPlayerState, resolvedTrackIndex]);
 
   useEffect(() => {
-    const handlePageHide = () => {
-      const audio = audioRef.current;
-      persistPlayerState({
-        currentTime: audio ? audio.currentTime : currentTime,
-        isPlaying: playbackIntentRef.current || !audio?.paused,
-        trackId: playlist[resolvedTrackIndex]?.id,
-      });
-    };
-
+    const handlePageHide = () => persistPlayerState(true);
     window.addEventListener('pagehide', handlePageHide);
     return () => window.removeEventListener('pagehide', handlePageHide);
-  }, [currentTime, persistPlayerState, playlist, resolvedTrackIndex]);
+  }, [persistPlayerState]);
 
   const currentTrack = playlist[resolvedTrackIndex] ?? null;
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
@@ -296,18 +228,13 @@ export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
   return {
     audioRef,
     currentTrack,
-    currentTrackIndex,
-    currentTime,
-    duration,
+    currentTrackIndex: resolvedTrackIndex,
+    handleAudioError,
     handleNext,
     handlePrev,
     isPlaying,
-    persistPlayerState,
-    playbackIntentRef,
     progressPercent,
-    resumeTimeRef,
     selectTrack,
-    setIsPlaying,
     shouldPreloadMetadata,
     syncPlayState,
   };

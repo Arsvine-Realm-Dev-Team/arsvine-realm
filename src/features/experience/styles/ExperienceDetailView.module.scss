@@ -1,25 +1,10 @@
+@use '../../../shared/styles/breakpoints';
 /* features/experience/styles/ExperienceDetailView.module.scss */
-/* Adapted from WorkDetailView.module.scss */
+@use '../../../shared/styles/feature-detail';
 
-.detailContainer {
-  width: 100%;
-  padding: 20px 0; 
-  position: relative; 
-}
-
-.detailTitle {
-  font-family: var(--font-hud); 
-  font-size: var(--fs-title); 
-  font-weight: bold;
-  color: var(--ark-primary);
-  margin-bottom: 20px; 
-  margin-top: 0; 
-  text-align: left;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--ark-border); 
-}
+@include feature-detail.container;
+@include feature-detail.title(20px);
+@include feature-detail.thumbnail-grid;
 
 .detailMeta {
   display: flex;
@@ -72,13 +57,6 @@
   letter-spacing: 1px;
 }
 
-.thumbnailGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  align-items: start;
-  gap: 15px;
-}
-
 .thumbnailButton {
   background: none;
   border: none;
@@ -106,7 +84,7 @@
   }
 }
 
-@media (max-width: 768px) {
+@include breakpoints.mobile {
   .detailParagraph {
     font-size: var(--fs-xl);
   }

@@ -1,3 +1,4 @@
+@use '../../styles/hud-contact-keyframes';
 @use 'styles/detail-standalone/shell';
 @use 'styles/detail-standalone/hero';
 @use 'styles/detail-standalone/story-gallery';
@@ -6,3 +7,5 @@
 @use 'styles/detail-standalone/inline-interactive';
 @use 'styles/detail-standalone/responsive';
 @use 'styles/detail-standalone/keyframes';
+
+@include inline-interactive.styles;

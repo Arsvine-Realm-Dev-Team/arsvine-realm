@@ -1,3 +1,4 @@
+@use '../../../../shared/styles/breakpoints';
 .footerInfo {
   font-family: var(--font-hud);
   font-size: var(--fs-caption);
@@ -77,12 +78,12 @@
   z-index: 2;
   transition: background-color 0.5s ease-in-out;
 
-  @media (min-width: 1024px) {
+  @include breakpoints.desktop {
     margin-left: calc(var(--content-offset) - 4vw);
     width: calc(var(--content-width) + 4vw);
   }
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     width: 100%;
     margin-left: 0;
     padding: 30px 20px 100px;
@@ -201,7 +202,7 @@
   transition: opacity 0.5s ease-in-out;
 }
 
-@media (max-width: 1023px) {
+@include breakpoints.tablet-down {
   .aboutNewImageWrapper {
     position: relative;
     top: auto;
@@ -211,7 +212,7 @@
   }
 }
 
-@media (max-width: 767px) {
+@include breakpoints.mobile {
   .contentSection.aboutSection {
     padding: 20px 16px 80px;
   }

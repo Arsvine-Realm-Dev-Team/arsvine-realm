@@ -29,35 +29,10 @@ vi.mock('next-mdx-remote/serialize', () => ({
 
 import handler from '@/features/blog/server/postVariantHandler';
 
-function createMockResponse() {
-  const headers = new Map<string, string | string[]>();
-  let statusCode = 200;
-  let body: unknown;
-
-  return {
-    res: {
-      setHeader(name: string, value: string | string[]) {
-        headers.set(name, value);
-      },
-      status(code: number) {
-        statusCode = code;
-        return this;
-      },
-      json(payload: unknown) {
-        body = payload;
-        return this;
-      },
-    },
-    get statusCode() {
-      return statusCode;
-    },
-    get body() {
-      return body;
-    },
-    getHeader(name: string) {
-      return headers.get(name);
-    },
-  };
+function createRequest(cookie?: string) {
+  return new Request('https://arsvine.com/api/post-variant?locale=zh-CN&slug=protected-post', {
+    headers: cookie ? { Cookie: cookie } : undefined,
+  });
 }
 
 describe('/api/post-variant', () => {
@@ -75,22 +50,18 @@ describe('/api/post-variant', () => {
     });
     hasValidAccessGrantMock.mockReturnValue(false);
 
-    const mock = createMockResponse();
-    await handler({
-      method: 'GET',
-      query: { locale: 'zh-CN', slug: 'protected-post' },
-      cookies: {},
-    } as never, mock.res as never);
+    const response = await handler(createRequest());
+    const body = await response.json();
 
-    expect(mock.statusCode).toBe(403);
-    expect(mock.body).toEqual({
+    expect(response.status).toBe(403);
+    expect(body).toEqual({
       ok: false,
       error: { code: 'FORBIDDEN', message: 'Access grant required.' },
     });
     expect(getPostBySlugAndContentLocaleMock).not.toHaveBeenCalled();
     expect(serializeMock).not.toHaveBeenCalled();
-    expect(mock.getHeader('Cache-Control')).toBe('private, no-store');
-    expect(mock.getHeader('Vary')).toBe('Cookie');
+    expect(response.headers.get('Cache-Control')).toBe('private, no-store');
+    expect(response.headers.get('Vary')).toBe('Cookie');
   });
 
   it('allows protected content only after a valid access grant', async () => {
@@ -117,14 +88,9 @@ describe('/api/post-variant', () => {
       scope: {},
     });
 
-    const mock = createMockResponse();
-    await handler({
-      method: 'GET',
-      query: { locale: 'zh-CN', slug: 'protected-post' },
-      cookies: { arsvine_post_access: 'signed-token' },
-    } as never, mock.res as never);
+    const response = await handler(createRequest('arsvine_post_access=signed-token'));
 
-    expect(mock.statusCode).toBe(200);
+    expect(response.status).toBe(200);
     expect(getPostBySlugAndContentLocaleMock).toHaveBeenCalledWith(
       'protected-post',
       'zh-CN',

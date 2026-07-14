@@ -139,7 +139,7 @@
     border-radius: 50%;
     background: conic-gradient(
       from 0deg,
-      rgba(178, 242, 187, 0.5) 0deg 15deg,
+      rgba(var(--ark-highlight-green-rgb), 0.5) 0deg 15deg,
       transparent 15.1deg 360deg
     );
     border: none;
@@ -283,7 +283,7 @@
   font-family: var(--font-mono);
   font-size: var(--fs-base);
   letter-spacing: 0.5px;
-  text-shadow: 0 0 3px rgba(178, 242, 187, 0.5);
+  text-shadow: 0 0 3px rgba(var(--ark-highlight-green-rgb), 0.5);
   opacity: 0;
   transform: translateX(0);
   clip-path: inset(0 100% 0 0);
@@ -351,8 +351,8 @@
     to bottom,
     transparent,
     transparent 2px,
-    rgba(178, 242, 187, 0.2) 2px,
-    rgba(178, 242, 187, 0.2) 3px
+    rgba(var(--ark-highlight-green-rgb), 0.2) 2px,
+    rgba(var(--ark-highlight-green-rgb), 0.2) 3px
   );
   background-size: 100% 6px;
   filter: blur(0.3px);
@@ -432,7 +432,7 @@
   font-family: var(--font-mono);
   font-size: var(--fs-base);
   letter-spacing: 0.5px;
-  text-shadow: 0 0 3px rgba(178, 242, 187, 0.5);
+  text-shadow: 0 0 3px rgba(var(--ark-highlight-green-rgb), 0.5);
   opacity: 0;
   white-space: pre-wrap;
   margin-top: 5px;

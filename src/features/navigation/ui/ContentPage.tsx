@@ -20,10 +20,12 @@ import LifeDetailView from '../../life/ui/LifeDetailView';
 import { buildBlogPostHref } from '../../blog/model/blogClient';
 import { resolveImageUrl } from '@/shared/lib/cdn';
 import { setHudTypingOverlaySuppressed } from '@/shared/lib/hud-typing-visibility';
+import { markCursorTargetsDirty } from '@/shared/lib/cursor-targets';
 import { siteConfig } from '@/shared/config/site';
 import type { Locale } from '@/shared/contracts/locale';
 import type { BlogPostMeta, Project, LifeItem, ExperienceItem, SkillCategory } from '../../../shared/types';
 import { useNavigationRuntime } from '../model/NavigationRuntime';
+import { CONTENT_DETAIL_EXIT_DELAY_MS } from '@/shared/lib/ui-timings';
 
 type DetailMode =
   | { type: 'none' }
@@ -95,13 +97,19 @@ export default function ContentPage({
   const [detail, setDetail] = useState<DetailMode>({ type: 'none' });
   const [isClosing, setIsClosing] = useState(false);
   const isClosingRef = useRef(false);
+  const detailCloseTimeoutRef = useRef<number | null>(null);
   const detailRef = useRef<HTMLDivElement>(null);
   const scrollPositionRef = useRef(0);
 
   const isDetailMounted = detail.type !== 'none';
 
   useEffect(() => {
-    return () => { setBackOverride(null); };
+    return () => {
+      setBackOverride(null);
+      if (detailCloseTimeoutRef.current !== null) {
+        window.clearTimeout(detailCloseTimeoutRef.current);
+      }
+    };
   }, [setBackOverride]);
 
   useEffect(() => {
@@ -128,7 +136,11 @@ export default function ContentPage({
         return;
       }
       prefetched.add(url);
-      void prefetch(url);
+      void prefetch(url).catch((error) => {
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[content] prefetch failed:', url, error);
+        }
+      });
     };
 
     immediateUrls.forEach(prefetchUrl);
@@ -145,7 +157,7 @@ export default function ContentPage({
       cancelled = true;
       window.clearTimeout(scheduleIdle);
     };
-  }, [prefetch, blogPosts, gameData, travelData, otherData, gameProjects, webProjects, locale]);
+  }, [prefetch, blogPosts, gameData, travelData, otherData, webProjects, locale]);
 
   useEffect(() => {
     if (isClosing && scrollContainerRef.current) {
@@ -154,7 +166,7 @@ export default function ContentPage({
   }, [isClosing]);
 
   useEffect(() => {
-    window.dispatchEvent(new Event('arsvine:cursor-targets-dirty'));
+    markCursorTargetsDirty();
   }, [detail.type, isClosing]);
 
   useEffect(() => {
@@ -166,6 +178,12 @@ export default function ContentPage({
   }, [isClosing, isDetailMounted]);
 
   const openDetail = useCallback((mode: DetailMode) => {
+    if (detailCloseTimeoutRef.current !== null) {
+      window.clearTimeout(detailCloseTimeoutRef.current);
+      detailCloseTimeoutRef.current = null;
+    }
+    isClosingRef.current = false;
+    setIsClosing(false);
     if (scrollContainerRef.current) {
       scrollPositionRef.current = scrollContainerRef.current.scrollTop;
     }
@@ -227,6 +245,12 @@ export default function ContentPage({
     isClosingRef.current = true;
     setIsClosing(true);
     setBackOverride(null);
+    detailCloseTimeoutRef.current = window.setTimeout(() => {
+      setDetail({ type: 'none' });
+      setIsClosing(false);
+      isClosingRef.current = false;
+      detailCloseTimeoutRef.current = null;
+    }, CONTENT_DETAIL_EXIT_DELAY_MS);
   }, [setBackOverride]);
 
   useEffect(() => {
@@ -238,6 +262,10 @@ export default function ContentPage({
   const handleDetailAnimEnd = useCallback((e: React.AnimationEvent) => {
     if (e.target !== detailRef.current) return;
     if (isClosingRef.current) {
+      if (detailCloseTimeoutRef.current !== null) {
+        window.clearTimeout(detailCloseTimeoutRef.current);
+        detailCloseTimeoutRef.current = null;
+      }
       setDetail({ type: 'none' });
       setIsClosing(false);
       isClosingRef.current = false;

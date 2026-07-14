@@ -223,7 +223,7 @@
 
   .batteryIcon {
     border-color: var(--ark-highlight-green);
-    box-shadow: 0 0 6px rgba(178, 242, 187, 0.45), inset 0 0 4px rgba(178, 242, 187, 0.2);
+    box-shadow: 0 0 6px rgba(var(--ark-highlight-green-rgb), 0.45), inset 0 0 4px rgba(var(--ark-highlight-green-rgb), 0.2);
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 
     &::after {
@@ -234,7 +234,7 @@
 
   .batteryLevelSegment {
     // 未填充段也微微亮起来，暗示充电通路就绪
-    background-color: rgba(178, 242, 187, 0.25);
+    background-color: rgba(var(--ark-highlight-green-rgb), 0.25);
   }
 }
 
@@ -242,12 +242,12 @@
 
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(178, 242, 187, 0.7);
+    box-shadow: 0 0 0 0 rgba(var(--ark-highlight-green-rgb), 0.7);
     transform: translateY(-50%) scaleX(1);
   }
 
   50% {
-    box-shadow: 0 0 6px 2px rgba(178, 242, 187, 0);
+    box-shadow: 0 0 6px 2px rgba(var(--ark-highlight-green-rgb), 0);
     transform: translateY(-50%) scaleX(1.4);
   }
 }

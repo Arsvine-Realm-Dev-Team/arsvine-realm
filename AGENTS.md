@@ -49,7 +49,7 @@ npx vitest run -t "name pattern"
 7. **Do not use `--font-display` for translated/user content.** `ZELDA Free` is Latin-only and breaks CJK/accented text.
 8. **Use `coscli` only with temporary environment-provided credentials.** Never persist COS keys in a CLI config or commit `cos-workspace/`.
 9. **Do not ship protected MDX in static props.** Protected posts must remain runtime-gated through the API and signed access cookie.
-10. **Preserve the protected-post reducer/effect race fixes.** See `docs/GOTCHAS.md` before touching `src/features/blog/model/useBlogPostState.ts` or `src/features/blog/model/blogPostState.ts`.
+10. **Preserve the protected-post XState actor cancellation fixes.** See `docs/GOTCHAS.md` before touching `src/features/blog/model/useBlogPostState.ts` or `src/features/blog/model/blogPostState.ts`.
 
 ## Where to edit common things
 

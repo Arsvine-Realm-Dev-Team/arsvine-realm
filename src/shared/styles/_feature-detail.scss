@@ -1,0 +1,31 @@
+@mixin container {
+  .detailContainer {
+    width: 100%;
+    padding: 20px 0;
+    position: relative;
+  }
+}
+
+@mixin title($margin-bottom: 30px) {
+  .detailTitle {
+    font-family: var(--font-hud);
+    font-size: var(--fs-title);
+    font-weight: bold;
+    color: var(--ark-primary);
+    margin: 0 0 $margin-bottom;
+    text-align: left;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--ark-border);
+  }
+}
+
+@mixin thumbnail-grid {
+  .thumbnailGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    align-items: start;
+    gap: 15px;
+  }
+}

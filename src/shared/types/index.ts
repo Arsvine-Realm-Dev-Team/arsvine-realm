@@ -3,6 +3,9 @@
 // ============================================================
 
 import type { Locale } from '@/shared/contracts/locale';
+import type { ContentPostAccess } from '@/shared/lib/content/types';
+
+export type { ContentAccessMode, ContentPostAccess } from '@/shared/lib/content/types';
 
 /**
  * 单条内容相对当前请求 locale 的翻译状态：
@@ -153,28 +156,6 @@ export interface SkillCategory {
 }
 
 // ============================================================
-// Music Player
-// ============================================================
-
-export interface MusicTrack {
-  id: string;
-  /** 歌曲标题 */
-  title: string;
-  /** 艺术家 */
-  artist: string;
-  /** COS / CDN objectKey。项目音频使用 realm/audio/... */
-  objectKey?: string;
-  /** 兼容旧测试与迁移期数据；新数据源应优先提供 objectKey。 */
-  src?: string;
-  /** 云端排序字段。 */
-  order?: number;
-  /** 展示日期。 */
-  date?: string;
-  /** 可选时长（秒）。 */
-  duration?: number;
-}
-
-// ============================================================
 // Site Configuration
 // ============================================================
 
@@ -240,107 +221,6 @@ export interface SitePages {
   };
   /** /copyright 页 title / description */
   copyright: { title: string; description: string };
-}
-
-export type ContentAccessMode = 'public' | 'totp';
-
-export interface ContentPostAccess {
-  mode: ContentAccessMode;
-  group?: string;
-}
-
-// ============================================================
-// Hook Return Types
-// ============================================================
-
-export type ColumnPhase = 'idle' | 'retracting' | 'expanding';
-
-export interface AnimationSequenceState {
-  isLoading: boolean;
-  mainVisible: boolean;
-  linesAnimated: boolean;
-  hudVisible: boolean;
-  leftPanelAnimated: boolean;
-  textVisible: boolean;
-  animationsComplete: boolean;
-  leversVisible: boolean;
-  pulsingNormalIndices: number[] | null;
-  pulsingReverseIndices: number[] | null;
-  handleLoadingComplete: () => void;
-  columnPhase: ColumnPhase;
-  retractColumns: (onComplete: () => void) => void;
-  expandColumns: (onComplete?: () => void) => void;
-}
-
-export interface PowerSystemState {
-  powerLevel: number;
-  isInverted: boolean;
-  isTesseractActivated: boolean;
-  isDischarging: boolean;
-  chargeBattery: () => void;
-  handleDischargeLeverPull: () => void;
-  handleActivateTesseract: () => void;
-  deactivateTesseract: () => void;
-}
-
-export interface RealtimeStatsState {
-  currentTime: string;
-  runtime: string;
-  currentVisitDuration: string;
-}
-
-export type PerformanceTier =
-  | 'full'
-  | 'logo-reduced'
-  | 'ambient-reduced'
-  | 'css-reduced'
-  | 'motion-reduced'
-  | 'webgl-reduced'
-  | 'minimal';
-export type PerformanceReason = 'reduced-motion' | 'save-data' | 'runtime-fps' | null;
-
-export interface AdaptivePerformanceState {
-  performanceTier: PerformanceTier;
-  performanceReason: PerformanceReason;
-  allowLogoEffects: boolean;
-  allowAmbientWebGL: boolean;
-  allowInteractiveWebGL: boolean;
-  allowHeavyCssEffects: boolean;
-  allowCustomCursor: boolean;
-  allowDecorativeMotion: boolean;
-}
-
-export interface FateTypingState {
-  displayedFateText: string;
-  isFateTypingActive: boolean;
-}
-
-export interface EnvData {
-  temp: number;
-  rad: number;
-  o2: number;
-  pollution: string;
-  acidRain: string;
-}
-
-export type EnvArtifactStage = 0 | 1 | 2 | 3 | 4;
-
-export interface EnvParamsTypingState {
-  displayedEnvParams: string;
-  isEnvParamsTyping: boolean;
-  envData: EnvData | null;
-  envDataVersion: number;
-  envArtifactStage: EnvArtifactStage;
-}
-
-export interface ColumnHoverState {
-  randomHudTexts: string[];
-  branchText1: string;
-  branchText2: string;
-  branchText3: string;
-  branchText4: string;
-  handleColumnMouseEnter: (index: number) => void;
-  handleColumnMouseLeave: (index: number) => void;
 }
 
 // ============================================================

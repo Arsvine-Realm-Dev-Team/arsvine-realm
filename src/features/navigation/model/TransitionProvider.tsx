@@ -13,6 +13,7 @@ import {
 import { AnimationRunController } from './animationRunController';
 import { useLayoutAnchors } from './LayoutAnchorsContext';
 import { useNavigationRuntime } from './NavigationRuntime';
+import { NAVIGATION_COMMIT_TIMEOUT_MS } from '@/shared/lib/ui-timings';
 
 interface TransitionContextValue {
   navigateTo: (url: string, options?: { scroll?: boolean }) => void;
@@ -77,11 +78,6 @@ const DIAG_COLLAPSE_OPTS: KeyframeAnimationOptions = {
   easing: 'ease-in',
   fill: 'forwards',
 };
-const checkMobile = () => {
-  // fallback for非 hook 上下文（handleLoadingComplete 等）—— 主流程已走 useResponsive。
-  return typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
-};
-
 export function TransitionProvider({ children }: TransitionProviderProps) {
   const { pathname, asPath, query, push } = useNavigationRuntime();
   const { retractColumns, expandColumns } = useHudAnimation();
@@ -112,20 +108,27 @@ export function TransitionProvider({ children }: TransitionProviderProps) {
     request: ContentHashNavigationRequest,
     onAligned: () => void,
   ) => {
-    void alignContentHash(request).then((result) => {
-      if (result !== 'cancelled') onAligned();
-    });
+    void alignContentHash(request)
+      .then((result) => {
+        if (result !== 'cancelled') onAligned();
+      })
+      .catch((error) => {
+        console.error('[navigation] content hash alignment failed:', error);
+        onAligned();
+      });
   }, [alignContentHash]);
 
   const navigateTo = useCallback((url: string, options?: { scroll?: boolean }) => {
-    const mobile = hookIsMobile || checkMobile();
+    const mobile = hookIsMobile;
     const transitionPlan = resolveNavigationTransitionPlan({
       sourcePathname: pathname,
       targetUrl: url,
       mobile,
     });
     if (transitionPlan === 'samePageHash') {
-      void push(url, { scroll: false, ...options });
+      void push(url, { scroll: false, ...options }).catch((error) => {
+        console.error('[navigation] same-page navigation failed:', error);
+      });
       return;
     }
 
@@ -136,7 +139,9 @@ export function TransitionProvider({ children }: TransitionProviderProps) {
     const wrapper = transitionSurfaceRef.current;
     if (!wrapper) {
       runControllerRef.current.cancel();
-      void push(url, { scroll: false, ...options });
+      void push(url, { scroll: false, ...options }).catch((error) => {
+        console.error('[navigation] navigation without transition surface failed:', error);
+      });
       return;
     }
 
@@ -168,34 +173,43 @@ export function TransitionProvider({ children }: TransitionProviderProps) {
           runControllerRef.current.cancel();
           processQueue();
         }
-      }, 10_000);
-      void push(target, { scroll: false, ...pushOpts }).catch(() => {
+      }, NAVIGATION_COMMIT_TIMEOUT_MS);
+      void push(target, { scroll: false, ...pushOpts }).catch((error) => {
+        console.error('[navigation] route push failed:', error);
+        wrapper.style.opacity = '';
+        wrapper.style.transform = '';
+        wrapper.style.clipPath = '';
         cleanup();
+        processQueue();
+      });
+    };
+
+    const runAnimation = (animation: Animation, onFinished: () => void) => {
+      runControllerRef.current.runAnimation(animation, onFinished, (error) => {
+        console.error('[navigation] transition animation failed:', error);
         processQueue();
       });
     };
 
     const wapiSlideIn = () => {
       const anim = wrapper.animate(SLIDE_IN_KF, SLIDE_IN_OPTS);
-      runControllerRef.current.setAnimation(anim);
-      anim.finished.then(() => {
+      runAnimation(anim, () => {
         wrapper.style.opacity = '';
         wrapper.style.transform = '';
         anim.cancel();
         processQueue();
-      }).catch(() => {});
+      });
     };
 
     const wapiDiagExpand = () => {
       wrapper.style.opacity = '';
       const anim = wrapper.animate(DIAG_EXPAND_KF, DIAG_EXPAND_OPTS);
-      runControllerRef.current.setAnimation(anim);
-      anim.finished.then(() => {
+      runAnimation(anim, () => {
         wrapper.style.clipPath = '';
         wrapper.style.transform = '';
         anim.cancel();
         processQueue();
-      }).catch(() => {});
+      });
     };
 
     if (transitionPlan === 'homeForwardMobile' || transitionPlan === 'homeForwardDesktop') {
@@ -203,8 +217,7 @@ export function TransitionProvider({ children }: TransitionProviderProps) {
         // Mobile forward: diagonal collapse home → push → diagonal expand content
         retractColumns(() => {});
         const anim = wrapper.animate(DIAG_COLLAPSE_KF, DIAG_COLLAPSE_OPTS);
-        runControllerRef.current.setAnimation(anim);
-        anim.finished.then(() => {
+        runAnimation(anim, () => {
           anim.cancel();
           wrapper.style.clipPath = 'inset(100%)';
           pushThen(url, () => {
@@ -215,7 +228,7 @@ export function TransitionProvider({ children }: TransitionProviderProps) {
 
             wapiDiagExpand();
           }, options);
-        }).catch(() => {});
+        });
       } else {
         // Desktop forward: retract columns → hide wrapper → push → slide in
         retractColumns(() => {
@@ -232,8 +245,7 @@ export function TransitionProvider({ children }: TransitionProviderProps) {
       }
     } else if (transitionPlan === 'crossPageHash') {
       const outAnim = wrapper.animate(SLIDE_OUT_KF, SLIDE_OUT_OPTS);
-      runControllerRef.current.setAnimation(outAnim);
-      outAnim.finished.then(() => {
+      runAnimation(outAnim, () => {
         outAnim.cancel();
         wrapper.style.opacity = '0';
         pushThen(url, () => {
@@ -244,25 +256,23 @@ export function TransitionProvider({ children }: TransitionProviderProps) {
 
           wapiSlideIn();
         }, options);
-      }).catch(() => {});
+      });
     } else if (transitionPlan === 'returnHomeMobile' || transitionPlan === 'returnHomeDesktop') {
       if (transitionPlan === 'returnHomeMobile') {
         // Mobile back: diagonal collapse content → push home → diagonal expand home
         const anim = wrapper.animate(DIAG_COLLAPSE_KF, DIAG_COLLAPSE_OPTS);
-        runControllerRef.current.setAnimation(anim);
-        anim.finished.then(() => {
+        runAnimation(anim, () => {
           anim.cancel();
           wrapper.style.clipPath = 'inset(100%)';
           pushThen(url, () => {
             expandColumns();
             wapiDiagExpand();
           });
-        }).catch(() => {});
+        });
       } else {
         // Desktop back: slide out → push home → expand columns
         const anim = wrapper.animate(SLIDE_OUT_KF, SLIDE_OUT_OPTS);
-        runControllerRef.current.setAnimation(anim);
-        anim.finished.then(() => {
+        runAnimation(anim, () => {
           anim.cancel();
           wrapper.style.opacity = '0';
           pushThen(url, () => {
@@ -271,7 +281,7 @@ export function TransitionProvider({ children }: TransitionProviderProps) {
               processQueue();
             });
           });
-        }).catch(() => {});
+        });
       }
     } else if (transitionPlan === 'blogDetailFade') {
       // Blog detail: push immediately so the URL changes first, then fade once the target is ready.
@@ -291,12 +301,11 @@ export function TransitionProvider({ children }: TransitionProviderProps) {
     } else {
       // Other: WAAPI slide out → push → WAAPI slide in
       const outAnim = wrapper.animate(SLIDE_OUT_KF, SLIDE_OUT_OPTS);
-      runControllerRef.current.setAnimation(outAnim);
-      outAnim.finished.then(() => {
+      runAnimation(outAnim, () => {
         outAnim.cancel();
         wrapper.style.opacity = '0';
         pushThen(url, wapiSlideIn, options);
-      }).catch(() => {});
+      });
     }
   }, [
     pathname,
@@ -341,9 +350,7 @@ export function TransitionProvider({ children }: TransitionProviderProps) {
       backOverrideRef.current();
       return;
     }
-    // 路由模板 /[locale] 即为 home
-    const isHome = pathname.split('/').filter(Boolean).length === 1;
-    if (!isHome) {
+    if (!isHomeUrl(pathname)) {
       // 用当前 query.locale 拼出 home 路径
       const queryLocale = query.locale;
       const locale = typeof queryLocale === 'string' ? queryLocale : 'zh-CN';

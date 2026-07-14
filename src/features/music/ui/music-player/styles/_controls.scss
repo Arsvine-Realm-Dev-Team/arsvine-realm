@@ -211,10 +211,5 @@
    }
 }
 
-// 扫描线动画 (复用自其他模块，例如 HomeLoadingScreen)
-@keyframes scanMove {
-  0%   { background-position: 0 0; }
-  100% { background-position: 0 100px; }
-}
 
 // ===== 响应式: 移动端播放器适配 =====

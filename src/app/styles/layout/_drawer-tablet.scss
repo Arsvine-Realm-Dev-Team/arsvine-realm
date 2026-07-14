@@ -1,11 +1,12 @@
+@use '../../../shared/styles/breakpoints';
 // ===== 响应式: 左面板抽屉模式 (<1024px) =====
-@media (max-width: 1023px) {
+@include breakpoints.tablet-down {
   .leftPanel {
     width: var(--left-panel-width);
     left: 0;
     transform: translateX(-100%);
     transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-    z-index: 1000;
+    z-index: var(--z-navigation-drawer);
     background-color: rgba(26, 26, 26, 0.97);
     pointer-events: auto;
     // 抽屉模式: 改为垂直流式布局
@@ -244,12 +245,12 @@
 .drawerBackdrop {
   display: none;
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     display: block;
     position: fixed;
     inset: 0;
     background-color: rgba(0, 0, 0, 0.6);
-    z-index: 999;
+    z-index: var(--z-drawer-backdrop);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
@@ -265,14 +266,14 @@
 .hamburgerButton {
   display: none;
 
-  @media (min-width: 768px) and (max-width: 1023px) {
+  @include breakpoints.tablet {
     display: flex;
     position: fixed;
     top: var(--spacing-hud);
     left: var(--spacing-hud);
     width: 44px;
     height: 44px;
-    z-index: 1001;
+    z-index: var(--z-navigation-drawer-content);
     background: rgba(26, 26, 26, 0.8);
     border: 1px solid var(--ark-border);
     color: var(--ark-primary);

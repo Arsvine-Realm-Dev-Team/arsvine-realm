@@ -1,5 +1,4 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import type { NextApiResponse } from 'next';
 
 const ACCESS_COOKIE_NAME = 'arsvine_post_access';
 const ACCESS_GRANT_TTL_MS = 60 * 60 * 1000;
@@ -71,11 +70,7 @@ export function getAccessGrantCookieName() {
   return ACCESS_COOKIE_NAME;
 }
 
-export function setAccessGrantCookie(
-  res: NextApiResponse,
-  group: string,
-  ttlMs = ACCESS_GRANT_TTL_MS,
-) {
+export function createAccessGrantCookie(group: string, ttlMs = ACCESS_GRANT_TTL_MS) {
   const value = createAccessGrant(group, ttlMs);
   const secure = process.env.NODE_ENV === 'production';
   const cookie = [
@@ -89,10 +84,10 @@ export function setAccessGrantCookie(
     .filter(Boolean)
     .join('; ');
 
-  res.setHeader('Set-Cookie', cookie);
+  return cookie;
 }
 
-export function clearAccessGrantCookie(res: NextApiResponse) {
+export function createClearedAccessGrantCookie() {
   const secure = process.env.NODE_ENV === 'production';
   const cookie = [
     `${ACCESS_COOKIE_NAME}=`,
@@ -105,7 +100,7 @@ export function clearAccessGrantCookie(res: NextApiResponse) {
     .filter(Boolean)
     .join('; ');
 
-  res.setHeader('Set-Cookie', cookie);
+  return cookie;
 }
 
 export function hasValidAccessGrant(

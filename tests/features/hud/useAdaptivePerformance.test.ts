@@ -1,4 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
+import { createElement, StrictMode, type ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import useAdaptivePerformance from '@/features/hud/model/useAdaptivePerformance';
@@ -130,6 +131,15 @@ afterEach(() => {
 });
 
 describe('useAdaptivePerformance', () => {
+  it('does not double-apply a poor sample window under StrictMode', () => {
+    const wrapper = ({ children }: { children: ReactNode }) => createElement(StrictMode, null, children);
+    const { result } = renderHook(() => useAdaptivePerformance(true), { wrapper });
+
+    flushPoorWindow();
+
+    expect(result.current.performanceTier).toBe('logo-reduced');
+  });
+
   it('reduces immediately for prefers-reduced-motion', () => {
     matchesByQuery.set('(prefers-reduced-motion: reduce)', true);
 

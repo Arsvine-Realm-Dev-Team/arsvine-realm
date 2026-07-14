@@ -1,6 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 
-import type { EnvParamsTypingState } from '@/shared/types';
+import type { EnvParamsTypingState } from '@/features/hud/contracts/state';
 import {
   EnvTelemetryController,
   ENV_DECAY_INTERVAL_MS,

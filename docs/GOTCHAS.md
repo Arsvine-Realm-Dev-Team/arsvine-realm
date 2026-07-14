@@ -82,20 +82,17 @@ Why:
 
 Target-based overlay selection breaks one of these flows.
 
-## 8. Protected-post auth probe must depend on auth state
+## 8. Protected-post async work belongs to invoked XState actors
 
-The auth-probe effect in `useBlogPostState.ts` must:
+`features/blog/model/blogPostState.ts` uses invoked XState actors for grant checks and variant loading. Keep those requests inside `authChecking` and `loadingVariant` rather than moving them into component effects.
 
-- short-circuit unless `state.authState === 'checking'`;
-- include `state.authState` in the dependency list.
+Why: leaving either state aborts its actor through the provided `AbortSignal`. `ARTICLE_CHANGED` and `SELECT_LOCALE` deliberately re-enter `resolving`, which cancels stale work before starting the request for the new article or locale.
 
-Without this, navigating between protected posts in the same `access.group` can leave dependencies referentially unchanged and the page stuck in auth checking.
+## 9. Protected-post article changes must fully replace machine context
 
-## 9. Protected-post `authResolved` must clear request state in both branches
+The `ARTICLE_CHANGED` transition must keep `reenter: true`, run `replaceArticle`, reset errors, derive a fresh `authState`, and restore `displayedContentLocale` from the new article.
 
-The reducer action in `features/blog/model/blogPostState.ts` must clear `activeRequestKey` and `loadingLocale` whether auth resolves to granted or required.
-
-If only the required branch clears request state, public → protected navigation can leave stale request keys behind. The next legitimate fetch may be deduped incorrectly and the page can hang.
+Do not add request-key deduplication refs around the machine. That recreates the stale-request race that actor cancellation now prevents. Preserve the regression tests for article reset, stale actor cancellation, forbidden variant fallback, and explicit `AUTH_GRANTED` continuation.
 
 ## 10. Protected body content must never be in static props
 

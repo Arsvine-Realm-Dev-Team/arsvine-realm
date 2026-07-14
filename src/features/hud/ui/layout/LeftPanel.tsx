@@ -6,7 +6,7 @@ import { useHudPerformance } from '../../model/HudProvider';
 import { useSiteAssets } from '../../../assets/model/SiteAssetsProvider';
 import ActivationLever from '../ActivationLever';
 import type { Locale } from '@/shared/contracts/locale';
-import type { EnvData } from '../../../../shared/types';
+import type { EnvData } from '@/shared/contracts/environment';
 import useLogoEffects from './useLogoEffects';
 
 interface DrawerNavLink {

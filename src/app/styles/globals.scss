@@ -1,3 +1,4 @@
+@use '../../shared/styles/breakpoints';
 // Google Fonts (Dosis + Noto Sans SC + Noto Serif SC) 通过根布局
 // 的 <link rel="stylesheet"> 加载，避免 @import 的串行阻塞。
 
@@ -51,6 +52,16 @@
   --transition-medium: 0.5s cubic-bezier(0.6, 0.05, 0.01, 0.9);
   --transition-fast: 0.3s cubic-bezier(0.6, 0.05, 0.01, 0.9);
 
+  // --- 全局叠层阶梯 ---
+  --z-drawer-backdrop: 999;
+  --z-loading-backdrop: 999;
+  --z-loading-screen: 1000;
+  --z-navigation-drawer: 1000;
+  --z-navigation-drawer-content: 1001;
+  --z-mobile-navigation: 1002;
+  --z-lightbox: 1200;
+  --z-custom-cursor: 1300;
+
   --ark-primary: rgba(200, 200, 200, 0.8);
   --ark-primary-rgb: 200, 200, 200;
   --ark-primary-glow: rgba(150, 150, 150, 0.5);
@@ -82,7 +93,7 @@
 }
 
 // 平板断点 (< 1024px): 左面板折叠为抽屉
-@media (max-width: 1023px) {
+@include breakpoints.tablet-down {
   :root {
     --left-panel-width: 280px;
     --content-offset: 0;
@@ -91,7 +102,7 @@
 }
 
 // 移动断点 (< 768px): 底部导航 + 全屏内容
-@media (max-width: 767px) {
+@include breakpoints.mobile {
   :root {
     --left-panel-width: 85vw;
     --content-offset: 0;
@@ -124,7 +135,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   cursor: none; /* 隐藏系统光标 */
   
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     cursor: auto; /* 平板/移动端恢复系统光标 */
   }
 }
@@ -143,7 +154,7 @@ a {
   color: inherit;
   text-decoration: none;
   cursor: none;
-  @media (max-width: 1023px) { cursor: auto; }
+  @include breakpoints.tablet-down { cursor: auto; }
 }
 
 h1, h2, h3, h4, h5 {
@@ -161,7 +172,7 @@ img {
 button {
   font-family: var(--font-hud);
   cursor: none;
-  @media (max-width: 1023px) { cursor: auto; }
+  @include breakpoints.tablet-down { cursor: auto; }
 }
 
 .section {
@@ -266,7 +277,7 @@ button {
 }
 
 /* 响应式断点 — 字号已由 :root --font-size-base clamp() 处理 */
-@media (max-width: 767px) {
+@include breakpoints.mobile {
   .section {
     padding: 3rem 0;
   }

@@ -1,5 +1,5 @@
-import { render, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { render } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createElement } from 'react';
 
 import { collectGsapTargets } from '@/features/hud/ui/loading/HomeLoadingScreen';
@@ -25,14 +25,22 @@ describe('collectGsapTargets', () => {
 });
 
 describe('HomeLoadingScreen session remount', () => {
-  it('notifies a remounted HUD when the document boot sequence is already complete', async () => {
+  afterEach(() => {
+    document.documentElement.removeAttribute('data-initial-boot-complete');
+  });
+
+  it('does not render or re-notify when the document boot sequence is complete', () => {
     completeInitialBootSequence();
     const onComplete = vi.fn();
-    const { rerender } = render(createElement(HomeLoadingScreen, { onComplete }));
+    const firstMount = render(createElement(HomeLoadingScreen, { onComplete }));
 
-    await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
+    expect(firstMount.container.childElementCount).toBe(0);
+    expect(onComplete).not.toHaveBeenCalled();
 
-    rerender(createElement(HomeLoadingScreen, { onComplete }));
-    expect(onComplete).toHaveBeenCalledTimes(1);
+    firstMount.unmount();
+    const secondMount = render(createElement(HomeLoadingScreen, { onComplete }));
+
+    expect(secondMount.container.childElementCount).toBe(0);
+    expect(onComplete).not.toHaveBeenCalled();
   });
 });

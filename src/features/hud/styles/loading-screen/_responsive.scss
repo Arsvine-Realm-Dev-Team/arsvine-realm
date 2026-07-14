@@ -1,5 +1,6 @@
+@use '../../../../shared/styles/breakpoints';
 // ===== Responsive: Tablet (<1024px) =====
-@media (max-width: 1023px) {
+@include breakpoints.tablet-down {
   .logo_area {
     width: min(700px, 95vw);
     /* Increased */
@@ -65,7 +66,7 @@
 }
 
 // ===== Responsive: Mobile (<768px) =====
-@media (max-width: 767px) {
+@include breakpoints.mobile {
   .logo_area {
     display: flex;
     justify-content: center;

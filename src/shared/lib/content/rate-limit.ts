@@ -23,6 +23,8 @@ type LimiterDecision = {
 };
 
 const buckets = new Map<string, Bucket>();
+const LOCAL_CLEANUP_INTERVAL_MS = 60_000;
+let nextLocalCleanupAt = 0;
 
 const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL?.trim();
 const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
@@ -42,6 +44,12 @@ export function isRateLimitPersistent(): boolean {
 
 function localEnforce(key: string, limit: number, windowMs: number): LimiterDecision {
   const now = Date.now();
+  if (now >= nextLocalCleanupAt) {
+    for (const [bucketKey, bucket] of buckets) {
+      if (bucket.resetAt <= now) buckets.delete(bucketKey);
+    }
+    nextLocalCleanupAt = now + LOCAL_CLEANUP_INTERVAL_MS;
+  }
   const current = buckets.get(key);
 
   if (!current || current.resetAt <= now) {

@@ -1,4 +1,4 @@
-// One-shot: fetch the current Google Fonts stylesheet (URL lives in data/site.ts),
+// One-shot: fetch the current Google Fonts stylesheet (URL lives in src/shared/config/site.ts),
 // download every woff2 referenced by the per-unicode-range @font-face blocks,
 // and rewrite the CSS so its url() entries point at the self-hosted COS copy.
 //
@@ -38,6 +38,7 @@ import { dirname, join } from 'node:path';
 import { spawn } from 'node:child_process';
 
 const STAGING_DIR = 'public/_fonts-staging';
+const SITE_CONFIG_PATH = 'src/shared/config/site.ts';
 const CDN_BASE = 'https://cdn.arsvine.com/shared/fonts';
 const MODERN_CHROME_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
@@ -73,14 +74,14 @@ function curlFetch(url, { binary = false } = {}) {
   });
 }
 
-// Read the Google Fonts URL straight from data/site.ts so the script can never
-// drift from the source of truth. data/site.ts is a TS file; we parse the URL
-// string out with a regex rather than spinning up a TS loader.
+// Read the Google Fonts URL straight from the site config so this script cannot
+// drift from the source of truth. The config is TypeScript, so parse the URL
+// string rather than introducing a TS loader into this dependency-free CLI.
 async function readGoogleFontsUrl() {
-  const src = await readFile('data/site.ts', 'utf-8');
+  const src = await readFile(SITE_CONFIG_PATH, 'utf-8');
   const match = src.match(/googleStylesheet:\s*\n?\s*['"]([^'"]+)['"]/);
   if (!match) {
-    throw new Error("Couldn't find googleStylesheet URL in data/site.ts");
+    throw new Error(`Couldn't find googleStylesheet URL in ${SITE_CONFIG_PATH}`);
   }
   return match[1];
 }
@@ -146,9 +147,17 @@ async function downloadFontFile(url, destPath) {
 }
 
 async function main() {
-  console.log('[fonts] Reading Google Fonts URL from data/site.ts...');
+  console.log(`[fonts] Reading Google Fonts URL from ${SITE_CONFIG_PATH}...`);
   const cssUrl = await readGoogleFontsUrl();
+  if (!cssUrl.startsWith('https://fonts.googleapis.com/')) {
+    throw new Error(`Unexpected Google Fonts stylesheet URL: ${cssUrl}`);
+  }
   console.log(`[fonts] Source: ${cssUrl}`);
+
+  if (process.argv.includes('--check-config')) {
+    console.log('[fonts] Config check passed.');
+    return;
+  }
 
   // Clean staging on each run — keeps the upload set minimal and avoids stale files
   // from previous weight choices being re-uploaded to COS.

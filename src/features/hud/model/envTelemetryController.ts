@@ -5,7 +5,9 @@ import {
   createTelemetrySnapshot,
   decayArtifactLoad,
 } from '@/shared/lib/env-telemetry-artifact';
-import type { EnvArtifactStage, EnvData, EnvParamsTypingState } from '@/shared/types';
+import type { EnvArtifactStage, EnvData } from '@/shared/contracts/environment';
+import type { EnvParamsTypingState } from '@/features/hud/contracts/state';
+import { hashStringFnv1a } from '@/shared/lib/hash';
 
 const ENV_INITIAL_BOOT_DELAY = 1000;
 const ENV_REFRESH_MIN_MS = 10000;
@@ -21,6 +23,7 @@ const ENV_OVERWRITE_BATCH_MIN = 2;
 const ENV_OVERWRITE_BATCH_MAX = 4;
 
 type ArtifactGainReason = Parameters<typeof advanceArtifactLoad>[1];
+type PendingWork = 'none' | 'pulse' | 'refresh';
 
 interface Scheduler {
   setTimeout: (callback: () => void, delay: number) => ReturnType<typeof setTimeout>;
@@ -55,12 +58,7 @@ function defaultDependencies(): EnvTelemetryControllerDependencies {
 }
 
 function hashDisplayedBuffer(value: string) {
-  let hash = 2166136261;
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-  return (hash >>> 0).toString(16);
+  return hashStringFnv1a(value).toString(16);
 }
 
 export class EnvTelemetryController {
@@ -75,15 +73,14 @@ export class EnvTelemetryController {
   private lastArtifactGainAt = 0;
   private lastHiddenAt: number | null = null;
   private lastScrollGainAt = 0;
-  private pendingRefresh = false;
-  private pendingPulse = false;
+  private pendingWork: PendingWork = 'none';
   private telemetryVariant = 0;
   private pulseCounter = 0;
   private currentTemp = 55;
   private currentTelemetrySnapshot: ReturnType<typeof createTelemetrySnapshot> | null = null;
   private bootTimer: ReturnType<typeof setTimeout> | undefined;
   private refreshTimer: ReturnType<typeof setTimeout> | undefined;
-  private overwriteTimer: ReturnType<typeof setTimeout> | undefined;
+  private animationTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(dependencies: Partial<EnvTelemetryControllerDependencies> = {}) {
     const defaults = defaultDependencies();
@@ -115,8 +112,7 @@ export class EnvTelemetryController {
     this.lastArtifactGainAt = 0;
     this.lastHiddenAt = null;
     this.lastScrollGainAt = 0;
-    this.pendingRefresh = false;
-    this.pendingPulse = false;
+    this.pendingWork = 'none';
     this.telemetryVariant = 0;
     this.pulseCounter = 0;
     this.currentTelemetrySnapshot = null;
@@ -206,8 +202,8 @@ export class EnvTelemetryController {
       this.ensureBooted();
       return;
     }
-    if (this.pendingRefresh || this.pendingPulse) {
-      this.runPulse(this.pendingRefresh);
+    if (this.pendingWork !== 'none') {
+      this.runPulse(this.pendingWork === 'refresh');
     } else if (!this.refreshTimer) {
       this.scheduleNextRefresh();
     }
@@ -217,10 +213,10 @@ export class EnvTelemetryController {
     const { scheduler } = this.dependencies;
     scheduler.clearTimeout(this.bootTimer);
     scheduler.clearTimeout(this.refreshTimer);
-    scheduler.clearTimeout(this.overwriteTimer);
+    scheduler.clearTimeout(this.animationTimer);
     this.bootTimer = undefined;
     this.refreshTimer = undefined;
-    this.overwriteTimer = undefined;
+    this.animationTimer = undefined;
   }
 
   private ensureBooted() {
@@ -228,7 +224,7 @@ export class EnvTelemetryController {
     this.bootTimer = this.dependencies.scheduler.setTimeout(() => {
       this.bootTimer = undefined;
       if (!this.canRender()) {
-        this.pendingPulse = true;
+        this.queueWork(false);
         return;
       }
       this.initialized = true;
@@ -257,7 +253,7 @@ export class EnvTelemetryController {
     this.dependencies.scheduler.clearTimeout(this.refreshTimer);
     this.refreshTimer = this.dependencies.scheduler.setTimeout(() => {
       this.refreshTimer = undefined;
-      this.pendingRefresh = true;
+      this.queueWork(true);
       if (this.canRender()) this.runPulse(true);
     }, delay);
   }
@@ -267,10 +263,16 @@ export class EnvTelemetryController {
     this.pushLoad(advanceArtifactLoad(this.artifactLoad, reason));
   }
 
+  private queueWork(refreshSnapshot: boolean) {
+    if (refreshSnapshot || this.pendingWork === 'none') {
+      this.pendingWork = refreshSnapshot ? 'refresh' : 'pulse';
+    }
+  }
+
   private pushLoad(nextLoad: number, shouldPulse = true) {
     this.artifactLoad = Math.max(0, Math.min(100, Math.round(nextLoad)));
     this.applyStage(computeArtifactStage(this.artifactLoad));
-    if (shouldPulse) this.pendingPulse = true;
+    if (shouldPulse) this.queueWork(false);
   }
 
   private applyStage(stage: EnvArtifactStage) {
@@ -300,8 +302,8 @@ export class EnvTelemetryController {
   }
 
   private finishPulse(finalText: string) {
-    this.overwriteTimer = undefined;
-    this.pendingPulse = false;
+    this.animationTimer = undefined;
+    this.pendingWork = 'none';
     this.patchSnapshot({ displayedEnvParams: finalText, isEnvParamsTyping: false });
   }
 
@@ -309,7 +311,7 @@ export class EnvTelemetryController {
     this.patchSnapshot({ displayedEnvParams: '', isEnvParamsTyping: true });
     const step = (index: number) => {
       if (!this.canRender()) {
-        this.pendingPulse = true;
+        this.queueWork(false);
         this.patchSnapshot({ isEnvParamsTyping: false });
         return;
       }
@@ -318,7 +320,7 @@ export class EnvTelemetryController {
         return;
       }
       this.patchSnapshot({ displayedEnvParams: this.snapshot.displayedEnvParams + target[index] });
-      this.overwriteTimer = this.dependencies.scheduler.setTimeout(() => step(index + 1), ENV_INITIAL_TYPE_DELAY_MS);
+      this.animationTimer = this.dependencies.scheduler.setTimeout(() => step(index + 1), ENV_INITIAL_TYPE_DELAY_MS);
     };
     step(0);
   }
@@ -343,7 +345,7 @@ export class EnvTelemetryController {
     this.patchSnapshot({ isEnvParamsTyping: true });
     const step = () => {
       if (!this.canRender()) {
-        this.pendingPulse = true;
+        this.queueWork(false);
         this.patchSnapshot({ isEnvParamsTyping: false });
         return;
       }
@@ -360,18 +362,18 @@ export class EnvTelemetryController {
         working[targetIndex] = targetChars[targetIndex];
       }
       this.patchSnapshot({ displayedEnvParams: working.join('') });
-      this.overwriteTimer = this.dependencies.scheduler.setTimeout(step, ENV_OVERWRITE_DELAY_MS);
+      this.animationTimer = this.dependencies.scheduler.setTimeout(step, ENV_OVERWRITE_DELAY_MS);
     };
     step();
   }
 
   private runPulse(refreshSnapshot: boolean) {
     if (!this.canRender()) {
-      this.pendingPulse = true;
+      this.queueWork(refreshSnapshot);
       return;
     }
-    this.dependencies.scheduler.clearTimeout(this.overwriteTimer);
-    this.overwriteTimer = undefined;
+    this.dependencies.scheduler.clearTimeout(this.animationTimer);
+    this.animationTimer = undefined;
     const envData = refreshSnapshot || !this.snapshot.envData
       ? this.createNextEnvData()
       : this.snapshot.envData;
@@ -388,7 +390,7 @@ export class EnvTelemetryController {
       seed: `${telemetry.id}:${stage}:${this.pulseCounter}:${hashDisplayedBuffer(this.snapshot.displayedEnvParams)}`,
       envData,
     });
-    this.pendingRefresh = false;
+    this.pendingWork = 'none';
     this.overwriteToTarget(target);
     this.scheduleNextRefresh();
   }

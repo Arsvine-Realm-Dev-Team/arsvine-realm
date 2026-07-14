@@ -3,6 +3,7 @@ import { startTransition, useEffect, useState } from 'react';
 import { useLayoutAnchors } from '@/features/navigation/model/LayoutAnchorsContext';
 import { classifyRoutePathname } from '@/features/navigation/model/contentHashNavigation';
 import { setHudTypingOverlaySuppressed, setHudTypingRouteEnabled } from '@/shared/lib/hud-typing-visibility';
+import { markCursorTargetsDirty } from '@/shared/lib/cursor-targets';
 
 export function useWebglReadyLatch(animationsComplete: boolean) {
   const [webglReady, setWebglReady] = useState(false);
@@ -27,11 +28,11 @@ export function useHudRouteVisibility(isStandalone: boolean) {
 
 export function useCursorTargetInvalidation(asPath: string, mainVisible: boolean) {
   useEffect(() => {
-    window.dispatchEvent(new Event('arsvine:cursor-targets-dirty'));
+    markCursorTargetsDirty();
   }, [asPath]);
 
   useEffect(() => {
-    if (mainVisible) window.dispatchEvent(new Event('arsvine:cursor-targets-dirty'));
+    if (mainVisible) markCursorTargetsDirty();
   }, [mainVisible]);
 }
 

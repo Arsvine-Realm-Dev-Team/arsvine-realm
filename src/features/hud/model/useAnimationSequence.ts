@@ -1,17 +1,23 @@
-import { useState, useEffect, useCallback } from 'react';
-import type { AnimationSequenceState, ColumnPhase } from '../../../shared/types';
+import { useState, useEffect, useCallback, useLayoutEffect } from 'react';
+import type { AnimationSequenceState, ColumnPhase } from '@/features/hud/contracts/state';
 import { useSafeTimeouts } from '../../../shared/hooks/useSafeTimeouts';
 import { useResponsive } from '@/shared/hooks/useMediaQuery';
+import {
+  completeInitialBootSequence,
+  isInitialBootSequencePending,
+} from './homeLoadingSession';
 
 export default function useAnimationSequence(): AnimationSequenceState {
-  const [isLoading, setIsLoading] = useState(true);
-  const [mainVisible, setMainVisible] = useState(false);
-  const [linesAnimated, setLinesAnimated] = useState(false);
-  const [hudVisible, setHudVisible] = useState(false);
-  const [leftPanelAnimated, setLeftPanelAnimated] = useState(false);
-  const [textVisible, setTextVisible] = useState(false);
-  const [animationsComplete, setAnimationsComplete] = useState(false);
-  const [leversVisible, setLeversVisible] = useState(false);
+  const [initialBootPending] = useState(isInitialBootSequencePending);
+  const initialSequenceComplete = !initialBootPending;
+  const [isLoading, setIsLoading] = useState(initialBootPending);
+  const [mainVisible, setMainVisible] = useState(initialSequenceComplete);
+  const [linesAnimated, setLinesAnimated] = useState(initialSequenceComplete);
+  const [hudVisible, setHudVisible] = useState(initialSequenceComplete);
+  const [leftPanelAnimated, setLeftPanelAnimated] = useState(initialSequenceComplete);
+  const [textVisible, setTextVisible] = useState(initialSequenceComplete);
+  const [animationsComplete, setAnimationsComplete] = useState(initialSequenceComplete);
+  const [leversVisible, setLeversVisible] = useState(initialSequenceComplete);
   const [columnPhase, setColumnPhase] = useState<ColumnPhase>('idle');
 
   // Vertical line pulse animation states
@@ -20,6 +26,12 @@ export default function useAnimationSequence(): AnimationSequenceState {
 
   const safeTimers = useSafeTimeouts();
   const { isMobile: hookIsMobile } = useResponsive();
+
+  useLayoutEffect(() => {
+    if (initialSequenceComplete) {
+      completeInitialBootSequence();
+    }
+  }, [initialSequenceComplete]);
 
   const handleLoadingComplete = () => {
     setIsLoading(false);

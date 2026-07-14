@@ -1,3 +1,4 @@
+@use '../../../../styles/breakpoints';
 /* ==================== HERO SECTION ==================== */
 
 .hero {
@@ -112,7 +113,7 @@
   min-height: 1.8em;
   margin-top: 1rem;
 
-  @media (max-width: 767px) {
+  @include breakpoints.mobile {
     letter-spacing: 0.08em;
   }
 }
@@ -138,7 +139,7 @@
   justify-content: flex-end;
   border-bottom: 1px solid var(--ark-border);
 
-  @media (max-width: 1023px) {
+  @include breakpoints.tablet-down {
     padding-left: clamp(20px, 5vw, 40px);
     padding-top: clamp(80px, 12vh, 120px);
   }

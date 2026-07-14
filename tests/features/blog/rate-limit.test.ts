@@ -60,6 +60,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
   process.env = { ...ORIGINAL_ENV };
 });
@@ -107,6 +108,20 @@ describe('enforceRateLimit — local Map path (Upstash 未配置)', () => {
     }
     expect((await enforceRateLimit(a, 5, 60_000)).ok).toBe(false);
     expect((await enforceRateLimit(b, 5, 60_000)).ok).toBe(true);
+  });
+
+  it('prunes expired local buckets during the periodic cleanup pass', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2030-01-01T00:00:00Z'));
+    const deleteSpy = vi.spyOn(Map.prototype, 'delete');
+    const { enforceRateLimit } = await import('@/shared/lib/content/rate-limit');
+    const expiredKey = `totp:expired:${Math.random()}`;
+
+    await enforceRateLimit(expiredKey, 5, 1_000);
+    vi.setSystemTime(new Date('2030-01-01T00:01:01Z'));
+    await enforceRateLimit(`totp:active:${Math.random()}`, 5, 60_000);
+
+    expect(deleteSpy).toHaveBeenCalledWith(expiredKey);
   });
 });
 

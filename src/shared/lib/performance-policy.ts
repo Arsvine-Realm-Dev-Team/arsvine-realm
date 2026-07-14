@@ -1,4 +1,4 @@
-import type { PerformanceReason, PerformanceTier } from '@/shared/types';
+import type { PerformanceReason, PerformanceTier } from '@/shared/contracts/performance';
 
 export interface InitialPerformanceSignals {
   reducedMotion: boolean;

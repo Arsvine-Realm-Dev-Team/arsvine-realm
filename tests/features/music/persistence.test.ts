@@ -15,7 +15,6 @@ describe('music player persistence', () => {
     ).toEqual({
       currentTrackIndex: 3,
       currentTime: 0,
-      isPlaying: true,
     });
   });
 
@@ -32,7 +31,19 @@ describe('music player persistence', () => {
     ).toEqual({
       currentTrackIndex: 1,
       currentTime: 12,
-      isPlaying: false,
+    });
+  });
+
+  it('accepts legacy isPlaying data without restoring autoplay intent', () => {
+    expect(parsePersistedPlayerState(JSON.stringify({
+      currentTrackIndex: 2,
+      currentTime: 8,
+      isPlaying: true,
+      trackId: 'legacy-track',
+    }), 4)).toEqual({
+      currentTrackIndex: 2,
+      currentTime: 8,
+      trackId: 'legacy-track',
     });
   });
 });
