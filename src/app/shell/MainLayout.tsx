@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, type ReactNode, type RefObject } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, type ReactNode, type RefObject } from 'react';
 import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
 
@@ -106,6 +106,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   const [forceHomeSection, setForceHomeSection] = useState(false);
   const [clientEffectsReady, setClientEffectsReady] = useState(false);
+  const [webglUnavailable, setWebglUnavailable] = useState(false);
   const { isHome, isContentPage, isStandalone, activeSection } = useLayoutRouteMode(
     pathname,
     forceHomeSection,
@@ -146,9 +147,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
     }
   }, [forceHomeSection, isHome]);
 
-  const allow3DTesseract = allowInteractiveWebGL && isDesktop;
+  const handleWebglContextLost = useCallback(() => {
+    setWebglUnavailable(true);
+  }, []);
 
-  // Latch: once WebGL is ready, never unmount it (avoids GPU context destruction during transitions)
+  const allow3DTesseract = allowInteractiveWebGL && isDesktop && !webglUnavailable;
+
+  // Keep WebGL mounted across transitions; only an actual context loss trips the page-level circuit breaker.
   const webglReady = useWebglReadyLatch(animationsComplete);
 
   useMobileTesseractCharge({
@@ -189,7 +194,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
         <div className={styles.leftDotMatrix}></div>
         {mainVisible && <MusicPlayer powerLevel={powerLevel} />}
         {clientEffectsReady && isDesktop && allowCustomCursor && <CustomCursor />}
-        {clientEffectsReady && webglReady && isDesktop && allowAmbientWebGL && <RainMorimeEffect />}
+        {clientEffectsReady && webglReady && isDesktop && allowAmbientWebGL && !webglUnavailable && (
+          <RainMorimeEffect onContextLost={handleWebglContextLost} />
+        )}
         <HomeLoadingScreen onComplete={handleLoadingComplete} />
         {clientEffectsReady && isTesseractActivated && allow3DTesseract && !effectiveStandalone && (
           <TesseractExperience
@@ -200,6 +207,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             powerDisplayRef={powerDisplayRef}
             batteryIconRef={batteryIconRef}
             scrollContainerRef={scrollContainerRef}
+            onContextLost={handleWebglContextLost}
           />
         )}
         <div className={styles.gridBackground}></div>

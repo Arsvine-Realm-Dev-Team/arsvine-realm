@@ -1,7 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { listenForWebglContextLoss } from '@/shared/lib/webgl-context-loss';
 
-const RainMorimeEffect = () => {
+interface RainMorimeEffectProps {
+  onContextLost: () => void;
+}
+
+const RainMorimeEffect = ({ onContextLost }: RainMorimeEffectProps) => {
   const mountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -104,17 +109,11 @@ const RainMorimeEffect = () => {
     document.addEventListener('visibilitychange', handleVisibility);
 
     const canvas = renderer.domElement;
-    const handleContextLost = (e: Event) => {
-      e.preventDefault();
+    const removeContextLossListener = listenForWebglContextLoss(canvas, () => {
       contextLost = true;
       cancelAnimationFrame(rafId);
-    };
-    const handleContextRestored = () => {
-      contextLost = false;
-      if (!paused) animate();
-    };
-    canvas.addEventListener('webglcontextlost', handleContextLost);
-    canvas.addEventListener('webglcontextrestored', handleContextRestored);
+      onContextLost();
+    });
 
     const handleResize = () => {
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -124,8 +123,7 @@ const RainMorimeEffect = () => {
     return () => {
       cancelAnimationFrame(rafId);
       document.removeEventListener('visibilitychange', handleVisibility);
-      canvas.removeEventListener('webglcontextlost', handleContextLost);
-      canvas.removeEventListener('webglcontextrestored', handleContextRestored);
+      removeContextLossListener();
       window.removeEventListener('resize', handleResize);
       if (currentMount && renderer.domElement && currentMount.contains(renderer.domElement)) {
         currentMount.removeChild(renderer.domElement);
@@ -135,7 +133,7 @@ const RainMorimeEffect = () => {
       material.dispose();
       renderer.dispose();
     };
-  }, []);
+  }, [onContextLost]);
 
   // 组件容器样式 (固定定位，覆盖全屏，位于内容之后)
   const style: React.CSSProperties = {

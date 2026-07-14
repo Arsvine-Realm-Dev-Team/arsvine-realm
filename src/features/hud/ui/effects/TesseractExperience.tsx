@@ -1,5 +1,5 @@
 import React, { Suspense, startTransition, useEffect, useMemo, useRef, useState } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Physics, usePlane } from '@react-three/cannon';
 import * as THREE from 'three';
 
@@ -11,6 +11,7 @@ import {
   resolveBatteryWorldPosition,
   type BatteryPosition3D,
 } from '@/shared/lib/tesseract-geometry';
+import { listenForWebglContextLoss } from '@/shared/lib/webgl-context-loss';
 
 function resolvePhysicsMesh(tesseractRef: React.RefObject<TesseractHandle | null>) {
   return tesseractRef.current?.meshRef.current ?? null;
@@ -31,6 +32,17 @@ function Plane(props: { position: [number, number, number] }) {
       <meshStandardMaterial color="#050a11" transparent opacity={0} />
     </mesh>
   );
+}
+
+function WebglContextLossListener({ onContextLost }: { onContextLost: () => void }) {
+  const gl = useThree((state) => state.gl);
+
+  useEffect(
+    () => listenForWebglContextLoss(gl.domElement, onContextLost),
+    [gl, onContextLost],
+  );
+
+  return null;
 }
 
 interface SceneLogicProps {
@@ -130,6 +142,7 @@ interface TesseractExperienceProps {
   powerDisplayRef: React.RefObject<HTMLDivElement | null>;
   batteryIconRef: React.RefObject<HTMLDivElement | null>;
   scrollContainerRef: React.RefObject<HTMLDivElement | null>;
+  onContextLost: () => void;
 }
 
 const TesseractExperience = ({
@@ -140,6 +153,7 @@ const TesseractExperience = ({
   powerDisplayRef,
   batteryIconRef,
   scrollContainerRef,
+  onContextLost,
 }: TesseractExperienceProps) => {
   const [batteryPosition3D, setBatteryPosition3D] = useState<BatteryPosition3D | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -246,6 +260,7 @@ const TesseractExperience = ({
           gl.setClearColor(new THREE.Color(0, 0, 0), 0);
         }}
       >
+        <WebglContextLossListener onContextLost={onContextLost} />
         <Suspense fallback={null}>
           <ambientLight intensity={0.4} />
           <directionalLight

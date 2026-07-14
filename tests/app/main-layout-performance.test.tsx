@@ -8,6 +8,8 @@ const layoutRouteModeMock = vi.fn();
 const useNotFoundPresenceMock = vi.fn();
 const recordMobileTesseractChargeCall = vi.fn();
 const recordLeftPanelProps = vi.fn();
+const recordTesseractProps = vi.fn();
+const recordRainProps = vi.fn();
 
 vi.mock('@/features/navigation/model/NavigationRuntime', () => ({
   useNavigationRuntime: () => ({
@@ -30,7 +32,9 @@ vi.mock('next/dynamic', () => {
       callCount += 1;
       const testIds = ['tesseract-experience', 'rain-effect', 'custom-cursor'];
       const testId = testIds[callCount - 1] ?? 'dynamic-stub';
-      return function DynamicStub() {
+      return function DynamicStub(props: Record<string, unknown>) {
+        if (testId === 'tesseract-experience') recordTesseractProps(props);
+        if (testId === 'rain-effect') recordRainProps(props);
         return <div data-testid={testId} />;
       };
     },
@@ -172,6 +176,8 @@ describe('MainLayout adaptive performance gates', () => {
     useNotFoundPresenceMock.mockReturnValue(false);
     recordMobileTesseractChargeCall.mockReset();
     recordLeftPanelProps.mockReset();
+    recordTesseractProps.mockReset();
+    recordRainProps.mockReset();
   });
 
   afterEach(() => {
@@ -218,6 +224,43 @@ describe('MainLayout adaptive performance gates', () => {
     expect(recordMobileTesseractChargeCall).toHaveBeenCalledWith(expect.objectContaining({
       shouldUseAutoChargeFallback: false,
     }));
+  });
+
+  it.each([
+    ['ambient', recordRainProps],
+    ['interactive', recordTesseractProps],
+  ])('disables all WebGL effects after an %s context loss', (_kind, recordProps) => {
+    const { rerender } = render(
+      <MainLayout appLocale="zh-CN">
+        <div>child</div>
+      </MainLayout>,
+    );
+
+    act(() => {
+      vi.runOnlyPendingTimers();
+    });
+
+    const props = recordProps.mock.lastCall?.[0] as { onContextLost: () => void };
+    act(() => {
+      props.onContextLost();
+    });
+
+    expect(screen.queryByTestId('rain-effect')).toBeNull();
+    expect(screen.queryByTestId('tesseract-experience')).toBeNull();
+    expect(screen.getByTestId('custom-cursor')).toBeTruthy();
+    expect(recordMobileTesseractChargeCall).toHaveBeenLastCalledWith(expect.objectContaining({
+      shouldUseAutoChargeFallback: true,
+      isTesseractActivated: true,
+    }));
+
+    rerender(
+      <MainLayout appLocale="zh-CN">
+        <div>updated child</div>
+      </MainLayout>,
+    );
+
+    expect(screen.queryByTestId('rain-effect')).toBeNull();
+    expect(screen.queryByTestId('tesseract-experience')).toBeNull();
   });
 
   it('restores the full shell when a standalone-shaped route renders not-found', () => {
