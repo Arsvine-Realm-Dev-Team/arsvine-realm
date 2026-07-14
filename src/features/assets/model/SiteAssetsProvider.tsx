@@ -29,9 +29,9 @@ export function getSiteAssetManifestUrl(base: string, version: string) {
   const url = new URL(`${base}/realm/site-catalog/versions/${version}/assets.json`);
 
   // EdgeOne can retain a pre-CORS response for an immutable manifest path.
-  // Keep every non-primary site origin in a separate cache namespace so a
-  // stale header variant cannot block beta or local development clients.
-  if (typeof window !== 'undefined' && window.location.origin !== 'https://arsvine.com') {
+  // Keep every site origin in a separate cache namespace so a stale header
+  // variant cannot block production, beta, or local development clients.
+  if (typeof window !== 'undefined') {
     url.searchParams.set('cors-origin', window.location.origin);
   }
 

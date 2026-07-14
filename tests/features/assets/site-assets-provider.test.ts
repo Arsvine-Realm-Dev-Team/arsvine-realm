@@ -13,11 +13,11 @@ describe('getSiteAssetManifestUrl', () => {
     vi.unstubAllGlobals();
   });
 
-  it('keeps the primary site manifest URL stable', () => {
+  it('partitions the manifest cache for the primary site origin', () => {
     stubOrigin('https://arsvine.com');
 
     expect(getSiteAssetManifestUrl(base, version)).toBe(
-      `${base}/realm/site-catalog/versions/${version}/assets.json`,
+      `${base}/realm/site-catalog/versions/${version}/assets.json?cors-origin=https%3A%2F%2Farsvine.com`,
     );
   });
 
@@ -34,6 +34,14 @@ describe('getSiteAssetManifestUrl', () => {
 
     expect(getSiteAssetManifestUrl(base, version)).toBe(
       `${base}/realm/site-catalog/versions/${version}/assets.json?cors-origin=http%3A%2F%2Fdev.arsvine.com`,
+    );
+  });
+
+  it('keeps the manifest URL stable outside the browser', () => {
+    vi.stubGlobal('window', undefined);
+
+    expect(getSiteAssetManifestUrl(base, version)).toBe(
+      `${base}/realm/site-catalog/versions/${version}/assets.json`,
     );
   });
 });
