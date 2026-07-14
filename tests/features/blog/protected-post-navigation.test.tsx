@@ -64,6 +64,10 @@ vi.mock('@/features/navigation/model/TransitionProvider', () => ({
   useTransition: () => ({ navigateTo }),
 }));
 
+vi.mock('@/features/navigation/model/useNavigationIntentPrefetch', () => ({
+  default: () => vi.fn(),
+}));
+
 vi.mock('@/shared/ui/HreflangLinks', () => ({
   default: () => null,
 }));

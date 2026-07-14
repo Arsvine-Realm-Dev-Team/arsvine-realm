@@ -33,11 +33,7 @@ import * as skillsZH from '@/features/profile/contracts/skills';
 import * as skillsEN from '@/features/profile/contracts/skills/en';
 import * as skillsZHTW from '@/features/profile/contracts/skills/zh-TW';
 import * as siteZH from '@/shared/config/site';
-import enMessages from '../locales/en.json';
-import zhCNMessages from '../locales/zh-CN.json';
-import zhTWMessages from '../locales/zh-TW.json';
-
-export type MessageSchema = typeof zhCNMessages;
+import { getMessages, type MessageSchema } from './client-messages';
 
 interface ProjectsModule {
   webProjects: Project[];
@@ -97,12 +93,6 @@ const skillModules: LocalizedModuleMap<SkillsModule> = {
   'zh-CN': skillsZH as SkillsModule,
   'zh-TW': skillsZHTW as SkillsModule,
   en: skillsEN as SkillsModule,
-};
-
-const messageModules: LocalizedModuleMap<MessageSchema> = {
-  'zh-CN': zhCNMessages,
-  'zh-TW': zhTWMessages,
-  en: enMessages,
 };
 
 function loadLocalizedModule<T>(registry: LocalizedModuleMap<T>, locale: Locale): T {
@@ -232,5 +222,5 @@ export function loadServices(): { heading: string; items: ServiceCredit[] } | un
 
 /** 加载 locale 对应的 messages（locales/<locale>.json） */
 export async function loadMessages(locale: Locale): Promise<MessageSchema> {
-  return loadLocalizedModule(messageModules, locale);
+  return getMessages(locale);
 }

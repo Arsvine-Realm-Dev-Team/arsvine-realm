@@ -3,12 +3,14 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useHudPower } from '../../../../features/hud/model/HudProvider';
 import { useTransition } from '../../../navigation/model/TransitionProvider';
+import useNavigationIntentPrefetch from '../../../navigation/model/useNavigationIntentPrefetch';
 import { buildBlogIndexHref, buildBlogPostHref } from '../../model/blogClient';
 import type { BlogContentLocale } from '../../server/blog';
 import { type Locale } from '@/shared/contracts/locale';
 import type { BlogPostMeta } from '../../../../shared/types';
 import styles from '../../styles/BlogDetailView.module.scss';
 import hudStyles from '../../../../app/styles/Shell.module.scss';
+import { useLocalePageStateStore } from '@/features/navigation/model/LocalePageState';
 
 type BlogDetailSectionId = 'header' | 'content' | 'end';
 
@@ -35,8 +37,10 @@ export default function BlogDetailScaffold({
 }: BlogDetailScaffoldProps) {
   const { isInverted } = useHudPower();
   const { navigateTo } = useTransition();
+  const prefetchOnIntent = useNavigationIntentPrefetch();
   const tCommon = useTranslations('common');
   const tNav = useTranslations('nav');
+  const pageStateStore = useLocalePageStateStore();
 
   const currentIndex = allPosts.findIndex((post) => post.slug === meta.slug);
   const prevPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
@@ -50,6 +54,7 @@ export default function BlogDetailScaffold({
     : contentIndexHref;
 
   const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const restoreScrollFrameRef = useRef<number | null>(null);
   const sectionRefs = useRef<Record<BlogDetailSectionId, HTMLElement | null>>({
     header: null,
     content: null,
@@ -64,7 +69,24 @@ export default function BlogDetailScaffold({
     if (scrollRootRef) {
       scrollRootRef.current = node;
     }
-  }, [scrollRootRef]);
+    if (!node) return;
+
+    const savedScrollTop = pageStateStore.read<number>('blog.scroll-top') ?? 0;
+    restoreScrollFrameRef.current = window.requestAnimationFrame(() => {
+      node.scrollTop = Math.min(savedScrollTop, Math.max(0, node.scrollHeight - node.clientHeight));
+      restoreScrollFrameRef.current = null;
+    });
+  }, [pageStateStore, scrollRootRef]);
+
+  const handleScroll = useCallback(() => {
+    pageStateStore.write('blog.scroll-top', wrapperRef.current?.scrollTop ?? 0);
+  }, [pageStateStore]);
+
+  useEffect(() => () => {
+    if (restoreScrollFrameRef.current !== null) {
+      window.cancelAnimationFrame(restoreScrollFrameRef.current);
+    }
+  }, []);
 
   const setSectionRef = useCallback((id: BlogDetailSectionId) => (node: HTMLElement | null) => {
     sectionRefs.current[id] = node;
@@ -134,7 +156,11 @@ export default function BlogDetailScaffold({
   }, []);
 
   return (
-    <div ref={setWrapperRef} className={`${styles.pageWrapper} ${isInverted ? hudStyles.inverted : ''}`}>
+    <div
+      ref={setWrapperRef}
+      className={`${styles.pageWrapper} ${isInverted ? hudStyles.inverted : ''}`}
+      onScroll={handleScroll}
+    >
       <div className={styles.mainContent}>
         <header
           className={`${styles.headerSection} ${headerEntered ? styles.entered : ''}`}
@@ -164,8 +190,18 @@ export default function BlogDetailScaffold({
             {prevPost ? (
               <Link
                 href={prevPostHref}
-                prefetch={prevPost.access.mode === 'public'}
+                prefetch={false}
                 className={`${styles.footerNavButton} ${styles.footerNavPrev}`}
+                onPointerDown={(event) => {
+                  if (event.button === 0 && prevPost.access.mode === 'public') {
+                    prefetchOnIntent(prevPostHref);
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && prevPost.access.mode === 'public') {
+                    prefetchOnIntent(prevPostHref);
+                  }
+                }}
                 onClick={(event) => {
                   event.preventDefault();
                   navigateTo(prevPostHref);
@@ -180,6 +216,12 @@ export default function BlogDetailScaffold({
                 href={contentIndexHref}
                 prefetch={false}
                 className={`${styles.footerNavButton} ${styles.footerNavPrev}`}
+                onPointerDown={(event) => {
+                  if (event.button === 0) prefetchOnIntent(contentIndexHref);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') prefetchOnIntent(contentIndexHref);
+                }}
                 onClick={handleBack}
                 data-cursor-label="BACK"
               >
@@ -191,8 +233,18 @@ export default function BlogDetailScaffold({
             {nextPost ? (
               <Link
                 href={nextPostHref}
-                prefetch={nextPost.access.mode === 'public'}
+                prefetch={false}
                 className={`${styles.footerNavButton} ${styles.footerNavNext}`}
+                onPointerDown={(event) => {
+                  if (event.button === 0 && nextPost.access.mode === 'public') {
+                    prefetchOnIntent(nextPostHref);
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && nextPost.access.mode === 'public') {
+                    prefetchOnIntent(nextPostHref);
+                  }
+                }}
                 onClick={(event) => {
                   event.preventDefault();
                   navigateTo(nextPostHref);
@@ -207,6 +259,12 @@ export default function BlogDetailScaffold({
                 href={contentIndexHref}
                 prefetch={false}
                 className={`${styles.footerNavButton} ${styles.footerNavNext}`}
+                onPointerDown={(event) => {
+                  if (event.button === 0) prefetchOnIntent(contentIndexHref);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') prefetchOnIntent(contentIndexHref);
+                }}
                 onClick={handleBack}
                 data-cursor-label="BACK"
               >

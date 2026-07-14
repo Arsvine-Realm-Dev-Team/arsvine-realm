@@ -6,6 +6,7 @@ interface DetailFooterNavItem {
   title: string;
   cursorLabel: string;
   onClick: MouseEventHandler<HTMLAnchorElement>;
+  onNavigateIntent?: () => void;
 }
 
 interface DetailFooterNavProps {
@@ -28,8 +29,15 @@ export default function DetailFooterNav({
     <footer className={styles.footer}>
       <Link
         href={previousItem.href}
+        prefetch={false}
         className={`${styles.footerNavButton} ${styles.footerNavPrev}`}
         onClick={previousItem.onClick}
+        onPointerDown={(event) => {
+          if (event.button === 0) previousItem.onNavigateIntent?.();
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') previousItem.onNavigateIntent?.();
+        }}
         data-cursor-label={previousItem.cursorLabel}
       >
         <span className={styles.footerNavArrow}>←</span>
@@ -38,8 +46,15 @@ export default function DetailFooterNav({
 
       <Link
         href={nextItem.href}
+        prefetch={false}
         className={`${styles.footerNavButton} ${styles.footerNavNext}`}
         onClick={nextItem.onClick}
+        onPointerDown={(event) => {
+          if (event.button === 0) nextItem.onNavigateIntent?.();
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') nextItem.onNavigateIntent?.();
+        }}
         data-cursor-label={nextItem.cursorLabel}
       >
         <span className={styles.footerNavTitle}>{nextItem.title}</span>

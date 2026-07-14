@@ -1,6 +1,7 @@
 import { startTransition, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useHudPower } from '../../hud/model/HudProvider';
+import { useLocaleStableState } from '@/features/navigation/model/LocalePageState';
 import type { Locale } from '@/shared/contracts/locale';
 import {
   getTweetPlainText,
@@ -161,7 +162,10 @@ interface TweetCardProps {
 function TweetCard({ tweet, locale, contentStyle }: TweetCardProps) {
   const t = useTranslations('pages.tweets');
   const resolved = resolveTweetContent(tweet, locale);
-  const [showingOriginal, setShowingOriginal] = useState(false);
+  const [showingOriginal, setShowingOriginal] = useLocaleStableState(
+    `tweets.${tweet.id}.showing-original`,
+    false,
+  );
 
   const canSwitch = resolved.isAutoTranslated;
   const targetText = canSwitch && showingOriginal ? tweet.content : resolved.displayContent;
@@ -260,7 +264,7 @@ export default function TweetsSection({
   const t = useTranslations('pages.tweets');
   const tCommon = useTranslations('common');
   const { isInverted } = useHudPower();
-  const [loadedGroups, setLoadedGroups] = useState(monthGroups);
+  const [loadedGroups, setLoadedGroups] = useLocaleStableState('tweets.loaded-groups', monthGroups);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState('');
 

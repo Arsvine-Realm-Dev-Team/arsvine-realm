@@ -25,7 +25,7 @@ This README is only the entry point. Detailed maintenance information is split b
 | [`docs/PERFORMANCE.md`](./docs/PERFORMANCE.md) | Adaptive performance tiers, capability gates, sampling, and recovery. |
 | [`docs/ASSETS.md`](./docs/ASSETS.md) | Public/COS boundaries, catalogs, COSCLI publishing, validation, and rollback. |
 | [`docs/GOTCHAS.md`](./docs/GOTCHAS.md) | Historical bugs and fragile conventions that should not be reintroduced. |
-| [`CLAUDE.md`](./CLAUDE.md) | Short instruction index for coding agents. It should stay concise and point to the documents above. |
+| [`AGENTS.md`](./AGENTS.md) | Short instruction index for coding agents. It should stay concise and point to the documents above. |
 
 ## Quick start
 

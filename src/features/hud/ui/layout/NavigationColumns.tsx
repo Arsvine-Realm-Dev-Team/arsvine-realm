@@ -24,6 +24,7 @@ interface NavigationColumnsProps {
   branchText3: string;
   branchText4: string;
   handleColumnClick: (index: number) => void;
+  handleColumnNavigateIntent?: (index: number) => void;
   handleColumnMouseEnter: (index: number) => void;
   handleColumnMouseLeave: (index: number) => void;
 }
@@ -43,6 +44,7 @@ export default function NavigationColumns({
   branchText3,
   branchText4,
   handleColumnClick,
+  handleColumnNavigateIntent,
   handleColumnMouseEnter,
   handleColumnMouseLeave,
 }: NavigationColumnsProps) {
@@ -186,6 +188,9 @@ export default function NavigationColumns({
               key={name}
               className={`${styles.column} ${styles['column' + index]} ${!animationsComplete ? styles.nonInteractive : ''}`}
               onClick={animationsComplete ? () => handleColumnClick(index) : undefined}
+              onPointerDown={animationsComplete ? (event) => {
+                if (event.button === 0) handleColumnNavigateIntent?.(index);
+              } : undefined}
               onMouseEnter={() => handleColumnMouseEnter(index)}
               onMouseLeave={() => handleColumnMouseLeave(index)}
             >

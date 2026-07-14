@@ -81,6 +81,7 @@
   position: relative;
   z-index: 3;
   --logo-base-opacity: 0.8;
+  --logo-base-color: #888888;
 }
 
 .logoReveal {
@@ -139,7 +140,9 @@
   inset: 0;
   display: block;
   z-index: 1;
-  background: url('/avatar_transparent.webp') center / contain no-repeat;
+  background-color: var(--logo-base-color);
+  -webkit-mask: url('/avatar_transparent.webp') center / contain no-repeat;
+  mask: url('/avatar_transparent.webp') center / contain no-repeat;
   opacity: var(--logo-base-opacity);
 }
 

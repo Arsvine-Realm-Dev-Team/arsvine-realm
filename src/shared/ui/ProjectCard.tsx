@@ -21,10 +21,16 @@ interface ProjectCardItem {
 interface ProjectCardProps<T extends ProjectCardItem> {
   project: T;
   onClick?: (project: T, event: MouseEvent<HTMLElement>) => void;
+  onNavigateIntent?: (project: T) => void;
   isInverted: boolean;
 }
 
-function ProjectCard<T extends ProjectCardItem>({ project, onClick, isInverted }: ProjectCardProps<T>) {
+function ProjectCard<T extends ProjectCardItem>({
+  project,
+  onClick,
+  onNavigateIntent,
+  isInverted,
+}: ProjectCardProps<T>) {
   const { title, description, tech, link, imageUrl, invertedImageUrl, role, year, isConfidential, liveUrl } = project;
 
   const resolvedImageUrl = isInverted && invertedImageUrl ? invertedImageUrl : imageUrl;
@@ -48,8 +54,12 @@ function ProjectCard<T extends ProjectCardItem>({ project, onClick, isInverted }
       role={isClickable ? "button" : undefined}
       tabIndex={isClickable ? 0 : undefined}
       data-cursor-no-magnetic
+      onPointerDown={isClickable && onNavigateIntent ? (event) => {
+        if (event.button === 0) onNavigateIntent(project);
+      } : undefined}
       onKeyDown={isClickable ? (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
+          onNavigateIntent?.(project);
           handleCardClick(e);
         }
       } : undefined}

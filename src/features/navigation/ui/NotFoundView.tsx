@@ -7,8 +7,10 @@ import { useTransition } from '../model/TransitionProvider';
 import { resolveLocale } from '@/shared/contracts/locale';
 import styles from '../styles/NotFoundPage.module.scss';
 import { useNavigationRuntime } from '../model/NavigationRuntime';
+import { useRegisterNotFoundPresence } from '../model/notFoundPresence';
 
 export default function NotFoundView() {
+  useRegisterNotFoundPresence();
   const { asPath, query } = useNavigationRuntime();
   const { navigateTo } = useTransition();
   const locale = resolveLocale(query.locale, asPath);

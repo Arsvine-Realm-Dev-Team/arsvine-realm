@@ -80,16 +80,18 @@ export function useMusicPlayerState({ playlist }: UseMusicPlayerStateOptions) {
 
     const snapshot = stateRef.current;
     const audio = audioRef.current;
+    const hasLoadedSource = Boolean(audio?.currentSrc || audio?.getAttribute('src'));
+    if (!playlist.length && !hasLoadedSource) return;
     const nextState = {
       currentTrackIndex: snapshot.currentTrackIndex,
-      currentTime: audio?.currentTime ?? snapshot.currentTime,
-      trackId: playlist[snapshot.currentTrackIndex]?.id,
+      currentTime: hasLoadedSource ? audio?.currentTime ?? snapshot.currentTime : snapshot.currentTime,
+      trackId: playlist[snapshot.currentTrackIndex]?.id ?? initialPersistedState?.trackId,
     };
     const serialized = JSON.stringify(nextState);
     window.sessionStorage.setItem(MUSIC_PLAYER_STORAGE_KEY, serialized);
     window.localStorage.setItem(MUSIC_PLAYER_STORAGE_KEY, serialized);
     lastPersistedAtRef.current = now;
-  }, [playlist]);
+  }, [initialPersistedState?.trackId, playlist]);
 
   const requestPlayback = useCallback(() => {
     desiredPlayingRef.current = true;

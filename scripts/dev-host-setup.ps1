@@ -276,9 +276,9 @@ function Stop-PortListener {
 }
 
 function Get-ProcessNameByPid {
-    param([int]$Pid)
+    param([int]$ProcessId)
     try {
-        return (Get-Process -Id $Pid -ErrorAction Stop).ProcessName
+        return (Get-Process -Id $ProcessId -ErrorAction Stop).ProcessName
     } catch {
         return $null
     }
@@ -413,7 +413,7 @@ foreach ($portToCheck in $portsToCheck) {
         continue
     }
 
-    $preExistingName = Get-ProcessNameByPid -Pid $preExisting
+    $preExistingName = Get-ProcessNameByPid -ProcessId $preExisting
     if ($preExistingName -and $preExistingName.Equals('node', [System.StringComparison]::OrdinalIgnoreCase)) {
         $portLabel = if ($portToCheck -eq $DevPort) { "port $portToCheck" } else { "legacy dev port $portToCheck" }
         Write-Host ""

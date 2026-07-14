@@ -4,17 +4,20 @@ import { describe, expect, it } from 'vitest';
 
 describe('GEO and ISR rendering contract', () => {
   it('keeps request cookies out of the locale root layout so blog routes remain prerenderable', () => {
-    const layout = readFileSync(resolve(process.cwd(), 'src/app/[locale]/layout.tsx'), 'utf8');
+    const rootLayout = readFileSync(resolve(process.cwd(), 'src/app/layout.tsx'), 'utf8');
+    const localeLayout = readFileSync(resolve(process.cwd(), 'src/app/[locale]/layout.tsx'), 'utf8');
     const documentBootstrapScript = readFileSync(
       resolve(process.cwd(), 'src/app/providers/DocumentBootstrapScript.tsx'),
       'utf8',
     );
     const blogPage = readFileSync(resolve(process.cwd(), 'src/app/[locale]/blog/[slug]/page.tsx'), 'utf8');
 
-    expect(layout).not.toContain("from 'next/headers'");
-    expect(layout).not.toContain('cookies()');
-    expect(layout).toContain('<DocumentBootstrapScript script={buildDocumentBootstrapScript()} />');
-    expect(layout).not.toMatch(/<script\s+dangerouslySetInnerHTML/);
+    expect(rootLayout).not.toContain("from 'next/headers'");
+    expect(rootLayout).not.toContain('cookies()');
+    expect(rootLayout).toContain('<DocumentBootstrapScript script={buildDocumentBootstrapScript()} />');
+    expect(rootLayout).not.toMatch(/<script\s+dangerouslySetInnerHTML/);
+    expect(localeLayout).not.toContain('<html');
+    expect(localeLayout).not.toContain('<body');
     expect(documentBootstrapScript).toContain("useServerInsertedHTML");
     expect(documentBootstrapScript).toContain('id="document-bootstrap"');
     expect(documentBootstrapScript).toContain('return null;');

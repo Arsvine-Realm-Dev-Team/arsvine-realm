@@ -20,6 +20,8 @@ describe('logo effects CSS contract', () => {
       path.join(process.cwd(), 'src/app/styles/layout/_inverted.scss'),
       'utf8',
     );
-    expect(invertedSource).toMatch(/\.logoContainer\s*{\s*--logo-base-opacity:\s*0\.3;/);
+    expect(invertedSource).toMatch(
+      /\.logoContainer\s*\{\s*--logo-base-opacity:\s*0\.8;\s*--logo-base-color:\s*#444444;/,
+    );
   });
 });
