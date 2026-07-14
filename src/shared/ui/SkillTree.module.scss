@@ -1,7 +1,7 @@
 @use '../styles/breakpoints';
-$line: rgba(200, 200, 200, 0.18);
-$line-sub: rgba(200, 200, 200, 0.12);
-$line-hover: rgba(200, 200, 200, 0.45);
+$line: rgba(var(--ark-primary-rgb), 0.18);
+$line-sub: rgba(var(--ark-primary-rgb), 0.12);
+$line-hover: rgba(var(--ark-primary-rgb), 0.45);
 $indent: 20px;
 $connector-w: 14px;
 
@@ -94,7 +94,7 @@ $connector-w: 14px;
 }
 
 .branchLine {
-  color: rgba(200, 200, 200, 0.08);
+  color: rgba(var(--ark-primary-rgb), 0.08);
   overflow: hidden;
   white-space: nowrap;
   flex: 1;
@@ -160,7 +160,7 @@ $connector-w: 14px;
 
   .hovered & {
     border-color: var(--ark-border);
-    background-color: rgba(200, 200, 200, 0.025);
+    background-color: rgba(var(--ark-primary-rgb), 0.025);
   }
 }
 
@@ -191,7 +191,7 @@ $connector-w: 14px;
 }
 
 .filled {
-  background-color: rgba(200, 200, 200, 0.45);
+  background-color: rgba(var(--ark-primary-rgb), 0.45);
 
   .hovered & {
     background-color: var(--ark-primary);
@@ -324,7 +324,7 @@ $connector-w: 14px;
 }
 
 .infoEmpty {
-  border: 1px dashed rgba(200, 200, 200, 0.08);
+  border: 1px dashed rgba(var(--ark-primary-rgb), 0.08);
   padding: 14px 16px;
   font-family: var(--font-hud);
   font-size: var(--fs-xs);

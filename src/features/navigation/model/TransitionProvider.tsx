@@ -9,6 +9,7 @@ import {
   getContentSectionHashFromUrl,
   isHomeUrl,
   resolveNavigationTransitionPlan,
+  type NavigationTransitionPlan,
 } from './contentHashNavigation';
 import { AnimationRunController } from './animationRunController';
 import { useLayoutAnchors } from './LayoutAnchorsContext';
@@ -80,6 +81,114 @@ const DIAG_COLLAPSE_OPTS: KeyframeAnimationOptions = {
   easing: 'ease-in',
   fill: 'forwards',
 };
+
+interface NavStrategyCtx {
+  wrapper: HTMLDivElement;
+  url: string;
+  options?: { scroll?: boolean };
+  contentHashRequest: ContentHashNavigationRequest | null;
+  pushThen: (target: string, cb: () => void, pushOpts?: { scroll?: boolean }) => void;
+  runAnimation: (animation: Animation, onFinished: () => void) => void;
+  wapiSlideIn: () => void;
+  wapiDiagExpand: () => void;
+  revealAfterContentHashAligned: (request: ContentHashNavigationRequest, onAligned: () => void) => void;
+  retractColumns: (cb: () => void) => void;
+  expandColumns: (cb?: () => void) => void;
+  processQueue: () => void;
+  waitForTransition: (el: HTMLElement, ms: number, cb: () => void) => void;
+}
+
+// 每种 transition plan 的执行策略；选择逻辑在 resolveNavigationTransitionPlan，
+// 这里只负责"执行"。新增 plan 时加一条策略即可，不必改 navigateTo 本体。
+const NAVIGATION_STRATEGIES: Record<Exclude<NavigationTransitionPlan, 'samePageHash'>, (ctx: NavStrategyCtx) => void> = {
+  homeForwardMobile: (ctx) => {
+    ctx.retractColumns(() => {});
+    const anim = ctx.wrapper.animate(DIAG_COLLAPSE_KF, DIAG_COLLAPSE_OPTS);
+    ctx.runAnimation(anim, () => {
+      anim.cancel();
+      ctx.wrapper.style.clipPath = 'inset(100%)';
+      ctx.pushThen(ctx.url, () => {
+        if (ctx.contentHashRequest) {
+          ctx.revealAfterContentHashAligned(ctx.contentHashRequest, ctx.wapiDiagExpand);
+          return;
+        }
+        ctx.wapiDiagExpand();
+      }, ctx.options);
+    });
+  },
+  homeForwardDesktop: (ctx) => {
+    ctx.retractColumns(() => {
+      ctx.wrapper.style.opacity = '0';
+      ctx.pushThen(ctx.url, () => {
+        if (ctx.contentHashRequest) {
+          ctx.revealAfterContentHashAligned(ctx.contentHashRequest, ctx.wapiSlideIn);
+          return;
+        }
+        ctx.wapiSlideIn();
+      }, ctx.options);
+    });
+  },
+  crossPageHash: (ctx) => {
+    const outAnim = ctx.wrapper.animate(SLIDE_OUT_KF, SLIDE_OUT_OPTS);
+    ctx.runAnimation(outAnim, () => {
+      outAnim.cancel();
+      ctx.wrapper.style.opacity = '0';
+      ctx.pushThen(ctx.url, () => {
+        if (ctx.contentHashRequest) {
+          ctx.revealAfterContentHashAligned(ctx.contentHashRequest, ctx.wapiSlideIn);
+          return;
+        }
+        ctx.wapiSlideIn();
+      }, ctx.options);
+    });
+  },
+  returnHomeMobile: (ctx) => {
+    const anim = ctx.wrapper.animate(DIAG_COLLAPSE_KF, DIAG_COLLAPSE_OPTS);
+    ctx.runAnimation(anim, () => {
+      anim.cancel();
+      ctx.wrapper.style.clipPath = 'inset(100%)';
+      ctx.pushThen(ctx.url, () => {
+        ctx.expandColumns();
+        ctx.wapiDiagExpand();
+      });
+    });
+  },
+  returnHomeDesktop: (ctx) => {
+    const anim = ctx.wrapper.animate(SLIDE_OUT_KF, SLIDE_OUT_OPTS);
+    ctx.runAnimation(anim, () => {
+      anim.cancel();
+      ctx.wrapper.style.opacity = '0';
+      ctx.pushThen(ctx.url, () => {
+        ctx.wrapper.style.opacity = '';
+        ctx.expandColumns(() => {
+          ctx.processQueue();
+        });
+      });
+    });
+  },
+  blogDetailFade: (ctx) => {
+    ctx.wrapper.style.transition = 'opacity 0.3s ease-out';
+    ctx.wrapper.style.opacity = '0';
+    ctx.pushThen(ctx.url, () => {
+      ctx.wrapper.style.transition = 'opacity 0.4s ease-in';
+      ctx.wrapper.style.opacity = '1';
+      ctx.waitForTransition(ctx.wrapper, 500, () => {
+        ctx.wrapper.style.transition = '';
+        ctx.wrapper.style.opacity = '';
+        ctx.processQueue();
+      });
+    }, ctx.options);
+  },
+  standardSlide: (ctx) => {
+    const outAnim = ctx.wrapper.animate(SLIDE_OUT_KF, SLIDE_OUT_OPTS);
+    ctx.runAnimation(outAnim, () => {
+      outAnim.cancel();
+      ctx.wrapper.style.opacity = '0';
+      ctx.pushThen(ctx.url, ctx.wapiSlideIn, ctx.options);
+    });
+  },
+};
+
 export function TransitionProvider({ children }: TransitionProviderProps) {
   const { pathname, asPath, query, push } = useNavigationRuntime();
   const { retractColumns, expandColumns } = useHudAnimation();
@@ -214,101 +323,24 @@ export function TransitionProvider({ children }: TransitionProviderProps) {
       });
     };
 
-    if (transitionPlan === 'homeForwardMobile' || transitionPlan === 'homeForwardDesktop') {
-      if (transitionPlan === 'homeForwardMobile') {
-        // Mobile forward: diagonal collapse home → push → diagonal expand content
-        retractColumns(() => {});
-        const anim = wrapper.animate(DIAG_COLLAPSE_KF, DIAG_COLLAPSE_OPTS);
-        runAnimation(anim, () => {
-          anim.cancel();
-          wrapper.style.clipPath = 'inset(100%)';
-          pushThen(url, () => {
-            if (contentHashRequest) {
-              revealAfterContentHashAligned(contentHashRequest, wapiDiagExpand);
-              return;
-            }
+    const ctx: NavStrategyCtx = {
+      wrapper,
+      url,
+      options,
+      contentHashRequest,
+      pushThen,
+      runAnimation,
+      wapiSlideIn,
+      wapiDiagExpand,
+      revealAfterContentHashAligned,
+      retractColumns,
+      expandColumns,
+      processQueue,
+      waitForTransition: (el, ms, cb) => runControllerRef.current.waitForTransition(el, ms, cb),
+    };
 
-            wapiDiagExpand();
-          }, options);
-        });
-      } else {
-        // Desktop forward: retract columns → hide wrapper → push → slide in
-        retractColumns(() => {
-          wrapper.style.opacity = '0';
-          pushThen(url, () => {
-            if (contentHashRequest) {
-              revealAfterContentHashAligned(contentHashRequest, wapiSlideIn);
-              return;
-            }
-
-            wapiSlideIn();
-          }, options);
-        });
-      }
-    } else if (transitionPlan === 'crossPageHash') {
-      const outAnim = wrapper.animate(SLIDE_OUT_KF, SLIDE_OUT_OPTS);
-      runAnimation(outAnim, () => {
-        outAnim.cancel();
-        wrapper.style.opacity = '0';
-        pushThen(url, () => {
-          if (contentHashRequest) {
-            revealAfterContentHashAligned(contentHashRequest, wapiSlideIn);
-            return;
-          }
-
-          wapiSlideIn();
-        }, options);
-      });
-    } else if (transitionPlan === 'returnHomeMobile' || transitionPlan === 'returnHomeDesktop') {
-      if (transitionPlan === 'returnHomeMobile') {
-        // Mobile back: diagonal collapse content → push home → diagonal expand home
-        const anim = wrapper.animate(DIAG_COLLAPSE_KF, DIAG_COLLAPSE_OPTS);
-        runAnimation(anim, () => {
-          anim.cancel();
-          wrapper.style.clipPath = 'inset(100%)';
-          pushThen(url, () => {
-            expandColumns();
-            wapiDiagExpand();
-          });
-        });
-      } else {
-        // Desktop back: slide out → push home → expand columns
-        const anim = wrapper.animate(SLIDE_OUT_KF, SLIDE_OUT_OPTS);
-        runAnimation(anim, () => {
-          anim.cancel();
-          wrapper.style.opacity = '0';
-          pushThen(url, () => {
-            wrapper.style.opacity = '';
-            expandColumns(() => {
-              processQueue();
-            });
-          });
-        });
-      }
-    } else if (transitionPlan === 'blogDetailFade') {
-      // Blog detail: push immediately so the URL changes first, then fade once the target is ready.
-      wrapper.style.transition = 'opacity 0.3s ease-out';
-      wrapper.style.opacity = '0';
-      pushThen(url, () => {
-        wrapper.style.transition = 'opacity 0.4s ease-in';
-        wrapper.style.opacity = '1';
-
-        const onFadeIn = () => {
-          wrapper.style.transition = '';
-          wrapper.style.opacity = '';
-          processQueue();
-        };
-        runControllerRef.current.waitForTransition(wrapper, 500, onFadeIn);
-      }, options);
-    } else {
-      // Other: WAAPI slide out → push → WAAPI slide in
-      const outAnim = wrapper.animate(SLIDE_OUT_KF, SLIDE_OUT_OPTS);
-      runAnimation(outAnim, () => {
-        outAnim.cancel();
-        wrapper.style.opacity = '0';
-        pushThen(url, wapiSlideIn, options);
-      });
-    }
+    // transitionPlan 已收窄为非 'samePageHash'（上方早 return）
+    NAVIGATION_STRATEGIES[transitionPlan](ctx);
   }, [
     pathname,
     push,

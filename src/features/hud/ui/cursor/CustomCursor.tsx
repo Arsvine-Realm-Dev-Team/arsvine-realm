@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
+import { isAtRest } from '@/features/hud/model/raf-lerp';
 import gsap from 'gsap';
 import styles from './CustomCursor.module.scss';
 import useCursorTargetRegistry from '@/features/hud/model/useCursorTargetRegistry';
@@ -27,6 +28,8 @@ const CustomCursor = () => {
   const rendered = useRef({ x: -100, y: -100 });
   const dotSize = useRef({ w: 24, h: 24 });
   const rafId = useRef<number>(0);
+  const runningRef = useRef(false);
+  const tickRef = useRef<() => void>(() => {});
   const isHovering = useRef(false);
   const snapTarget = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
   const hoverEl = useRef<HTMLElement | null>(null);
@@ -164,9 +167,17 @@ const CustomCursor = () => {
         }
       }
 
+      const atRest = isAtRest(rendered.current.x, tx) && isAtRest(rendered.current.y, ty);
+      if (atRest && !isHovering.current) {
+        // 光标静止且无 hover 时停帧省 CPU；mousemove / hover-enter 唤醒
+        runningRef.current = false;
+        return;
+      }
       rafId.current = requestAnimationFrame(tick);
     };
 
+    tickRef.current = tick;
+    runningRef.current = true;
     rafId.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId.current);
   }, [applyPosition, resetHoverState, syncHoverTarget]);
@@ -190,6 +201,11 @@ const CustomCursor = () => {
     }
 
     dotRef.current?.classList.add(styles.hovering);
+
+    if (!runningRef.current) {
+      runningRef.current = true;
+      rafId.current = requestAnimationFrame(tickRef.current);
+    }
   }, [syncHoverTarget]);
 
   const handleRegisteredLeave = useCallback((event: MouseEvent, currentTarget: HTMLElement) => {
@@ -213,6 +229,12 @@ const CustomCursor = () => {
     const onMouseMove = (e: MouseEvent) => {
       mouse.current.x = e.clientX;
       mouse.current.y = e.clientY;
+
+      // 光标移动时若已停帧则重启 rAF
+      if (!runningRef.current) {
+        runningRef.current = true;
+        rafId.current = requestAnimationFrame(tickRef.current);
+      }
 
       if (isHovering.current) return;
 

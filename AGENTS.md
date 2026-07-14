@@ -4,13 +4,13 @@ This file is the concise coding-agent entry point for **ARSVINE REALM**. Keep it
 
 ## Read first
 
-- [`README.md`](./README.md) — project overview and documentation map.
-- [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md) — setup, commands, scripts, local COS workflow, assets.
-- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — routing, content system, protected posts, API, transitions, styling.
-- [`docs/OPERATIONS.md`](./docs/OPERATIONS.md) — deployment, env vars, analytics, CDN/COS, ISR, Upstash, SEO.
-- [`docs/PERFORMANCE.md`](./docs/PERFORMANCE.md) — adaptive tiers, capability gates, and recovery thresholds.
-- [`docs/ASSETS.md`](./docs/ASSETS.md) — public/COS boundary, catalogs, publishing, and rollback.
-- [`docs/GOTCHAS.md`](./docs/GOTCHAS.md) — historical regressions and fragile conventions.
+- [`README.md`](./README.md) — project overview.
+- [`docs/README.md`](./docs/README.md) — complete task-oriented documentation map.
+- [`docs/GETTING_STARTED.md`](./docs/GETTING_STARTED.md), [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md), and [`docs/TESTING_AND_QUALITY.md`](./docs/TESTING_AND_QUALITY.md) — setup, daily workflow, and verification.
+- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md), [`docs/ROUTING_AND_I18N.md`](./docs/ROUTING_AND_I18N.md), and [`docs/CONTENT_AND_MDX.md`](./docs/CONTENT_AND_MDX.md) — system, navigation, locales, and content.
+- [`docs/SECURITY.md`](./docs/SECURITY.md) — protected posts, cookies, rate limiting, and input boundaries.
+- [`docs/OPERATIONS.md`](./docs/OPERATIONS.md), [`docs/ASSETS.md`](./docs/ASSETS.md), and [`docs/PERFORMANCE.md`](./docs/PERFORMANCE.md) — deployment, COS/Catalog, and adaptive performance.
+- [`docs/TROUBLESHOOTING.md`](./docs/TROUBLESHOOTING.md) and [`docs/GOTCHAS.md`](./docs/GOTCHAS.md) — diagnostics and historical regressions.
 
 ## Project snapshot
 
@@ -23,19 +23,19 @@ User-facing pages live under `/<locale>/...` with UI locales `zh-CN`, `zh-TW`, a
 ## Commands
 
 ```bash
-npm run dev        # node server.js
-npm run build      # next build
-npm start          # cross-env NODE_ENV=production node server.js
-npm run lint       # eslint .
-npm run typecheck  # tsc --noEmit
-npm run test       # vitest run
+pnpm dev        # node server.js
+pnpm build      # next build
+pnpm start      # cross-env NODE_ENV=production node server.js
+pnpm lint       # eslint .
+pnpm typecheck  # tsc --noEmit
+pnpm test       # vitest run
 ```
 
 Run a single test:
 
 ```bash
-npx vitest run path/to/file.test.ts
-npx vitest run -t "name pattern"
+pnpm vitest run path/to/file.test.ts
+pnpm vitest run -t "name pattern"
 ```
 
 ## Hard rules
@@ -72,9 +72,9 @@ npx vitest run -t "name pattern"
 Before handing off non-trivial changes, run at least:
 
 ```bash
-npm run lint
-npm run typecheck
-npm run test
+pnpm lint
+pnpm typecheck
+pnpm test
 ```
 
 For visual or interaction changes, also manually verify desktop and mobile layouts, route transitions, blog detail pages, protected-post gates, music-player behavior, hash navigation, and custom cursor states.

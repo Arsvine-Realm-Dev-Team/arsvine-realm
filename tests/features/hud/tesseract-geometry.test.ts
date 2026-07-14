@@ -6,7 +6,7 @@ import {
   createTesseractVertices,
   resolveBatteryAnchorPosition,
   TESSERACT_EDGES,
-} from '@/shared/lib/tesseract-geometry';
+} from '@/features/hud/model/tesseract-geometry';
 
 describe('tesseract geometry helpers', () => {
   it('resolves battery anchor from canvas and icon rects', () => {

@@ -196,7 +196,7 @@
   z-index: 3;
   pointer-events: none;
   opacity: 0;
-  box-shadow: 0 0 3px rgba(255, 255, 255, 0.3), 0 0 1px rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 3px rgba(var(--white-rgb), 0.3), 0 0 1px rgba(var(--white-rgb), 0.5);
 
   &.animated {
     animation-duration: 0.8s;
@@ -268,7 +268,7 @@
   .charItem {
     margin: 8px 0;
     transform: skewX(15deg);
-    color: rgba(200, 200, 200, 0.5);
+    color: rgba(var(--ark-primary-rgb), 0.5);
     transition: all 0.1s ease;
     text-shadow: 0 0 3px rgba(0, 150, 255, 0.2);
     font-family: var(--font-display);

@@ -7,7 +7,7 @@ import {
   computeArtifactStage,
   createTelemetrySnapshot,
   decayArtifactLoad,
-} from '@/shared/lib/env-telemetry-artifact';
+} from '@/features/hud/model/env-telemetry-artifact';
 
 const envData: EnvData = {
   temp: 53.7,

@@ -21,7 +21,7 @@
         "./src/*"
       ]
     },
-    "target": "ES2017",
+    "target": "ES2022",
     "plugins": [
       {
         "name": "next"

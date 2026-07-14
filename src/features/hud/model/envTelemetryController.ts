@@ -4,7 +4,7 @@ import {
   computeArtifactStage,
   createTelemetrySnapshot,
   decayArtifactLoad,
-} from '@/shared/lib/env-telemetry-artifact';
+} from '@/features/hud/model/env-telemetry-artifact';
 import type { EnvArtifactStage, EnvData } from '@/shared/contracts/environment';
 import type { EnvParamsTypingState } from '@/features/hud/contracts/state';
 import { hashStringFnv1a } from '@/shared/lib/hash';

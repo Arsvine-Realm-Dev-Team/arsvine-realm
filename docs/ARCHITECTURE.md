@@ -1,272 +1,200 @@
-# Architecture Notes
+# 系统架构
 
-This document explains the current architecture of **ARSVINE REALM**. It is intended for development agents and maintainers who need to change behavior without breaking established conventions.
+[返回文档导航](./README.md)
 
-## Technical baseline
+本文描述 ARSVINE REALM 的稳定系统边界、运行拓扑、分层、主要 provider 和数据流。具体操作细节链接到各专题文档。
 
-- Next.js 16 with **App Router**.
-- React 19.
-- TypeScript.
-- SCSS Modules plus shared SCSS partials.
-- `next-intl` 4 for UI localization.
-- MDX through `next-mdx-remote`.
-- Three.js / `@react-three/fiber` / `@react-three/drei` / `@react-three/cannon` for desktop effects.
-- GSAP and Web Animations API for interaction and transitions.
-- Vitest with `jsdom` for core logic tests.
-- Local-development and optional self-hosted server through `server.js` (not used by the Vercel deployment).
+## 技术基线
 
-The project uses App Router. Keep routes, layouts, metadata, and Route Handlers under `src/app/`; do not reintroduce a `src/pages/` tree.
+- Next.js 16 App Router、React 19、TypeScript。
+- `next-intl` 4 与三个 UI locale。
+- SCSS Modules + shared partials。
+- MDX 通过 `next-mdx-remote` 序列化和渲染。
+- Three.js、`@react-three/fiber`、`@react-three/cannon`、`cannon-es`。
+- GSAP 与 Web Animations API。
+- XState 5 / `@xstate/react` 处理受保护文章状态。
+- Vitest + `jsdom`。
+- Vercel 为生产平台；`server.js` 只用于本地和可选自托管。
 
-## Route model
+## 系统全景
 
-User-facing route adapters live under `src/app/[locale]/...`. Server Components own route parameters, metadata, and SSG/ISR contracts; feature UI and server loaders live under `src/features/`.
-
-`src/app/layout.tsx` is the stable document and client-shell boundary. The nested
-`[locale]/layout.tsx` validates locale, configures server-side `next-intl`, and
-owns locale metadata, but it must not mount the global HUD/providers. This keeps
-music, power, WebGL, and navigation state alive while locale page data changes.
-
-| Route | Purpose |
-|---|---|
-| `/[locale]` | HUD home page with primary navigation columns. |
-| `/[locale]/content` | Content aggregation page with hash sections such as `#works`, `#experience`, `#blog`, `#life`. |
-| `/[locale]/{works,experience,life,friends,about,contact,tweets,copyright}` | Canonical section or standalone pages. |
-| `/[locale]/blog/[slug]` | Blog detail page; static params plus ISR. |
-| `/[locale]/web/[id]` | Work/project detail page. |
-| `/[locale]/life/[slug]` | Life detail page. |
-| `/[locale]/access/[group]` | Standalone TOTP gate. |
-| `/[locale]/rss.xml` | Per-locale RSS. |
-| `/sitemap.xml` | Site-wide sitemap. |
-| `/robots.txt` | Dynamic robots response. |
-
-## Locale middleware
-
-`proxy.ts` handles locale routing plus `GEO_COUNTRY` cookie management for UI-only geo hints.
-
-Rules:
-
-1. Skip API, Next internals, Vercel internals, static asset prefixes, and file-extension paths.
-2. If the path already starts with a supported locale, forward it unchanged.
-3. If the path is bare, redirect to `/<locale>/<rest>`.
-4. Locale selection order is `NEXT_LOCALE cookie > Accept-Language > zh-CN`.
-5. Do not use IP-based geolocation for language selection.
-6. If the first segment looks like an unsupported BCP-47 locale, strip it before adding the selected locale to avoid paths like `/en/fr/web/1`.
-
-`src/app/i18n/config.ts` is the source of truth for supported locales, HTML language tags, Open Graph locales, and RSS language values.
-
-## State and layout contexts
-
-### `features/hud/model/HudProvider.tsx`
-
-Composes site-wide interactive state and effects:
-
-- loading sequence;
-- power/battery/inversion state;
-- real-time client-side stats;
-- home-page typing effects;
-- column hover copy/state.
-
-### `features/navigation/model/TransitionProvider.tsx`
-
-Controls animated navigation. Internal navigation should use:
-
-```ts
-useTransition().navigateTo(url)
+```mermaid
+flowchart LR
+  U[Browser] --> PX[src/proxy.ts]
+  PX --> APP[Next.js App Router]
+  APP --> SC[Server Components and ISR]
+  APP --> API[Route Handlers]
+  SC --> DATA[Bundled typed data]
+  SC --> GH[Private GitHub content]
+  SC --> CAT[Private COS Catalog]
+  API --> GH
+  API --> CAT
+  API --> REDIS[Upstash Redis optional]
+  SC --> HTML[HTML and RSC payload]
+  HTML --> SHELL[Stable client shell]
+  SHELL --> HUD[HUD and navigation providers]
+  SHELL --> FEATURES[Feature UI]
+  FEATURES --> CDN[Public COS CDN]
 ```
 
-instead of `router.push()`. This preserves home/content/detail transitions, column retract/expand behavior, and blog-detail fade behavior.
+## 运行拓扑
 
-UI locale changes use `switchLocale()` from the same context. That path updates
-the locale route without running page-exit or HUD animations.
+### Vercel
 
-It also supports `setBackOverride()` so detail views and lightboxes can intercept BACK behavior.
+Vercel 使用标准 Next.js 构建输出：
 
-### `features/navigation/model/LayoutAnchorsContext.tsx`
+- `src/proxy.ts` 作为 Proxy；
+- `src/app/api/**/route.ts` 作为 Route Handler / Function；
+- App Router 页面按 static、ISR 或 dynamic 模式运行；
+- 不运行 `server.js`，也不执行 `pnpm start`。
 
-Registers the active scroll container. This is required because the layout uses a locked-height content container; deep-link scrolling must target that container rather than the document viewport.
-
-### `features/navigation/model/LocalePageState.tsx`
-
-Keeps explicitly selected, non-sensitive page state across locale changes for
-the same locale-independent route. It is document-memory-only and clears when
-the user navigates to a different route. Authentication inputs, pending actions,
-and errors must not be stored there.
-
-## Route loading overlay
-
-`useRouteLoadingKind(router)` decides the loading overlay variant from the **source pathname**, not the target URL.
-
-This matters because:
-
-- home/content → blog detail should use the right-side/default overlay because the left panel is still visible;
-- blog detail → blog detail should use the standalone overlay because the left panel is hidden.
-
-Do not flip this logic to target-based selection; it regresses one of the two directions.
-
-## Content sources
-
-The project has two content sources.
-
-### 1. Bundled typed data
-
-Structured site data is co-located with its owning feature, while global site
-configuration lives in `src/shared/config/`:
+### 本地与自托管
 
 ```text
-src/features/portfolio/contracts/data/
-src/features/experience/contracts/data/
-src/features/life/contracts/data/
-src/features/profile/contracts/{skills,friendLinks}/
-src/shared/config/site.ts
+node server.js
+  -> load .env chain
+  -> next({ dev })
+  -> Node HTTP server
+  -> Next request handler
 ```
 
-Each trilingual topic generally has:
+`pnpm dev` 和 `pnpm start` 都经过 `server.js`。locale 和路由行为仍由 `src/proxy.ts` 与 App Router 控制。
+
+## 分层
+
+### `src/app/`
+
+负责 framework adapter：route params、metadata、layout、SSG/ISR、not-found、Route Handler。页面组件不应承载大型业务状态或外部服务实现。
+
+### `src/features/`
+
+按业务领域组织：
 
 ```text
-index.ts   # zh-CN fallback
-en.ts
-zh-TW.ts
+contracts/   数据合约与静态数据
+model/       状态、hooks、controller、纯逻辑
+server/      server loader、handler、外部数据适配
+ui/          React UI
+styles/      feature styles
+public.ts    可选公共入口
 ```
 
-`src/app/i18n/data.ts` maps `(topic, locale)` to modules through an explicit static registry. This is intentional. Dynamic `require` is not used.
+并非每个 feature 都必须拥有所有目录。
 
-### 2. External GitHub content repository
+### `src/shared/`
 
-When configured through server-side environment variables, blog posts and tweets are loaded from an external private content repository:
+只存跨 feature 的稳定能力：locale/performance contract、通用 hook、UI primitive、HTTP/revalidation helper、内容安全工具和配置。
 
-```env
-GITHUB_OWNER=ArsvineZhu
-GITHUB_REPO=arsvine-content
-GITHUB_BRANCH=main
-GITHUB_READ_TOKEN=github_pat_xxx
-```
+单个 feature 消费的算法应留在该 feature 的 `model/`，避免把 `shared` 变成杂物层。
 
-Expected repository shape:
+## 全局 shell
 
-```text
-blog-index.json
-blog/<slug>/
-  zh-CN.mdx
-  zh-TW.mdx
-  en.mdx
-  ja.mdx   # optional content-only locale
-  ru.mdx   # optional content-only locale
-  fr.mdx   # optional content-only locale
-tweets/
-  index.json
-  YYYY-MM.json
-```
+`src/app/layout.tsx` 是稳定 document/client-shell boundary，持有：
 
-If the external repository is not configured, the site falls back to the bundled `content/blog/init/` post and the tweets page resolves to an empty state.
+- client i18n message provider；
+- HUD provider；
+- navigation/transition provider；
+- telemetry boundary；
+- `MainLayout`；
+- document bootstrap performance/geo attributes。
 
-Tweet pages can also be rendered from synthetic stress data in development when `TWEETS_STRESS_TEST=1` is set.
+`src/app/[locale]/layout.tsx` 是 nested server layout，只处理 locale 验证、server-side `next-intl` 和 locale metadata。
 
-## Blog parsing and reading time
+详细路由关系见 [`ROUTING_AND_I18N.md`](./ROUTING_AND_I18N.md)。
 
-`features/blog/server/blog.ts` parses post frontmatter, MDX, translation fallback state, and reading-time estimates.
+## 主要状态边界
 
-Reading time uses an in-house estimator tuned for mixed CJK and Latin text. It strips code, inline code, HTML/JSX tags, and MDX import/export lines before counting.
+### HUD
 
-Do not reintroduce `reading-time`; whitespace-tokenized estimators report meaningless values for CJK posts.
+`features/hud/model/HudProvider.tsx` 组合 loading、power/battery、inverted theme、环境 telemetry、typing 和 column interaction。性能能力通过共享 contract 注入，feature 不自行读取粗粒度设备信息决定效果。
 
-## Multilingual blog behavior
+### Navigation
 
-UI locales are `zh-CN`, `zh-TW`, and `en`.
+`features/navigation/model/TransitionProvider.tsx` 统一处理内部导航动画、URL push、queue、BACK override 和 locale switch。
 
-Blog content can also expose optional content-only locales such as `ja`, `ru`, and `fr`. These do not change the UI language; they are selected inside the blog detail language switcher.
+`LayoutAnchorsContext` 注册真实 scroll container；`LocalePageState` 只保留明确允许的非敏感 locale-independent 页面状态。
 
-When a requested UI locale lacks a post variant, the blog layer falls back to the post's default/source locale and marks the translation state so the detail page can show a fallback banner.
+### Protected blog
 
-## Protected posts
+`features/blog/model/blogPostState.ts` 使用 XState invoked actor 管理 grant check、TOTP 后继续加载、variant 切换、错误和请求取消。组件不自行复制异步状态机。
 
-Protected posts use TOTP access and must not expose MDX content during static generation.
+## 数据来源
 
-Configuration is stored in the external content index and server environment:
+### Bundled typed data
 
-```json
-{
-  "access": { "mode": "totp", "group": "friends-a" }
-}
-```
+随构建进入应用，适合站点配置、作品、经历、Life、技能和友链。locale 数据通过静态 registry 选择。
 
-```env
-ACCESS_GRANT_SECRET=<long-random-string>
-TOTP_GROUPS_JSON={"friends-a":{"current":"JBSWY3DPEHPK3PXP","period":30,"digits":6,"window":1}}
-```
+### Private GitHub content
 
-Flow:
+服务端读取 `blog-index.json`、MDX 与 tweet JSON。路径经过严格 repo-relative 校验。未配置时使用可控 fallback。
 
-1. The App Router page returns sanitized metadata and `mdxSource: null` for protected posts without reading or serializing their body.
-2. The browser renders a loading shell and probes `/api/grant-check?group=...`.
-3. If already granted, the client requests `/api/post-variant?slug=&locale=`.
-4. If not granted, the TOTP gate posts to `/api/protected-verify`.
-5. On success, the server signs an HttpOnly access-grant cookie.
-6. The client then fetches the gated MDX body through `/api/post-variant`.
-7. Direct unauthenticated protected-post variant fetches return `403`.
+### COS Catalog
 
-Important invariant: neither the HTML nor the RSC payload may contain protected body content.
+私有 versioned Catalog 把稳定 `catalogKey` 映射到公共 bucket 中不可变 hash object。server loader 在 SSG/ISR 时 hydrate 数据；public site manifest 只提供非敏感 shell 资产。
 
-## API routes
+详见 [`CONTENT_AND_MDX.md`](./CONTENT_AND_MDX.md) 与 [`ASSETS.md`](./ASSETS.md)。
 
-| Route | Purpose |
-|---|---|
-| `GET /api/hitokoto` | Server-side proxy for `v1.hitokoto.cn`; cached and timeout-protected. |
-| `GET /api/grant-check?group=` | Checks signed access-grant cookie. |
-| `GET /api/post-variant?slug=&locale=` | Returns serialized MDX for a specific post variant; protected posts require grant. |
-| `POST /api/protected-verify` | Verifies TOTP and signs the access-grant cookie; rate-limited by client/group. |
-| `GET /api/tweet-months?offset=&limit=` | Paginates tweet months from the external content repository. |
-| `POST /api/revalidate` | Revalidates `/<locale>/tweets` for all locales. Guarded by `REVALIDATE_SECRET`; legacy `GET ?secret=` remains supported for older admin clients. |
-| `POST /api/revalidate-content` | Revalidates `/<locale>/content` and, when provided, `/<locale>/blog/<slug>` for all locales. Guarded by `REVALIDATE_SECRET`. |
-| `GET /api/assets/{audio,home,links,works}` | Reads the current COS asset catalog; catalog failures return `502` rather than an ambiguous empty success. |
-| `GET /api/assets/collections/<slug>` | Reads a paginated collection from the current COS catalog. |
+## API 边界
 
-All API routes are native App Router Route Handlers using Web `Request` and `Response`; there is no Pages API compatibility adapter. Unsupported methods are not exported, so Next.js returns `405`.
-
-Rate-limited routes use one client-address policy. Vercel-managed forwarding headers are trusted automatically when `VERCEL=1`. Self-hosted deployments must set `TRUST_PROXY=1|true|yes` only when their reverse proxy overwrites forwarding headers; otherwise the limiter uses the shared `unknown` key rather than trusting caller-supplied IP headers.
-
-## Desktop 3D effects
-
-Desktop-only effects:
-
-- `RainMorimeEffect` — atmospheric rain particle effect.
-- `TesseractExperience` — interactive charging/physics effect using `@react-three/cannon` and `cannon-es`.
-
-Both are dynamically imported with `ssr: false` and should not repeatedly unmount once ready. This avoids unnecessary GPU context destruction during route transitions.
-
-Mobile skips the WebGL canvas and uses simplified charging behavior.
-
-## Styling system
-
-- Feature UI owns its SCSS Modules; cross-feature primitives live with `shared/ui/`.
-- `src/app/styles/Shell.module.scss` is the application-shell style entrypoint; feature-specific section styles stay with their feature.
-- Global tokens and font variables live in `src/app/styles/globals.scss`.
-- Global overlay ordering uses the semantic `--z-*` tokens in `globals.scss`; do not introduce escalating literal values.
-- The mobile/desktop boundary is `max-width: 767px` / `min-width: 768px`.
-
-Important font variables:
-
-| Variable | Use |
-|---|---|
-| `--font-display` | Decorative Latin-only HUD display text. Never use for CJK, accented Latin, translated strings, or user content. |
-| `--font-hud` | HUD labels, numerals, blog headings, safer Latin text. |
-| `--font-reading` | MDX body and long-form reading. |
-| `--font-typewriter` | Typewriter and monospace effects. |
-
-Mobile section anchors that may receive hash navigation or `scrollIntoView()` must have:
-
-```scss
-scroll-margin-top: var(--mobile-section-scroll-offset);
-```
-
-Do not replace this with JS scroll-offset helpers.
-
-## Custom MDX components
-
-The MDX renderer maps Markdown primitives and custom blocks. Two inline annotation components are especially important:
-
-| Component | Behavior | Use |
+| Route | 方法 | 责任 |
 |---|---|---|
-| `<Term note="...">word</Term>` | Renders as native ruby annotation; always visible. | Proper nouns, abbreviations, short glosses. |
-| `<Explain note="...">phrase</Explain>` | Tooltip/bottom-sheet explanation. | Longer sentence-level notes. |
+| `/api/hitokoto` | GET | timeout/cached 第三方文本代理 |
+| `/api/grant-check` | GET | 检查签名访问 Cookie |
+| `/api/protected-verify` | POST | 校验 TOTP、限流、设置 Cookie |
+| `/api/post-variant` | GET | 按 locale 返回 MDX；protected 需要 grant |
+| `/api/tweet-months` | GET | 分页返回 tweet month group |
+| `/api/assets/{audio,home,links,works}` | GET | 读取当前 Catalog section |
+| `/api/assets/collections/[slug]` | GET | 分页读取 collection |
+| `/api/revalidate` | POST | 刷新 tweet 页面 |
+| `/api/revalidate-content` | POST | 刷新 content 与可选 blog slug |
+| `/api/revalidate-assets` | POST | 刷新 home/content/friends/detail 资产页面 |
 
-`<Explain>` uses a focusable span rather than a button to avoid inline wrapping and centering issues. On mobile, it becomes a fixed bottom panel.
+Route 文件只适配 Web `Request` / `Response`；业务 handler 位于 feature/server。未导出的方法由 Next.js 返回 `405`。
+
+## Styling 边界
+
+- component 使用 SCSS Module。
+- `src/app/styles/globals.scss` 提供颜色、字体、z-index 和 performance attribute token。
+- `src/app/styles/Shell.module.scss` 是应用 shell style entry。
+- feature section style 留在所属 feature。
+- semantic `--z-*` token 是全局 overlay 顺序来源。
+- mobile/desktop boundary 为 `767px` / `768px`。
+
+## 性能架构
+
+document bootstrap 只读取 reduced motion 与 Save-Data，生成 hydration-safe 初始 tier。运行时 HUD controller 根据 frame pacing 逐级关闭能力，并把状态写入 `<html data-*>`。
+
+WebGL module 必须允许 lazy load failure、context loss、pause 和能力关闭。Fiber 的 clock 使用仓库 patch 改成 `THREE.Timer` compatibility wrapper。
+
+详见 [`PERFORMANCE.md`](./PERFORMANCE.md)。
+
+## Failure boundary
+
+- GitHub 内容缺失：博客 fallback、推文空状态。
+- public site manifest 失败：移除可选装饰，不阻断导航。
+- private Catalog 失败：API 返回明确 `502`，server loader 使用定义好的 fallback。
+- telemetry provider 失败：error boundary 隔离，不阻断站点。
+- Upstash 失败：记录错误并退回本地限流。
+- WebGL import/context 失败：关闭对应能力，保留基础 UI。
+- protected variant `403`：回到 `authRequired`，不显示缓存外正文。
+
+## 关键不变量
+
+1. 只使用 App Router。
+2. Vercel 不运行 `server.js`。
+3. 内部导航使用 `navigateTo()`。
+4. locale 不由 IP 选择。
+5. locale data 使用静态 registry。
+6. protected body 不进入静态 payload。
+7. invoked actor 保留请求取消语义。
+8. WebGL 不在 transition 中反复销毁/重建 context。
+9. Catalog pointer 最后切换，public object 使用 immutable hash。
+10. Fiber 精确版本与 patch 同步维护。
+
+## 相关文档
+
+- [`ROUTING_AND_I18N.md`](./ROUTING_AND_I18N.md)
+- [`CONTENT_AND_MDX.md`](./CONTENT_AND_MDX.md)
+- [`SECURITY.md`](./SECURITY.md)
+- [`ASSETS.md`](./ASSETS.md)
+- [`PERFORMANCE.md`](./PERFORMANCE.md)

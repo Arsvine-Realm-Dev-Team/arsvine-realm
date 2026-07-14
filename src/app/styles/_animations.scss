@@ -88,12 +88,12 @@
 // 文字脉冲动画
 @keyframes textPulse {
   0% {
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(var(--white-rgb), 0.7);
     text-shadow: 0 0 5px rgba(150, 150, 150, 0.3);
   }
   100% {
-    color: rgba(255, 255, 255, 1);
-    text-shadow: 0 0 8px rgba(200, 200, 200, 0.7);
+    color: rgba(var(--white-rgb), 1);
+    text-shadow: 0 0 8px rgba(var(--ark-primary-rgb), 0.7);
   }
 }
 

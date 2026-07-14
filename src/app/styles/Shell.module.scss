@@ -289,8 +289,8 @@
   height: 220vh;
   background: radial-gradient(
     circle,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(200, 200, 200, 0.03) 40%,
+    rgba(var(--white-rgb), 0.05) 0%,
+    rgba(var(--ark-primary-rgb), 0.03) 40%,
     rgba(0, 0, 0, 0) 80%
   );
   transform: translate(-50%, -50%);
@@ -310,8 +310,8 @@
   pointer-events: none;
   background: repeating-linear-gradient(
     to bottom,
-    rgba(200, 200, 200, 0.15),
-    rgba(200, 200, 200, 0.15) 1px,
+    rgba(var(--ark-primary-rgb), 0.15),
+    rgba(var(--ark-primary-rgb), 0.15) 1px,
     transparent 1px,
     transparent 4px
   );
@@ -335,7 +335,7 @@
   background: linear-gradient(to bottom, 
     transparent, 
     transparent 49.9%, 
-    rgba(200, 200, 200, 0.1) 50%, 
+    rgba(var(--ark-primary-rgb), 0.1) 50%,
     transparent 50.1%, 
     transparent
   );

@@ -5,7 +5,7 @@ const eslintConfig = [
   {
     settings: {
       react: {
-        version: "19.0",
+        version: "19.2",
       },
     },
     rules: {

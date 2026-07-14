@@ -1,5 +1,5 @@
 import { useActor } from '@xstate/react';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import type { BlogPostMeta, TranslationStatus } from '../../../shared/types';
 import { type Locale } from '@/shared/contracts/locale';
@@ -107,7 +107,13 @@ export default function useBlogPostState({
 
   const [snapshot, send] = useActor(blogPostMachine, { input: articleInput });
 
+  // actor 创建时已使用当前 input 初始化。只在 memoized input 对象真正变化时同步；
+  // Strict Mode 重放首次 effect 时对象身份不变，因此不会重复发送 ARTICLE_CHANGED。
+  // 这里不比较 slug/locale request key，后续每次完整 input 变化仍进入 actor cancellation 流程。
+  const committedArticleInputRef = useRef(articleInput);
   useEffect(() => {
+    if (committedArticleInputRef.current === articleInput) return;
+    committedArticleInputRef.current = articleInput;
     send({ type: 'ARTICLE_CHANGED', ...articleInput });
   }, [articleInput, send]);
 

@@ -13,7 +13,7 @@ import {
   createTesseractLineGeometry,
   resolveBatteryWorldPosition,
   type BatteryPosition3D,
-} from '@/shared/lib/tesseract-geometry';
+} from '@/features/hud/model/tesseract-geometry';
 
 export interface TesseractHandle {
   getPosition: () => THREE.Vector3 | undefined;
@@ -57,6 +57,7 @@ function Tesseract({
 
   const raycaster = useMemo(() => new THREE.Raycaster(), []);
   const targetPosition = useMemo(() => new THREE.Vector3(), []);
+  const batteryWorldPosRef = useMemo(() => new THREE.Vector3(), []);
   const targetPlane = useRef(new THREE.Plane());
   const planeNormal = useRef(new THREE.Vector3());
   const mouseNdc = useMemo(() => new THREE.Vector2(), []);
@@ -156,8 +157,8 @@ function Tesseract({
         api.velocity.set(0, 0, 0);
         api.angularVelocity.set(0, 0, 0);
 
-        const batteryWorldPosition = resolveBatteryWorldPosition(batteryPosition3D, camera);
-        const distance = targetPosition.distanceTo(batteryWorldPosition);
+        resolveBatteryWorldPosition(batteryPosition3D, camera, batteryWorldPosRef);
+        const distance = targetPosition.distanceTo(batteryWorldPosRef);
 
         if (distance < 2.5) {
           currentlyConnecting = true;

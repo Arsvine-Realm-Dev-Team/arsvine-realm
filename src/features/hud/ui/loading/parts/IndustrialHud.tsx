@@ -17,20 +17,32 @@ function IndustrialHud({ ref }: { ref?: React.Ref<IndustrialHudRef> }) {
   const scaleRightRef = useRef<HTMLDivElement>(null);
   const { isTablet } = useResponsive();
 
+  const gsapCtxRef = useRef<ReturnType<typeof gsap.context> | null>(null);
+
   useImperativeHandle(ref, () => ({
     container: bgHudLayerRef.current,
     hudElements: hudElementsRef.current,
     initAnimations: () => {
-      if (!isTablet) {
+      if (isTablet) return;
+      // 用 gsap.context 包裹两个 repeat:-1 tween，卸载时统一 revert，
+      // 避免 HomeLoadingScreen 的 timeline.kill() 杀不到独立 tween 而泄漏。
+      gsapCtxRef.current?.revert();
+      gsapCtxRef.current = gsap.context(() => {
         if (scaleLeftRef.current) {
           gsap.to(scaleLeftRef.current, { y: '-50%', duration: 10, ease: 'none', repeat: -1 });
         }
         if (scaleRightRef.current) {
           gsap.to(scaleRightRef.current, { y: '-50%', duration: 10, ease: 'none', repeat: -1 });
         }
-      }
-    }
+      });
+    },
   }));
+
+  useEffect(() => {
+    return () => {
+      gsapCtxRef.current?.revert();
+    };
+  }, []);
 
   // ===================== Clock (direct DOM update, no re-render) =====================
   useEffect(() => {

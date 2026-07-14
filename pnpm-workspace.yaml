@@ -4,6 +4,7 @@ allowBuilds:
   esbuild: true
   sharp: true
   unrs-resolver: true
+minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
   - cos-nodejs-sdk-v5@3.0.0
   - next-intl@4.13.2

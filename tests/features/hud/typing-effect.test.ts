@@ -4,7 +4,7 @@ import {
   TYPING_CONSTANTS,
   formatFateTextForWrap,
   getTypingDelays,
-} from '@/shared/lib/typing-effect';
+} from '@/features/hud/model/typing-effect';
 
 describe('getTypingDelays', () => {
   it('returns the alphabetic profile for pure Latin text', () => {

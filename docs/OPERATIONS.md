@@ -1,232 +1,157 @@
-# Operations Guide
+# 部署与运维
 
-This document covers deployment, external services, environment variables, CDN/COS handling, analytics, ISR, and operational checks for **ARSVINE REALM**.
+[返回文档导航](./README.md)
 
-## Deployment
+本文覆盖 Vercel、自托管、环境配置、ISR/revalidation、外部服务、发布 smoke test、回滚和故障响应。资产发布细节见 [`ASSETS.md`](./ASSETS.md)。
 
-This project deploys in two distinct modes. **Do not conflate them** — they have different entry points and different `server.js` semantics.
+## 两种运行模式
 
-### Vercel (current production)
+### Vercel（当前生产）
 
-The project is deployed on Vercel. Vercel does **not** run `server.js`. It builds the project with `next build` and runs:
+Vercel 不运行 `server.js`，也不执行 `pnpm start`。它使用标准 Next.js 输出：
 
-- `src/proxy.ts` as the Next.js **Proxy** layer;
-- `src/app/api/**/route.ts` as **Route Handlers / Serverless Functions**;
-- App Router routes under `src/app/**` via the standard Next.js build output (static rendering, ISR, and dynamic server rendering).
+- `src/proxy.ts` → Proxy；
+- `src/app/api/**/route.ts` → Functions；
+- App Router page → static、ISR 或 dynamic rendering。
 
-Environment variables are configured in the Vercel project settings. The Vercel build does not execute `pnpm start`.
-
-### Self-hosted
-
-For non-Vercel deployments (VPS, Docker, on-prem), `server.js` is the production entry. The flow is:
+Build command：
 
 ```bash
 pnpm build
-pnpm start          # cross-env NODE_ENV=production node server.js
 ```
 
-Or under a process manager:
+Node.js 项目设置应为 `24.x`，并与 `package.json#engines` 一致。
+
+### 自托管
+
+```bash
+pnpm install --frozen-lockfile
+pnpm build
+pnpm start
+```
+
+`pnpm start` 运行：
+
+```text
+cross-env NODE_ENV=production node server.js
+```
+
+进程管理器示例：
 
 ```bash
 pm2 start server.js --name arsvine-realm
 ```
 
-In this mode, `server.js` passes requests to the standard Next.js request handler. Locale routing remains owned by `src/proxy.ts`, so self-hosted behavior stays aligned with Vercel; Vercel itself does not execute `server.js`.
+自托管反向代理必须传递正确 host/protocol，并只在它覆盖 forwarding IP header 时设置 `TRUST_PROXY=1`。
 
-## Required production variables
+## 生产配置
 
-At minimum:
+最低配置：
 
 ```env
 NODE_ENV=production
 NEXT_PUBLIC_SITE_URL=https://arsvine.com
 ```
 
-`NEXT_PUBLIC_SITE_URL` is used by sitemap, RSS, robots, Open Graph, and canonical URL generation.
+实际功能还可能需要 GitHub、TOTP、Upstash、COS 和 revalidation 变量。完整矩阵见 [`CONFIGURATION.md`](./CONFIGURATION.md)。
 
-## Optional public variables
+部署环境中的 secret 不得暴露为 `NEXT_PUBLIC_*`。
 
-```env
-NEXT_PUBLIC_CDN_BASE=https://cdn.arsvine.com
-# NEXT_PUBLIC_TELEMETRY_PROVIDER=vercel
+## 发布前检查
+
+```bash
+pnpm install --frozen-lockfile
+pnpm check
+git status --short
 ```
 
-Rules:
+确认：
 
-- Public variables are visible in browser bundles.
-- Telemetry is disabled when `NEXT_PUBLIC_TELEMETRY_PROVIDER` is unset.
-- Set it to `vercel` only in deployments where Analytics and Speed Insights are intended.
+- Node/pnpm 版本正确；
+- lockfile 与 patch 可应用；
+- 环境变量已配置到正确 environment；
+- 没有把 `.env.local`、`cos-workspace/`、`dist/` 或私有媒体加入提交；
+- protected post 和 asset Catalog 依赖已准备；
+- 文档中的 migration/rollback 步骤已评审。
 
-## Server-only variables
+## Revalidation API
 
-```env
-GITHUB_OWNER=ArsvineZhu
-GITHUB_REPO=arsvine-content
-GITHUB_BRANCH=main
-GITHUB_READ_TOKEN=github_pat_xxx
+认证 secret 放在 JSON body：
 
-ACCESS_GRANT_SECRET=replace-with-a-long-random-string
-TOTP_GROUPS_JSON={"friends-a":{"current":"JBSWY3DPEHPK3PXP","period":30,"digits":6,"window":1}}
-
-REVALIDATE_SECRET=replace-with-a-long-random-string
-TRUST_PROXY=1
-
-UPSTASH_REDIS_REST_URL=https://xxx.upstash.io
-UPSTASH_REDIS_REST_TOKEN=your-token
+```bash
+curl -X POST https://arsvine.com/api/revalidate-content \
+  -H "content-type: application/json" \
+  -d '{"secret":"REPLACE_ME","slug":"example-post"}'
 ```
 
-Never prefix secrets with `NEXT_PUBLIC_`.
+| Route | 刷新范围 |
+|---|---|
+| `POST /api/revalidate` | 三个 locale 的 tweets page |
+| `POST /api/revalidate-content` | 三个 locale 的 content；可选安全 slug 的 blog detail |
+| `POST /api/revalidate-assets` | home、content、friends、web/life detail |
 
-On Vercel, the runtime sets `VERCEL=1` and the API rate limiter trusts Vercel-managed forwarding headers automatically. For self-hosting, set `TRUST_PROXY=1` only when a trusted reverse proxy overwrites `X-Forwarded-For` / `X-Real-IP`; leave it unset for direct exposure.
+`/api/revalidate` 为旧管理客户端保留 `GET ?secret=`，新自动化应使用 POST body。其他两个 endpoint 不接受 query secret。
 
-## External content repository
+Revalidation 每个 client 每分钟最多 30 次。响应可能包含 `paths`、`skipped`、`failed` 或 `partial`，自动化不能只检查 HTTP `2xx`；还要检查失败数组。
 
-Blog posts and tweets can be served from a private GitHub repository. The production server reads it through GitHub Contents API using `GITHUB_READ_TOKEN`.
+## 外部 GitHub 内容
 
-Expected layout:
+生产 Function 通过 GitHub Contents API 读取私有仓库。运维检查：
 
-```text
-blog-index.json
-blog/<slug>/<locale>.mdx
-tweets/index.json
-tweets/YYYY-MM.json
-```
+1. Token 只读且未过期。
+2. owner/repo/branch 指向预期环境。
+3. `blog-index.json` 与实际 MDX locale 对齐。
+4. 新内容发布后调用对应 revalidation。
+5. GitHub failure 时 fallback 行为不会泄露 protected metadata。
 
-If the variables are missing:
+## Protected post
 
-- blog falls back to `content/blog/init/`;
-- tweets fall back to an empty state unless `TWEETS_STRESS_TEST=1` is set in development;
-- protected post features depending on external content are naturally unavailable.
+生产验收：
 
-## Protected-post access
+1. 未授权打开 protected page，只显示清理后的 metadata/gate。
+2. HTML/RSC 中没有正文。
+3. `/api/post-variant` 未授权返回 `403`。
+4. 有效 TOTP 设置 `Secure; HttpOnly; SameSite=Lax` Cookie。
+5. 正文随后通过 runtime API 加载。
+6. 错误尝试触发限流。
 
-TOTP-protected posts depend on:
+详见 [`SECURITY.md`](./SECURITY.md)。
 
-- external content index declaring `access.mode = "totp"` and `group`;
-- `ACCESS_GRANT_SECRET` for signed access cookies;
-- `TOTP_GROUPS_JSON` for group secrets;
-- `/api/protected-verify` for verification;
-- `/api/grant-check` and `/api/post-variant` for runtime access flow.
+## Upstash
 
-Operational checks:
+多实例生产应配置 Upstash Redis。监控：
 
-1. Visit a public post and verify direct rendering.
-2. Visit a protected post without access and verify no body content appears before verification.
-3. Check `_next/data/.../<slug>.json` for a protected post and verify no MDX body is present.
-4. Submit a valid TOTP code and verify the post body loads.
-5. Directly fetch `/api/post-variant?slug=<protected>&locale=zh-CN` without a grant and verify `403`.
+- Redis REST error；
+- `[rate-limit] redis enforce failed` 日志；
+- TOTP/revalidation 异常请求量；
+- fallback 到 local Map 的持续时间。
 
-## Upstash Redis rate limiting
+Redis 失败时系统可用性优先，会退回本地 limiter；这不是多实例安全保证，应尽快恢复。
 
-`/api/protected-verify` can use Upstash Redis for distributed rate limiting.
+## COS 与 CDN
 
-- With Upstash configured: rate limiting works across serverless instances.
-- Without Upstash: the project falls back to process-local `Map`, which is acceptable for local dev and single-instance testing but not reliable for multi-instance production.
+运维关注：
 
-Vercel Marketplace integration can inject:
+- public/private bucket region 与 credential；
+- public CORS、Referer、`Vary: Origin`；
+- `current.json` pointer 一致性；
+- versioned object 完整性；
+- CDN cache header 与 font Content-Type；
+- 流量预算和告警。
 
-```env
-UPSTASH_REDIS_REST_URL=...
-UPSTASH_REDIS_REST_TOKEN=...
-```
+资产发布、验证和回滚见 [`ASSETS.md`](./ASSETS.md)。
 
-## ISR and revalidation
-
-The site includes ISR trigger routes:
-
-```text
-/api/revalidate
-/api/revalidate-content
-```
-
-`/api/revalidate` revalidates the tweet pages for all locales. `/api/revalidate-content` revalidates the content page for all locales and, when a slug is provided, the matching blog detail pages.
-
-They are guarded by:
-
-```env
-REVALIDATE_SECRET=<long-random-string>
-```
-
-If `REVALIDATE_SECRET` is unset, revalidation endpoints should return unauthorized behavior and effectively remain disabled.
-
-Use these routes only from trusted automation or content-publish workflows.
-
-## Tencent COS media/CDN model
-
-The project uses Tencent COS Hong Kong bucket `arsvine-cdn`, served through `cdn.arsvine.com`.
-
-Canonical object layout:
-
-```text
-public bucket:  shared/fonts/**
-public bucket:  realm/images/YYYY/MM/DD/<name>.<hash>.<ext>
-public bucket:  realm/audio/YYYY/MM/DD/<name>.<hash>.<ext>
-private bucket: realm/catalog/current.json
-private bucket: realm/catalog/versions/<version>/{home,works,collections,links,audio}.json
-private bucket: realm/catalog/versions/<version>/static-assets.json (optional site-shell manifest)
-```
-
-Operational assumptions:
-
-- bucket is public-read / private-write;
-- audio and larger media are not committed to Git;
-- hashes make public media immutable; `current.json` is the only mutable catalog pointer;
-- `cos-workspace/coscli-windows-amd64.exe` is used with temporary environment credentials for upload, listing, and cleanup;
-- old root-level media prefixes must not be referenced after a catalog cutover.
-
-COS traffic is billable. A traffic package is not a hard limit; after the package is exhausted, traffic may continue and charge by usage. Keep budget alerts enabled.
-
-## COS Referer policy
-
-The bucket Referer allowlist is expected to allow:
-
-```text
-arsvine.com
-*.arsvine.com
-```
-
-Localhost and empty Referer are rejected. Use the local `dev.arsvine.com` hosts workflow documented in [`DEVELOPMENT.md`](./DEVELOPMENT.md) when testing real COS assets locally.
-
-## Font hosting operations
-
-Font refresh flow:
-
-1. edit `src/shared/config/site.ts` font URL configuration;
-2. run `node scripts/fetch-google-fonts.mjs`;
-3. upload `public/_fonts-staging/` to COS `shared/fonts/` with `coscli`;
-4. set object metadata exactly;
-5. verify with `curl -I`.
-
-Required metadata:
-
-| Object | Content-Type | Cache-Control |
-|---|---|---|
-| `google-fonts.css` | `text/css; charset=utf-8` | `public, max-age=86400, must-revalidate` |
-| `*.woff2` | `font/woff2` | `public, max-age=31536000, immutable` |
-
-Do not paste header names into the Value field. The Value field should contain only values such as `public, max-age=31536000, immutable`.
-
-## Analytics
-
-Telemetry is optional and disabled by default:
+## Telemetry
 
 ```env
 NEXT_PUBLIC_TELEMETRY_PROVIDER=vercel
 ```
 
-The application imports only its local telemetry adapter. Provider loading, rendering, and event failures are isolated and never block site behavior. Custom events must use `trackTelemetryEvent`; business components must not import provider packages.
+未设置时 telemetry 完全禁用。业务模块只调用本地 `trackTelemetryEvent`，不能直接依赖 provider package。Provider render 或 event failure 由边界隔离，不得阻断页面。
 
-## SEO and feed files
+检查 preview/localhost 是否按预期禁用数据采集，production domain 是否出现在 Vercel Analytics/Speed Insights。
 
-Dynamic files:
-
-| File | Source behavior |
-|---|---|
-| `/sitemap.xml` | Generated from site config, locales, posts, and routes. |
-| `/<locale>/rss.xml` | Per-locale RSS. |
-| `/robots.txt` | Generated from site URL and policy. |
-
-Operational check after deploy:
+## SEO 与 feed
 
 ```bash
 curl -I https://arsvine.com/sitemap.xml
@@ -234,37 +159,56 @@ curl -I https://arsvine.com/zh-CN/rss.xml
 curl -I https://arsvine.com/robots.txt
 ```
 
-Also verify the content body in a browser or with `curl` when changing URL generation.
+同时检查 response body、canonical host、locale URL、RSS language 和 content type。只检查 `200` 不足以发现错误 URL。
 
-## Image host operations
+## 发布后 smoke test
 
-Remote image hosts are configured in:
+- `/` 按 Cookie/Accept-Language `308` 到 locale。
+- `/zh-CN`、`/zh-TW`、`/en` 可加载。
+- `/zh-CN/content#blog` 正确滚动和 reveal。
+- public blog 可直接读取。
+- protected blog gate 与授权流程正确。
+- tweets page、分页 API 与 fallback 正确。
+- sitemap、RSS、robots 正确。
+- 新 Catalog 与 public manifest 生效。
+- 字体无 CJK tofu，远程图片无 CORS/Referer 错误。
+- 音乐播放器不产生意外 autoplay/repeated download。
+- mobile HUD、hash offset、drawer 和 cursor fallback 正常。
+- telemetry 只在预期环境启用。
 
-```text
-config/image-hosts.js
+## 回滚
+
+### 应用部署
+
+使用 Vercel deployment rollback/promotion 或恢复上一个已知良好提交。回滚后重新执行 smoke test；不要假设应用回滚会自动回滚 COS pointer 或外部内容。
+
+### 资产
+
+```bash
+pnpm assets:publish -- --rollback <version>
 ```
 
-When changing CDN/image providers:
+### 内容
 
-1. add or remove the host in `config/image-hosts.js`;
-2. rebuild the app;
-3. verify pages using `next/image` render successfully;
-4. check whether the host uses hotlink/referrer restrictions;
-5. avoid accidentally routing heavy assets through Vercel Image Optimization if direct COS delivery is intended.
+恢复外部内容仓库文件或索引后，调用 content/tweet revalidation。Protected metadata 泄漏类问题应先下线索引入口，再调查缓存。
 
-## Deployment smoke test
+### Secret
 
-After each production deployment, verify:
+泄漏时在平台轮换 secret/Token，重新部署 Function，并验证旧凭据失效。COS、GitHub、Upstash、TOTP 和 revalidation secret 分别处理。
 
-- `/zh-CN`, `/zh-TW`, `/en` load;
-- bare `/` redirects to a locale;
-- `/zh-CN/content#blog` lands correctly;
-- one public blog post loads;
-- one protected blog post gates correctly;
-- `/sitemap.xml`, `/robots.txt`, and `/zh-CN/rss.xml` work;
-- `cdn.arsvine.com` fonts load and do not produce CJK tofu;
-- music player does not auto-download excessive media;
-- mobile layout has no HUD overlap on hash navigation;
-- analytics are absent on localhost/preview when domain whitelist is set;
-- `pnpm check` passes before release.
-- `realm/catalog/current.json` and every catalog `objectKey` exist before removing old prefixes.
+## 故障响应顺序
+
+1. 判断影响面：单 locale、单 route、内容、资产、认证或全站。
+2. 查看 Vercel runtime/build log 或自托管 process log。
+3. 检查最近 deployment、content index 和 Catalog pointer。
+4. 检查外部依赖：GitHub、COS/CDN、Upstash。
+5. 使用最小只读请求复现。
+6. 能安全回滚时优先恢复服务，再做根因修复。
+7. 把新发现的稳定陷阱补充到 [`GOTCHAS.md`](./GOTCHAS.md)。
+
+## 相关文档
+
+- [`CONFIGURATION.md`](./CONFIGURATION.md)
+- [`ASSETS.md`](./ASSETS.md)
+- [`SECURITY.md`](./SECURITY.md)
+- [`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md)

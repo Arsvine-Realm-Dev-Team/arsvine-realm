@@ -15,7 +15,7 @@
     overflow: visible;
     position: relative;
     padding: 8px 10px;
-    border: 1px solid rgba(200, 200, 200, 0.08);
+    border: 1px solid rgba(var(--ark-primary-rgb), 0.08);
     border-radius: 2px;
 
     &::before {

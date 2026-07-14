@@ -77,29 +77,33 @@ const LazyImage = ({
     if (!isInView) return;
 
     const loadImage = async () => {
-      // 如果没有提供缩略图，先加载低质量版本
+      const highQualityUrl = getProcessedImageUrl(src, effectivePreset);
+      let highQualityLoaded = false;
+
+      // 缩略图与高质图并行请求（原串行 await 缩略图会延迟高质图首字节）
       if (!thumbnailSrc) {
         const thumbnailUrl = getThumbnailUrl(src);
         setCurrentSrc(thumbnailUrl);
-        
-        // 预加载缩略图
         const thumbnailImg = new Image();
-        await new Promise((resolve) => {
-          thumbnailImg.onload = resolve;
-          thumbnailImg.src = thumbnailUrl;
-        });
+        thumbnailImg.onload = () => {
+          if (!highQualityLoaded) setCurrentSrc(thumbnailUrl);
+        };
+        thumbnailImg.src = thumbnailUrl;
       }
 
-      // 然后加载高质量版本
-      const highQualityUrl = getProcessedImageUrl(src, effectivePreset);
       const highQualityImg = new Image();
-      
       highQualityImg.onload = () => {
+        highQualityLoaded = true;
         setCurrentSrc(highQualityUrl);
         setIsLoaded(true);
         if (onLoad) onLoad();
       };
-      
+      highQualityImg.onerror = () => {
+        // 加载失败时退出 loading 态，保留缩略图（若有）避免永久 spinner
+        highQualityLoaded = true;
+        setIsLoaded(true);
+        if (onLoad) onLoad();
+      };
       highQualityImg.src = highQualityUrl;
     };
 

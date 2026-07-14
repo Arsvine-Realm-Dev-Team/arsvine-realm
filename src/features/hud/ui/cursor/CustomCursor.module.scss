@@ -1,6 +1,6 @@
 @use '../../../../shared/styles/breakpoints';
-$c: rgba(200, 200, 200, 0.85);
-$c-dim: rgba(200, 200, 200, 0.25);
+$c: rgba(var(--ark-primary-rgb), 0.85);
+$c-dim: rgba(var(--ark-primary-rgb), 0.25);
 
 .cursorRoot {
   position: fixed;

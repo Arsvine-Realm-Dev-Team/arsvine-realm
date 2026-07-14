@@ -154,16 +154,16 @@
 
   &::before {
     background-image: repeating-linear-gradient(to bottom,
-        rgba(200, 200, 200, 0.1) 0,
-        rgba(200, 200, 200, 0.1) 1px,
+        rgba(var(--ark-primary-rgb), 0.1) 0,
+        rgba(var(--ark-primary-rgb), 0.1) 1px,
         transparent 1px,
         transparent 20px);
   }
 
   &::after {
     background-image: repeating-linear-gradient(to right,
-        rgba(200, 200, 200, 0.1) 0,
-        rgba(200, 200, 200, 0.1) 1px,
+        rgba(var(--ark-primary-rgb), 0.1) 0,
+        rgba(var(--ark-primary-rgb), 0.1) 1px,
         transparent 1px,
         transparent 20px);
   }

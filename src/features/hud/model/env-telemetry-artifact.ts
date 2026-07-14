@@ -1,5 +1,5 @@
 import type { EnvArtifactStage, EnvData } from '@/shared/contracts/environment';
-import { hashStringFnv1a } from './hash';
+import { hashStringFnv1a } from '@/shared/lib/hash';
 
 export type ArtifactGainReason = 'dwell' | 'route' | 'visibility-return' | 'scroll';
 

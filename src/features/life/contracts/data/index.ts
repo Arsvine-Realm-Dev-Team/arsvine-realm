@@ -1,4 +1,5 @@
 import type { LifeItem } from '@/shared/types';
+import type { Locale } from '@/shared/contracts/locale';
 import { findSourceItem, galleryReferences, legacyAssetReference, sourceManifests } from '@/features/assets/contracts/source-manifest';
 
 const arknightsSource = findSourceItem(sourceManifests.life, 'arknights');
@@ -141,3 +142,8 @@ export const alsoPlayGames: string[] = [
 // ============================================================
 export const artPlaceholderText =
   '艺术这栏暂时像一间还没完全通电的展厅：音乐、绘画、设计、电影、游戏视觉，我都喜欢，也都在慢慢看。只是现在能认真写下来的东西还不多。比起随便摆几句漂亮话，我更想等它们真的在我的审美里沉淀下来，再把这里整理成一间像样的档案室。';
+
+// 详情页 revalidation 路径注册表，供 /api/revalidate-assets 聚合调用
+export function getAssetRevalidationPaths(locale: Locale): string[] {
+  return [...gameData, ...travelData, ...otherData].map((item) => `/${locale}/life/${item.id}`);
+}

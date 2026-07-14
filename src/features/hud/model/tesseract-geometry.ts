@@ -88,16 +88,14 @@ export function projectWorldPositionToCanvas(
 export function resolveBatteryWorldPosition(
   batteryPosition3D: BatteryPosition3D,
   camera: THREE.Camera,
+  out: THREE.Vector3,
 ) {
-  const batteryWorldPos = new THREE.Vector3(
-    batteryPosition3D.x,
-    batteryPosition3D.y,
-    0.5,
-  );
-  batteryWorldPos.unproject(camera);
-  const direction = batteryWorldPos.sub(camera.position).normalize();
-  const distance = (batteryPosition3D.z - camera.position.z) / direction.z;
-  return camera.position.clone().add(direction.multiplyScalar(distance));
+  out.set(batteryPosition3D.x, batteryPosition3D.y, 0.5);
+  out.unproject(camera);
+  out.sub(camera.position).normalize();
+  const distance = (batteryPosition3D.z - camera.position.z) / out.z;
+  out.multiplyScalar(distance).add(camera.position);
+  return out;
 }
 
 export function computeBatteryAttractionOffset({

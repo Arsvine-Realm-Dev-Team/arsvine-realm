@@ -60,8 +60,8 @@
   padding: 16px 28px 16px 28px;
   margin: 0.4em 0;
   margin-bottom: 1.2em;
-  border-left: 2px solid rgba(230, 230, 230, 0.12);
-  background: rgba(255, 255, 255, 0.015);
+  border-left: 2px solid rgba(var(--ark-text-rgb), 0.12);
+  background: rgba(var(--white-rgb), 0.015);
   position: relative;
   font-style: italic;
 
@@ -72,7 +72,7 @@
     left: 10px;
     font-family: var(--font-hud);
     font-size: 2rem;
-    color: rgba(230, 230, 230, 0.1);
+    color: rgba(var(--ark-text-rgb), 0.1);
     line-height: 1;
     font-style: normal;
   }
@@ -129,7 +129,7 @@
       left: 0;
       font-family: var(--font-mono);
       font-size: 0.85em;
-      color: rgba(230, 230, 230, 0.35);
+      color: rgba(var(--ark-text-rgb), 0.35);
       font-weight: 500;
     }
   }
@@ -141,10 +141,10 @@
 }
 
 .strong {
-  color: rgba(200, 200, 200, 0.95);
+  color: rgba(var(--ark-primary-rgb), 0.95);
   font-weight: 600;
   text-decoration: underline;
-  text-decoration-color: rgba(200, 200, 200, 0.25);
+  text-decoration-color: rgba(var(--ark-primary-rgb), 0.25);
   text-underline-offset: 5px;
   text-decoration-thickness: 1.5px;
 }
@@ -155,7 +155,7 @@
   transition: background 0.25s ease, color 0.25s ease, text-decoration-color 0.25s ease;
 
   &:hover {
-    background: rgba(230, 230, 230, 0.88);
+    background: rgba(var(--ark-text-rgb), 0.88);
     color: #0d0d0d;
     text-decoration-color: rgba(13, 13, 13, 0.25);
   }
@@ -178,7 +178,7 @@
     display: block;
     width: 80px;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(230, 230, 230, 0.15), transparent);
+    background: linear-gradient(90deg, transparent, rgba(var(--ark-text-rgb), 0.15), transparent);
     margin: 0 auto;
   }
 
@@ -190,7 +190,7 @@
     width: 4px;
     height: 4px;
     transform: translate(-50%, -50%) rotate(45deg);
-    border: 1px solid rgba(230, 230, 230, 0.16);
+    border: 1px solid rgba(var(--ark-text-rgb), 0.16);
   }
 }
 
@@ -244,7 +244,7 @@
     display: block;
     width: 20px;
     height: 1px;
-    background: rgba(230, 230, 230, 0.18);
+    background: rgba(var(--ark-text-rgb), 0.18);
     margin-top: 2em;
   }
 }
@@ -259,9 +259,9 @@
   padding: 20px 24px 20px 36px;
   margin: 0.5em 0;
   margin-bottom: 1.6em;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-left: 2px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(var(--white-rgb), 0.06);
+  border-left: 2px solid rgba(var(--white-rgb), 0.1);
+  background: rgba(var(--white-rgb), 0.01);
 
   &::before {
     content: '//';
@@ -270,7 +270,7 @@
     left: 12px;
     font-family: var(--font-mono);
     font-size: var(--fs-2xs);
-    color: rgba(230, 230, 230, 0.2);
+    color: rgba(var(--ark-text-rgb), 0.2);
     letter-spacing: 0.05em;
   }
 
@@ -285,7 +285,7 @@
   }
 
   strong {
-    color: rgba(230, 230, 230, 0.9);
+    color: rgba(var(--ark-text-rgb), 0.9);
   }
 }
 
@@ -293,7 +293,7 @@
   display: block;
   font-family: var(--font-mono);
   font-size: var(--fs-2xs);
-  color: rgba(230, 230, 230, 0.22);
+  color: rgba(var(--ark-text-rgb), 0.22);
   letter-spacing: 0.2em;
   padding-bottom: 1.8em;
   text-transform: uppercase;
@@ -302,7 +302,7 @@
   &::before {
     content: '—';
     margin-right: 0.6em;
-    color: rgba(230, 230, 230, 0.12);
+    color: rgba(var(--ark-text-rgb), 0.12);
   }
 }
 
@@ -327,19 +327,19 @@
 
     &::before {
       font-size: 1em;
-      color: rgba(230, 230, 230, 0.3);
+      color: rgba(var(--ark-text-rgb), 0.3);
     }
   }
 
   a {
     color: var(--ark-text);
     opacity: 0.8;
-    border-bottom: 1px solid rgba(230, 230, 230, 0.15);
+    border-bottom: 1px solid rgba(var(--ark-text-rgb), 0.15);
     transition: opacity 0.2s ease, border-color 0.2s ease;
 
     &:hover {
       opacity: 1;
-      border-bottom-color: rgba(230, 230, 230, 0.4);
+      border-bottom-color: rgba(var(--ark-text-rgb), 0.4);
     }
   }
 
@@ -368,7 +368,7 @@
   font-family: var(--font-hud);
   font-size: 0.55em;
   font-weight: 400;
-  color: rgba(230, 230, 230, 0.55);
+  color: rgba(var(--ark-text-rgb), 0.55);
   letter-spacing: 0.05em;
   line-height: 1.2;
   // rt 视觉旁注，不入用户选区；纯文本复制由 <rp>(...)</rp> 兜底

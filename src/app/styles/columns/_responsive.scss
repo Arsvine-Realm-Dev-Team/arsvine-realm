@@ -229,7 +229,7 @@
     font-family: var(--font-hud);
     font-size: var(--fs-micro);
     letter-spacing: 1.5px;
-    color: var(--ark-text-secondary, rgba(200, 200, 200, 0.5));
+    color: var(--ark-text-secondary, rgba(var(--ark-primary-rgb), 0.5));
     opacity: 0.2;
     z-index: 2;
     pointer-events: none;

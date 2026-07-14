@@ -1,7 +1,7 @@
 import { revalidatePath } from 'next/cache';
 import { locales } from '@/shared/contracts/locale';
-import { webProjects, gameProjects, earlyProjects } from '@/features/portfolio/contracts/data';
-import { gameData, travelData, otherData } from '@/features/life/contracts/data';
+import { getAssetRevalidationPaths as getPortfolioPaths } from '@/features/portfolio/contracts/data';
+import { getAssetRevalidationPaths as getLifePaths } from '@/features/life/contracts/data';
 import { enforceRateLimit } from '@/shared/lib/content/rate-limit';
 import { getClientAddress, jsonResponse } from '@/shared/server/http';
 import { authenticateRevalidation } from '@/shared/server/revalidation';
@@ -22,12 +22,10 @@ export default async function handler(request: Request) {
   const auth = await authenticateRevalidation(request);
   if (!auth.ok) return auth.response;
 
-  const projects = [...webProjects, ...gameProjects, ...earlyProjects];
-  const lifeItems = [...gameData, ...travelData, ...otherData];
   const paths = locales.flatMap((locale) => [
     `/${locale}`, `/${locale}/content`, `/${locale}/friends`,
-    ...projects.map((project) => `/${locale}/web/${project.id}`),
-    ...lifeItems.map((item) => `/${locale}/life/${item.id}`),
+    ...getPortfolioPaths(locale),
+    ...getLifePaths(locale),
   ]);
   const results = await Promise.allSettled(paths.map(async (route) => revalidatePath(route)));
   const failed: string[] = [];

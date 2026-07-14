@@ -1,4 +1,4 @@
-import { lerp, clamp } from '@/shared/lib/raf-lerp';
+import { lerp, clamp } from '@/features/hud/model/raf-lerp';
 
 export const MAGNETIC_DISTANCE = 120;
 export const MAGNETIC_STRENGTH = 0.4;

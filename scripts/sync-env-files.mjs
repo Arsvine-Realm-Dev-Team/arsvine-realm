@@ -318,6 +318,7 @@ function renderExampleFile() {
 }
 
 function renderLocalFile(currentValues) {
+  const managedKeys = new Set();
   const lines = [];
   for (const section of SECTIONS) {
     if (lines.length > 0) {
@@ -326,8 +327,21 @@ function renderLocalFile(currentValues) {
 
     lines.push(...renderSectionHeader(section.title));
     for (const entry of section.entries) {
+      managedKeys.add(entry.key);
       const value = currentValues.has(entry.key) ? currentValues.get(entry.key) : entry.localDefault;
       lines.push(`${entry.key}=${value ?? ''}`);
+    }
+  }
+
+  // 保留 .env.local 中不在注册表的未知键（开发者临时调试 env），避免静默清除
+  const unmanagedKeys = [...currentValues.keys()]
+    .filter((key) => !managedKeys.has(key))
+    .sort();
+  if (unmanagedKeys.length > 0) {
+    lines.push('');
+    lines.push('# (unmanaged) keys below are not in the env registry; kept as-is');
+    for (const key of unmanagedKeys) {
+      lines.push(`${key}=${currentValues.get(key)}`);
     }
   }
 
@@ -355,7 +369,7 @@ function collectSummary(currentValues) {
 
 function printSummary(summary) {
   const render = (label, keys) => `${label}: ${keys.length ? keys.join(', ') : '(none)'}`;
-  console.log(render('removed keys', summary.removed));
+  console.log(render('unmanaged keys (kept)', summary.removed));
   console.log(render('added keys', summary.added));
   console.log(render('kept keys', summary.kept));
 }

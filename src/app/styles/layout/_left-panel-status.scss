@@ -166,7 +166,7 @@
   top: 0;
   width: 6.5vw;
   height: 100vh;
-  background-image: radial-gradient(circle, rgba(200, 200, 200, 0.2) 1px, transparent 1.1px); // Small, less opaque grey dots
+  background-image: radial-gradient(circle, rgba(var(--ark-primary-rgb), 0.2) 1px, transparent 1.1px); // Small, less opaque grey dots
   background-size: 10px 10px; // Spacing of the dots
   z-index: 5; // Behind leftPanel (z-index 10), above gridBackground (z-index 1)
   pointer-events: none;

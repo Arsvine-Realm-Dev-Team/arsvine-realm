@@ -131,17 +131,18 @@ function WebDetailContent({
   const heroBgRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitle = useTypingSubtitle(project.description, 55, 900);
-  const { visible, setRef } = useDetailScrollReveal(wrapperRef);
+  const detailDepsKey = [
+    project.articleContent?.length ?? 0,
+    project.galleryImages?.length ?? 0,
+    project.highlights?.length ?? 0,
+    project.liveUrl ?? '',
+    project.githubUrl ?? '',
+    Array.isArray(project.videoUrl) ? project.videoUrl.join('|') : project.videoUrl ?? '',
+  ].join('|');
+  const { visible, setRef } = useDetailScrollReveal(wrapperRef, detailDepsKey);
   const { activeNav, bindSectionRef, isPastHero, scrollToSection } = useDetailSectionNav({
     rootRef: wrapperRef,
-    depsKey: [
-      project.articleContent?.length ?? 0,
-      project.galleryImages?.length ?? 0,
-      project.highlights?.length ?? 0,
-      project.liveUrl ?? '',
-      project.githubUrl ?? '',
-      Array.isArray(project.videoUrl) ? project.videoUrl.join('|') : project.videoUrl ?? '',
-    ].join('|'),
+    depsKey: detailDepsKey,
   });
 
   useDetailHeroParallax(wrapperRef, heroBgRef);

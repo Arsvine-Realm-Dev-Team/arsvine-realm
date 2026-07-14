@@ -52,6 +52,6 @@ describe('maintenance scripts', () => {
     expect(synchronized).toContain('COS_PUBLIC_REGION=ap-hongkong');
     expect(synchronized).toContain('COS_PRIVATE_BUCKET=private-bucket');
     expect(synchronized).toContain('COS_PRIVATE_REGION=ap-hongkong');
-    expect(synchronized).not.toContain('UNREGISTERED_KEY');
+    expect(synchronized).toContain('UNREGISTERED_KEY=remove-me');
   });
 });

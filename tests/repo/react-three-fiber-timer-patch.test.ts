@@ -24,4 +24,13 @@ describe('React Three Fiber timer compatibility patch', () => {
     expect(patch).toContain('-      clock: new THREE.Clock(),');
     expect(patch).toContain('-      clock: new THREE__namespace.Clock(),');
   });
+
+  it('pins Fiber to an exact version so the patch cannot be silently dropped', () => {
+    const pkg = readSource('package.json');
+    const match = pkg.match(/"@react-three\/fiber":\s*"([^"]+)"/);
+    expect(match).not.toBeNull();
+    // 精确锁版（无 ^/~ 前缀）：caret 会自动跳到未打补丁的 patch 版本，
+    // pnpm 届时只打 warning 不应用补丁，导致 3D 可暂停 clock 静默退回 THREE.Clock()。
+    expect(match![1]).toBe('9.6.1');
+  });
 });

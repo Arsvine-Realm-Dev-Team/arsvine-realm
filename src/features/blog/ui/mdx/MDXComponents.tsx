@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from '../../styles/MDXContent.module.scss';
+import { getSafeMdxHref } from '@/features/blog/model/mdxHref';
 import Term from './Term';
 import Explain from './Explain';
 
@@ -13,11 +14,18 @@ const MDXComponents: MDXComponentsType = {
   blockquote: ({ children }) => (
     <blockquote className={styles.blockquote}>{children}</blockquote>
   ),
-  a: ({ href, children }) => (
-    <a href={href} target="_blank" rel="noopener noreferrer" className={styles.a}>
-      {children}
-    </a>
-  ),
+  a: ({ href, children }) => {
+    const safeHref = getSafeMdxHref(href);
+    if (!safeHref) {
+      // 危险协议或协议相对 URL 降级为纯文本，防止内容链接绕过协议限制。
+      return <span className={styles.a}>{children}</span>;
+    }
+    return (
+      <a href={safeHref} target="_blank" rel="noopener noreferrer" className={styles.a}>
+        {children}
+      </a>
+    );
+  },
   ul: ({ children }) => <ul className={styles.ul}>{children}</ul>,
   ol: ({ children }) => <ol className={styles.ol}>{children}</ol>,
   li: ({ children }) => <li className={styles.li}>{children}</li>,

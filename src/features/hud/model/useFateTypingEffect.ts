@@ -4,7 +4,7 @@ import type { FateTypingState } from '@/features/hud/contracts/state';
 import {
   formatFateTextForWrap,
   getTypingDelays,
-} from '@/shared/lib/typing-effect';
+} from '@/features/hud/model/typing-effect';
 
 /**
  * Fate text typing effect — 节奏：

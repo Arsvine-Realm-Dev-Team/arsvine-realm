@@ -151,7 +151,7 @@
   gap: 2px;
   background: transparent;
   border: none;
-  color: var(--ark-text-secondary, rgba(200, 200, 200, 0.5));
+  color: var(--ark-text-secondary, rgba(var(--ark-primary-rgb), 0.5));
   font-family: var(--font-hud);
   cursor: none;
   transition: color 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
@@ -191,7 +191,7 @@
   }
 
   &.bottomBarDisabled {
-    color: rgba(200, 200, 200, 0.15);
+    color: rgba(var(--ark-primary-rgb), 0.15);
     cursor: default;
     pointer-events: none;
   }

@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-export function useDetailScrollReveal(rootRef: React.RefObject<HTMLElement | null>) {
+export function useDetailScrollReveal(
+  rootRef: React.RefObject<HTMLElement | null>,
+  depsKey: string = '',
+) {
   const refs = useRef<(HTMLElement | null)[]>([]);
   const [visible, setVisible] = useState<Set<number>>(new Set());
   const [ready, setReady] = useState(false);
@@ -44,7 +47,7 @@ export function useDetailScrollReveal(rootRef: React.RefObject<HTMLElement | nul
     });
 
     return () => observer.disconnect();
-  }, [ready, rootRef]);
+  }, [ready, rootRef, depsKey]);
 
   const setRef = useCallback((index: number) => (element: HTMLElement | null) => {
     refs.current[index] = element;

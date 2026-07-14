@@ -1,4 +1,5 @@
 import type { CopyableToken, Project } from '@/shared/types';
+import type { Locale } from '@/shared/contracts/locale';
 import { findSourceItem, galleryReferences, legacyAssetReference, sourceManifests } from '@/features/assets/contracts/source-manifest';
 
 const realmSource = findSourceItem(sourceManifests.portfolio, 'arsvine-realm');
@@ -112,3 +113,10 @@ export const copyableTokens: CopyableToken[] = [
   { pattern: '2162371684', label: '个人 QQ 号' },
   { pattern: 'Details', label: '查看详情' },
 ];
+
+// 详情页 revalidation 路径注册表，供 /api/revalidate-assets 聚合调用
+export function getAssetRevalidationPaths(locale: Locale): string[] {
+  return [...webProjects, ...gameProjects, ...earlyProjects].map(
+    (project) => `/${locale}/web/${project.id}`,
+  );
+}

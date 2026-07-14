@@ -15,7 +15,7 @@
     "assets:publish": "node scripts/assets-publish.mjs",
     "env:sync": "node scripts/sync-env-files.mjs",
     "maintenance:check": "node scripts/fetch-google-fonts.mjs --check-config",
-    "check": "pnpm maintenance:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+    "check": "node scripts/fetch-google-fonts.mjs --check-config && eslint . && tsc --noEmit && vitest run && next build"
   },
   "keywords": [],
   "author": "Arsvine Zhu",
@@ -26,8 +26,7 @@
   },
   "dependencies": {
     "@react-three/cannon": "^6.6.0",
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.6.1",
+    "@react-three/fiber": "9.6.1",
     "@upstash/redis": "^1.38.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/functions": "^3.7.0",

@@ -63,7 +63,7 @@
   position: relative;
   overflow: hidden;
   border: 1px solid var(--ark-border);
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(var(--white-rgb), 0.02);
   cursor: none;
   transition: border-color 0.4s ease;
 
@@ -72,7 +72,7 @@
   }
 
   &:hover {
-    border-color: rgba(255, 255, 255, 0.25);
+    border-color: rgba(var(--white-rgb), 0.25);
 
     .galleryOverlay {
       opacity: 1;
@@ -90,7 +90,7 @@
   }
 
   @include breakpoints.mobile {
-    border-color: rgba(255, 255, 255, 0.12);
+    border-color: rgba(var(--white-rgb), 0.12);
 
     .galleryCornerTL,
     .galleryCornerBR {
@@ -128,7 +128,7 @@
   position: absolute;
   width: 16px;
   height: 16px;
-  border-color: rgba(255, 255, 255, 0.4);
+  border-color: rgba(var(--white-rgb), 0.4);
   border-style: solid;
   opacity: 0;
   transition: opacity 0.4s ease;
@@ -196,12 +196,12 @@
   max-width: 1400px;
   margin: 0;
   border: 1px solid var(--ark-border);
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(var(--white-rgb), 0.02);
   transition: border-color 0.4s ease;
   overflow: hidden;
   
   &:hover {
-    border-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(var(--white-rgb), 0.15);
   }
 
   /* Make LazyImage container fit content */
@@ -231,7 +231,7 @@
   min-width: 0;
   position: relative;
   border: 1px solid var(--ark-border);
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(var(--white-rgb), 0.02);
   transition: border-color 0.4s ease;
   overflow: hidden;
   cursor: none;
@@ -241,7 +241,7 @@
   }
 
   &:hover {
-    border-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(var(--white-rgb), 0.15);
   }
 
   :global(.lazyImageContainer) {

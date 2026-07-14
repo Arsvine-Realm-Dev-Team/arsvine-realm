@@ -82,14 +82,15 @@ function LifeDetailContent({
   const heroBgRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitle = useTypingSubtitle(item.description, 120, 2200);
-  const { visible, setRef } = useDetailScrollReveal(wrapperRef);
+  const detailDepsKey = [
+    item.articleContent?.length ?? 0,
+    item.galleryImages?.length ?? 0,
+    item.links?.length ?? 0,
+  ].join('|');
+  const { visible, setRef } = useDetailScrollReveal(wrapperRef, detailDepsKey);
   const { activeNav, bindSectionRef, isPastHero, scrollToSection } = useDetailSectionNav({
     rootRef: wrapperRef,
-    depsKey: [
-      item.articleContent?.length ?? 0,
-      item.galleryImages?.length ?? 0,
-      item.links?.length ?? 0,
-    ].join('|'),
+    depsKey: detailDepsKey,
   });
 
   useDetailHeroParallax(wrapperRef, heroBgRef);

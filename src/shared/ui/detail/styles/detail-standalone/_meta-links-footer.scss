@@ -66,7 +66,7 @@
   border: 1px solid var(--ark-border);
   color: var(--ark-text);
   opacity: 0.8;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(var(--white-rgb), 0.03);
   transition: border-color 0.3s, color 0.3s;
 
   &:hover {

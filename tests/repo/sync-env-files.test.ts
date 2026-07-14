@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 const execFileAsync = promisify(execFile);
 
 describe('sync-env-files script', () => {
-  it('removes unknown keys, preserves existing values, and fills missing keys', async () => {
+  it('preserves unknown keys, preserves existing values, and fills missing keys', async () => {
     const tempDir = await mkdtemp(path.join(os.tmpdir(), 'arsvine-env-sync-'));
     const localPath = path.join(tempDir, '.env.local');
     const examplePath = path.join(tempDir, '.env.example');
@@ -48,7 +48,7 @@ describe('sync-env-files script', () => {
     expect(localOutput).toContain('NEXT_PUBLIC_CDN_BASE=https://cdn.arsvine.com');
     expect(localOutput).toContain('ANALYZE=');
     expect(localOutput).toContain('NEXT_BUILD_DIR=');
-    expect(localOutput).not.toContain('LEGACY_PUBLIC_ASSET_ORIGIN=');
+    expect(localOutput).toContain('LEGACY_PUBLIC_ASSET_ORIGIN=https://cdn.arsvine.com');
 
     expect(exampleOutput).toContain('NEXT_PUBLIC_CDN_BASE=https://cdn.arsvine.com');
     expect(exampleOutput).toContain('# ANALYZE=true');

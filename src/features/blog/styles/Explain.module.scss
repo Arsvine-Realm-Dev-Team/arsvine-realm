@@ -16,7 +16,7 @@
   // 行盒自然换行，不会被强制单行或居中。
   // 注意：站点桌面端用 CustomCursor，body 设了 cursor: none —— 这里
   // 不要写 cursor: help / pointer，否则系统指针会在自定义光标之外露出。
-  text-decoration: underline dotted rgba(230, 230, 230, 0.5);
+  text-decoration: underline dotted rgba(var(--ark-text-rgb), 0.5);
   text-underline-offset: 4px;
   text-decoration-thickness: 1px;
   // box-decoration-break 让多行 trigger 跨行时背景色每行单独绘制，避免
@@ -35,9 +35,9 @@
 
   &:hover,
   &:focus-visible {
-    text-decoration-color: rgba(230, 230, 230, 0.9);
+    text-decoration-color: rgba(var(--ark-text-rgb), 0.9);
     color: var(--ark-text);
-    background-color: rgba(230, 230, 230, 0.1);
+    background-color: rgba(var(--ark-text-rgb), 0.1);
     outline: none;
   }
 
@@ -60,7 +60,7 @@
     text-decoration-color: transparent;
   }
   to {
-    text-decoration-color: rgba(230, 230, 230, 0.5);
+    text-decoration-color: rgba(var(--ark-text-rgb), 0.5);
   }
 }
 
@@ -87,10 +87,10 @@
   font-size: var(--fs-base);
   font-style: normal;
   line-height: 1.7;
-  color: rgba(230, 230, 230, 0.92);
+  color: rgba(var(--ark-text-rgb), 0.92);
   background: rgba(15, 15, 18, 0.95);
   backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(var(--white-rgb), 0.1);
   border-radius: 3px;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
   // 不阻挡正文交互；trigger 自身维持 hover 状态
@@ -135,7 +135,7 @@
     bottom: auto;
     width: auto;
     max-width: none;
-    z-index: 1100; // 高于全局 bottom bar，并低于 lightbox/cursor 层级
+    z-index: var(--z-tooltip); // 高于全局 bottom bar，并低于 lightbox/cursor 层级
     font-size: var(--fs-caption);
     padding: 12px 14px;
     // 长 note 不顶出可视区；tooltip 内可滚

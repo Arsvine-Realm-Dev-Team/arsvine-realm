@@ -61,20 +61,25 @@
   --z-mobile-navigation: 1002;
   --z-lightbox: 1200;
   --z-custom-cursor: 1300;
+  --z-tooltip: 1100;
+  --z-locale-banner: 120;
 
-  --ark-primary: rgba(200, 200, 200, 0.8);
+  --ark-primary: rgba(var(--ark-primary-rgb), 0.8);
   --ark-primary-rgb: 200, 200, 200;
   --ark-primary-glow: rgba(150, 150, 150, 0.5);
   --ark-accent: rgba(220, 220, 220, 1);
   --ark-dark-blue: #1a1a1a;
   --ark-dark-blue-rgb: 26, 26, 26;
   --ark-secondary-rgb: 30, 40, 55;
-  --ark-border: rgba(255, 255, 255, 0.15);
+  --ark-border: rgba(var(--white-rgb), 0.15);
   --ark-border-rgb: 255, 255, 255;
-  --ark-text: rgba(230, 230, 230, 0.9);
+  --ark-text: rgba(var(--ark-text-rgb), 0.9);
+  --ark-text-rgb: 230, 230, 230;
   --ark-text-secondary: #9a9a9a;
+  --ark-text-secondary-rgb: 154, 154, 154;
+  --white-rgb: 255, 255, 255;
   --ark-bg-dark: #1a1a1a;
-  --ark-highlight: rgba(255, 255, 255, 0.85);
+  --ark-highlight: rgba(var(--white-rgb), 0.85);
   --ark-highlight-green: #b2f2bb;
   --ark-highlight-green-rgb: 178, 242, 187;
   --logo-aberration-cyan-rgb: 0, 220, 255;
@@ -304,13 +309,13 @@ button {
 
 /* 文本选择样式 — 灰白底 + 反色文字 */
 ::selection {
-  background: rgba(230, 230, 230, 0.85);
+  background: rgba(var(--ark-text-rgb), 0.85);
   color: #1a1a1a;
   text-shadow: none;
 }
 
 ::-moz-selection {
-  background: rgba(230, 230, 230, 0.85);
+  background: rgba(var(--ark-text-rgb), 0.85);
   color: #1a1a1a;
   text-shadow: none;
 }

@@ -10,8 +10,8 @@ import {
   resolveBatteryAnchorPosition,
   resolveBatteryWorldPosition,
   type BatteryPosition3D,
-} from '@/shared/lib/tesseract-geometry';
-import { listenForWebglContextLoss } from '@/shared/lib/webgl-context-loss';
+} from '@/features/hud/model/tesseract-geometry';
+import { listenForWebglContextLoss } from '@/features/hud/model/webgl-context-loss';
 
 function resolvePhysicsMesh(tesseractRef: React.RefObject<TesseractHandle | null>) {
   return tesseractRef.current?.meshRef.current ?? null;
@@ -67,14 +67,18 @@ function SceneLogic({
   isDragging,
 }: SceneLogicProps) {
   const currentOffsetRef = useRef({ x: 0, y: 0 });
+  // 复用临时 Vector3，避免 useFrame 热点循环每帧分配
+  const tesseractWorldPosRef = useRef(new THREE.Vector3());
+  const batteryWorldPosRef = useRef(new THREE.Vector3());
+  const dragWorldPosRef = useRef(new THREE.Vector3());
 
   useFrame(({ camera }) => {
     if (isConnecting && batteryPosition3D) {
       const physicsMesh = resolvePhysicsMesh(tesseractRef);
       if (physicsMesh) {
-        const tesseractWorldPos = new THREE.Vector3();
+        const tesseractWorldPos = tesseractWorldPosRef.current;
         physicsMesh.getWorldPosition(tesseractWorldPos);
-        const batteryWorldPos = resolveBatteryWorldPosition(batteryPosition3D, camera);
+        const batteryWorldPos = resolveBatteryWorldPosition(batteryPosition3D, camera, batteryWorldPosRef.current);
 
         tesseractWorldPos.clampLength(0, 50);
         batteryWorldPos.clampLength(0, 50);
@@ -100,7 +104,7 @@ function SceneLogic({
     if (isDragging) {
       const physicsMesh = resolvePhysicsMesh(tesseractRef);
       if (physicsMesh) {
-        const worldPosition = new THREE.Vector3();
+        const worldPosition = dragWorldPosRef.current;
         physicsMesh.getWorldPosition(worldPosition);
         const tesseractScreen = projectWorldPositionToCanvas(worldPosition, camera, canvasRect);
         const offset = computeBatteryAttractionOffset({

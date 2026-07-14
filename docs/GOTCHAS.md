@@ -1,274 +1,245 @@
-# Gotchas and Regression Notes
+# 历史回归与不可破坏约束
 
-This file records real project-specific pitfalls. Read it before editing route transitions, protected posts, typography, COS assets, MDX rendering, the music player, or cursor behavior.
+[返回文档导航](./README.md)
 
-## 1. Do not use `reading-time`
+本文件记录项目中真实发生过、仅靠通用最佳实践不容易发现的回归。修改相关模块前先阅读对应条目，并保留关联测试。
 
-The project uses an in-house reading-time estimator in `features/blog/server/blog.ts`.
+## 领域索引
 
-Reason: common packages such as `reading-time` are whitespace-oriented. CJK text has few spaces, so long Chinese posts collapse to extremely low estimates and often display as `1 min` after flooring.
+- 内容与安全：1、8、9、10、16、17、22、23、24、25、26。
+- 字体与资产：2、3、4、5、29。
+- 路由与布局：6、7、18、19、21、28。
+- HUD、WebGL 与性能：11、12、15、20、29。
+- 音乐：13、14。
+- 测试结构：27。
 
-Expected behavior:
+## 1. 不要重新引入 `reading-time`
 
-- count CJK and Latin text differently;
-- strip code blocks, inline code, HTML/JSX tags, and MDX import/export lines;
-- expose only `readingMinutes: number` in blog metadata.
+项目在 `src/features/blog/server/blog.ts` 使用同时统计 CJK 字符和 Latin/Cyrillic 单词的估算器。
 
-## 2. `--font-display` is Latin-only
+普通 whitespace estimator 会把长中文文章压缩成极低时长。必须继续去除 code block、inline code、HTML/JSX 和 MDX import/export，并只向 metadata 暴露 `readingMinutes`。
 
-`--font-display` maps to `ZELDA Free`, which is decorative and incomplete.
+## 2. `--font-display` 只适合确定为 Latin 的装饰文字
 
-Do not use it for:
+`ZELDA Free` 字符集不完整。不要用于 CJK、accented Latin、博客标题、翻译或用户内容。
 
-- CJK text;
-- accented Latin text such as French;
-- blog titles;
-- translated strings;
-- user-supplied content;
-- any string that may contain arbitrary Unicode.
+- HUD 安全标题：`--font-hud`
+- 长文：`--font-reading`
+- typewriter/monospace：`--font-typewriter`
 
-Use `--font-hud` for HUD-safe headings and `--font-reading` for long-form content.
+## 3. COS custom header 的 Value 只填写值
 
-## 3. COS custom-header Value fields are value-only
-
-Tencent COS metadata UI has separate fields for header name and value.
-
-Correct:
+正确：
 
 ```text
-Key:   Cache-Control
+Key: Cache-Control
 Value: public, max-age=31536000, immutable
 ```
 
-Wrong:
+错误：
 
 ```text
-Key:   Cache-Control
 Value: Cache-Control: public, max-age=31536000, immutable
 ```
 
-The wrong form can produce malformed headers such as `Cache-Control: Cache-Control: ...`, causing Firefox to reject fonts and fall back to system fonts. The visible symptom can be rare Traditional Chinese characters rendering as tofu.
+错误写法会产生畸形 header，Firefox 可能拒绝字体并出现繁体罕见字 tofu。
 
-## 4. Google Fonts variable-font deduplication is intentional
+## 4. Google Fonts variable font URL 重复是正常现象
 
-Google Fonts can return multiple `@font-face` blocks with different `font-weight` values pointing to the same `.woff2` file.
+多个 `@font-face` weight 可以指向同一个 variable `.woff2`。不要修改 `scripts/fetch-google-fonts.mjs` 强制每个 weight 一个文件。
 
-This is normal for Variable Fonts. The file may cover a continuous `wght` axis even if its local filename contains one representative weight.
+## 5. COSCLI 凭据必须是临时的
 
-Do not rewrite `scripts/fetch-google-fonts.mjs` to force one file per weight.
+`pnpm assets:publish` 通过当前进程传入 credential，并使用 `--init-skip`。不要运行 `coscli config init`、提交 config、打印 secret 或提交 `cos-workspace/`。
 
-## 5. Keep COSCLI credentials ephemeral
-
-The supported asset workflow uses the local COSCLI binary through `pnpm assets:publish`. Pass credentials for the current process only. Do not run `coscli config init`, commit a config file, or print secrets in command summaries.
-
-## 6. Internal navigation must use `navigateTo()`
-
-Internal route changes should go through:
+## 6. 内部导航必须使用 `navigateTo()`
 
 ```ts
 useTransition().navigateTo(url)
 ```
 
-Direct `router.push()` skips transition animation and can break home/content/detail motion choreography.
+直接 `router.push()` 会跳过页面过渡、column retract/expand 和 detail choreography。
 
-## 7. Route loading overlay placement is source-driven
+## 7. Loading overlay 根据 source route 选择
 
-`useRouteLoadingKind(router)` reads the route being left, not the target route.
+`useRouteLoadingKind()` 读取离开的 route：
 
-Why:
+- home/content → blog detail：左面板仍显示，使用 default/right overlay。
+- blog detail → blog detail：左面板已隐藏，使用 standalone overlay。
 
-- home/content → blog detail needs the default/right-side overlay because the left panel is still visible;
-- blog detail → blog detail needs the standalone overlay because the left panel is already hidden.
+不要改成 target-based。
 
-Target-based overlay selection breaks one of these flows.
+## 8. Protected async work 属于 XState invoked actor
 
-## 8. Protected-post async work belongs to invoked XState actors
+grant check 和 variant load 留在 `authChecking` / `loadingVariant` actor。离开 state 时 `AbortSignal` 自动取消旧请求。
 
-`features/blog/model/blogPostState.ts` uses invoked XState actors for grant checks and variant loading. Keep those requests inside `authChecking` and `loadingVariant` rather than moving them into component effects.
+不要把请求移到 React effect，否则 article/locale change 会重新引入 stale response race。
 
-Why: leaving either state aborts its actor through the provided `AbortSignal`. `ARTICLE_CHANGED` and `SELECT_LOCALE` deliberately re-enter `resolving`, which cancels stale work before starting the request for the new article or locale.
+## 9. `ARTICLE_CHANGED` 必须完整替换 context
 
-## 9. Protected-post article changes must fully replace machine context
+transition 必须保留：
 
-The `ARTICLE_CHANGED` transition must keep `reenter: true`, run `replaceArticle`, reset errors, derive a fresh `authState`, and restore `displayedContentLocale` from the new article.
+- `reenter: true`；
+- `replaceArticle`；
+- error reset；
+- 新 `authState`；
+- 新文章的 `displayedContentLocale`。
 
-Do not add request-key deduplication refs around the machine. That recreates the stale-request race that actor cancellation now prevents. Preserve the regression tests for article reset, stale actor cancellation, forbidden variant fallback, and explicit `AUTH_GRANTED` continuation.
+不要按 slug/locale request key 去重。`useBlogPostState` 可以用完整 memoized `articleInput` 对象身份跳过 Strict Mode 初始 effect 重放，但任何真实 input 变化都必须发送 `ARTICLE_CHANGED`，继续走 actor cancellation。
 
-## 10. Protected body content must never be in static props
+保留 article reset、stale actor cancellation、forbidden fallback、`AUTH_GRANTED` continuation 和 Strict Mode 测试。
 
-For protected posts:
+## 10. Protected body 永远不能进入静态 props
 
-- `mdxSource` should be `null` from SSG;
-- metadata should be sanitized where appropriate;
-- body should be fetched only after runtime grant;
-- direct `/api/post-variant` calls without a grant should return `403`.
+未授权 protected post：
 
-Do not place ciphertext or hidden MDX payloads in `_next/data` JSON as an alternative. The invariant is no protected body in static data.
+- `mdxSource` 为 `null`；
+- metadata 清理 excerpt、tags、reading time；
+- body 只在 runtime grant 后加载；
+- 直接 `/api/post-variant` 返回 `403`。
 
-## 11. Keep avatar reveal and parallax on separate layers
+不要用 ciphertext 或隐藏 JSON 替代；不变量是静态数据中没有正文。
 
-The square reveal wrapper owns the `revealLogo` keyframe and its final transform. The nested motion layer owns pointer parallax, while two masked pseudo-elements own chromatic separation.
+## 11. Avatar reveal 与 parallax 分层
 
-Do not merge these responsibilities back onto the full left-panel container. That recreates a viewport-sized filter layer and forces inline `!important` transform overrides. Runtime logo effects may use only the bounded motion layer's transform and the mask layers' transform/opacity.
+方形 reveal wrapper 持有 reveal keyframe；内部 motion layer 持有 pointer parallax；mask pseudo-element 持有 chromatic separation。
 
-## 12. CustomCursor hover state must be reset through the helper
+不要把职责合回整个 left panel，否则会创建 viewport-sized filter layer 和 transform 冲突。
 
-The cursor can show contextual labels such as BACK. State residue can happen after route changes, scrolling, blur, visibility changes, or DOM unmounts.
+## 12. CustomCursor hover 状态通过 helper reset
 
-Use the existing reset helper instead of directly mutating internal refs when adding new hover-label semantics.
+route、scroll、blur、visibility、target leave 和 DOM unmount 都可能留下 BACK 等 label。新增 cursor semantics 时调用现有 reset helper，不要直接写内部 ref。
 
-## 13. MusicPlayer track click implies play
+## 13. 点击 MusicPlayer track 表示立即播放
 
-Clicking a track in the playlist should immediately express play intent.
+track click 设置显式 play intent，由 `audio.load()` → `audio.play()` 消费。不要加“只有当前正在播放才自动播放新 track”的 guard。
 
-Do not add a guard like “only autoplay if already playing.” Track switches use an explicit play-intent flag consumed by the `audio.load()` → `audio.play()` chain.
+## 14. MusicPlayer 移动端不能自动打开
 
-## 14. MusicPlayer must not auto-open on mobile
+desktop 可以延迟 auto-open；mobile guard 必须保留。首次进入就覆盖手机大部分屏幕是已修复的体验回归。
 
-The player may auto-open after a delay on desktop only. Keep the mobile guard.
+## 15. `ActivationLever` 必须是 button
 
-Reason: a draggable panel covering much of a phone screen on first paint is a poor mobile entry experience.
+保留 button semantics、`aria-label` 和 cursor label。不要为样式方便改成 `div`。
 
-## 15. ActivationLever is a button
+## 16. Blog reveal 结束后 transform 必须为 `none`
 
-`ActivationLever` should preserve button semantics, `aria-label`, and cursor label behavior.
-
-Do not restyle it into a non-semantic `div`.
-
-## 16. Blog reveal animation must clear transform with `none`
-
-Blog paragraphs reveal with an initial transform such as `translateY(20px)`. After transition end, the code should set:
+正确：
 
 ```ts
-transform: 'none'
+element.style.transform = 'none';
 ```
 
-not an empty string.
+空字符串可能恢复 stylesheet transform 并继续创建 stacking context，使 `<Explain>` tooltip 被后续段落压住。
 
-Reason: any non-`none` transform creates a stacking context. That can trap `<Explain>` tooltips under following paragraphs regardless of `z-index`.
+## 17. `<AnimatedTitleChars>` 默认 uppercase
 
-## 17. `<AnimatedTitleChars>` defaults to uppercase
-
-The shared component defaults to uppercase because web/life detail heroes want that style.
-
-Blog titles should pass:
+Web/Life hero 依赖默认 uppercase；博客标题必须显式：
 
 ```tsx
-uppercase={false}
+<AnimatedTitleChars uppercase={false} />
 ```
 
-For Latin words, pass the word wrapper class and define it as inline-block + nowrap to avoid bad narrow-width breaks.
+Latin 单词还要传 inline-block + nowrap 的 word wrapper，避免窄屏错误断词。
 
-## 18. Mobile section anchors need CSS scroll margin
-
-Any section that receives hash navigation or `scrollIntoView()` on mobile must have:
+## 18. 移动端 section anchor 使用 CSS scroll margin
 
 ```scss
 scroll-margin-top: var(--mobile-section-scroll-offset);
 ```
 
-Do not replace this with a JavaScript scroll-offset helper. CSS scroll margin is the intended mechanism.
+不要增加 JavaScript scroll offset helper，与 CSS 双重补偿会造成新偏移。
 
-## 19. Locale resolution is not geo-based
+## 19. Locale 不由 IP 决定
 
-Root-path language selection is:
+固定顺序：
 
 ```text
-NEXT_LOCALE cookie > Accept-Language > zh-CN
+NEXT_LOCALE Cookie > Accept-Language > zh-CN
 ```
 
-Do not infer language from IP country. Geo data may be used for other purposes, but not as the primary language selector.
+`GEO_COUNTRY` 只用于非安全 UI 微调，不能参与语言、认证或授权。
 
-## 20. WebGL effects should not churn GPU contexts
+## 20. WebGL effect 不应频繁 churn context
 
-Desktop-only Three.js effects are dynamically imported with SSR disabled and should not repeatedly unmount once ready.
+desktop Three.js effect 使用 SSR-disabled lazy import，ready 后不应随普通 transition 反复 unmount/remount。重复销毁 GPU context 会造成卡顿和不稳定。
 
-Repeated unmount/remount cycles can destroy and recreate GPU contexts during transitions, causing jank and instability.
+能力关闭或 context loss 时应有明确 pause/cleanup/fallback，不是无限重建。
 
-## 21. `/[locale]/game` is not a route
+## 21. `/[locale]/game` 不是路由
 
-The stale `/[locale]/game` route matchers, prefetches, and redirects were removed during the source-root migration. Game projects render through the content hub's in-page detail mode; do not add links or route patterns for a page that does not exist.
+Game project 在 content hub 的 in-page detail mode 展示。不要恢复旧 matcher、prefetch、redirect 或 link。
 
-## 22. GitHub content paths must be repo-relative only
+## 22. GitHub 内容路径只能是 repo-relative
 
-`lib/content/github.ts` now normalizes content paths before calling the GitHub Contents API.
+`src/shared/lib/content/github.ts` 必须拒绝：
 
-Do not pass user-controlled strings directly into the API path builder.
+- absolute/protocol-relative URL；
+- leading `/` 与反斜杠；
+- query、fragment；
+- traversal 与 encoded traversal。
 
-Required behavior:
+路径按 segment 编码，并从固定 GitHub API base 构建。
 
-- reject absolute URLs and protocol-relative URLs;
-- reject leading `/`, backslashes, query strings, hash fragments, traversal, and encoded traversal;
-- split the path into segments and encode each segment explicitly;
-- build the final URL from a fixed trusted GitHub API base.
+## 23. 外链必须解析，不能 substring match
 
-## 23. External links must be parsed, not substring-matched
+作品外链使用 `new URL()` 和 hostname allow/variant logic。不要用 `includes('github.com')` 或 `includes('bilibili.com')`，`github.com.evil.test` 会误判。
 
-`features/portfolio/ui/WorkDetailView.tsx` and `features/portfolio/ui/detail/webDetailParagraphs.tsx` now use a shared helper that calls `new URL(...)`.
+unsafe 输入降级为纯文本。
 
-Do not classify links with `includes('github.com')` / `includes('bilibili.com')` or similar substring checks.
+## 24. Blog 内部目标使用验证 helper
 
-Required behavior:
+不要把任意 slug 直接交给 `navigateTo()` 或 `Link href`。只允许安全 locale 和单 segment slug；不安全目标退回 `/${locale}/content#blog`。
 
-- accept only the intended protocols for rendered links;
-- treat unsafe input as plain text instead of a clickable `href`;
-- derive link variants from the parsed hostname.
+## 25. Locale fallback banner 使用显式 dispatch
 
-## 24. Internal blog redirects must use validated helpers
+`LocaleFallbackBanner.tsx` 按 locale allowlist 分支选择文案。不要用用户可控字符串进行动态 method/property dispatch。
 
-`features/blog/ui/blog/BlogDetailScaffold.tsx` now routes through helpers in `features/blog/model/blogClient.ts`.
+## 26. Typing effect 语言检测必须按 script
 
-Do not pass arbitrary slug strings directly into `navigateTo()` or `Link href`.
+`src/features/hud/model/typing-effect.ts` 显式识别 Latin、Han、Hiragana、Katakana、Hangul。
 
-Required behavior:
+纯 Latin 才走 alphabetic profile；混合 CJK 走 CJK cadence。不要退回宽泛 Unicode range。
 
-- validate locale and slug values before building blog URLs;
-- accept only a single slug segment for blog post routes;
-- fall back to `/${locale}/content#blog` when the target is unsafe.
+## 27. 新测试统一放 `tests/`
 
-## 25. Locale fallback banners must use explicit dispatch
+```text
+tests/features/<feature>/
+tests/shared/
+tests/app/
+tests/repo/
+tests/operations/
+tests/scripts/
+```
 
-`shared/ui/LocaleFallbackBanner.tsx` now resolves copy with explicit locale branches.
+不要在 `src/` 旁新增 test file。
 
-Do not call locale-keyed text maps with dynamic method selection.
+## 28. Global shell 必须位于 locale segment 之上
 
-Required behavior:
+`src/app/layout.tsx` 持有 document、client i18n、HUD、navigation 和 `MainLayout`；`[locale]/layout.tsx` 是 nested server layout。
 
-- use an allowlist branch per locale;
-- keep fallback and translated copy semantics stable;
-- keep the banner logic free of user-controlled method names.
+移到 `[locale]` 下会让 locale switch 重置全局状态。locale 使用 `switchLocale()`，普通内部 route 使用 `navigateTo()`。
 
-## 26. Typing-effect language detection must stay script-specific
+## 29. Fiber 精确固定并应用 Timer patch
 
-`lib/typing-effect.ts` now uses explicit Unicode script checks for Latin and CJK families.
+```text
+package.json: @react-three/fiber = 9.6.1
+pnpm-workspace.yaml: patches/@react-three__fiber@9.6.1.patch
+```
 
-Do not broaden the classification regex back to a loose range.
+补丁把 Fiber built dist 的 `THREE.Clock` 改成 `THREE.Timer` compatibility clock，使 adaptive tier 能 pause render loop。
 
-Required behavior:
+不能用 caret。dist filename 含内容 hash，自动 patch upgrade 可能只产生 warning 并静默退回 Clock。
 
-- treat Latin text as the alphabetic profile only when it is not mixed with CJK;
-- keep Han / Hiragana / Katakana / Hangul on the CJK path;
-- preserve the existing typing cadence semantics.
+升级时重新 `pnpm patch`、更新精确版本和 patch key，并保持 `tests/repo/react-three-fiber-timer-patch.test.ts` 通过。
 
-## 27. All new tests live under `tests/`
+## 维护本文件
 
-The repo now keeps test files in `tests/` and groups them by feature area.
+只记录已经发生且需要保留特殊实现/测试的项目陷阱。通用开发说明放入对应专题；新条目包含原因、禁止做法、必需行为和回归测试。
 
-Do not add new `.test.ts` or `.test.tsx` files next to source files.
+## 相关文档
 
-Required layout:
-
-- `tests/features/<feature>/...`
-- `tests/shared/...`
-- `tests/app/...` (application composition)
-- `tests/repo/...` (repository-wide conventions)
-
-## 28. The global shell must stay above the locale segment
-
-`src/app/layout.tsx` owns the document, client i18n provider, HUD providers, and
-`MainLayout`. `[locale]/layout.tsx` is deliberately a nested server layout.
-
-Do not move the global providers back under `[locale]`. A dynamic locale segment
-remount would reset music, HUD, WebGL, drawer, and transition state. Locale UI
-navigation must use `TransitionContext.switchLocale()`; regular internal routes
-continue to use `navigateTo()`.
+- [`ARCHITECTURE.md`](./ARCHITECTURE.md)
+- [`SECURITY.md`](./SECURITY.md)
+- [`TESTING_AND_QUALITY.md`](./TESTING_AND_QUALITY.md)
+- [`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md)
