@@ -14,11 +14,11 @@ export interface CursorTargetBounds {
 
 export { lerp, clamp };
 
-export function isCursorInteractive(el: HTMLElement | null) {
+export function isCursorInteractive(el: HTMLElement | null, rect?: DOMRect) {
   if (!el || !el.isConnected) return false;
 
-  const rect = el.getBoundingClientRect();
-  if (rect.width <= 0 || rect.height <= 0) return false;
+  const targetRect = rect ?? el.getBoundingClientRect();
+  if (targetRect.width <= 0 || targetRect.height <= 0) return false;
 
   let current: HTMLElement | null = el;
   while (current) {
@@ -66,15 +66,15 @@ export function collectInteractiveElements() {
   }) as HTMLElement[];
 }
 
-export function getCursorTargetBounds(el: HTMLElement, padding = 0): CursorTargetBounds {
-  const rect = el.getBoundingClientRect();
+export function getCursorTargetBounds(el: HTMLElement, padding = 0, rect?: DOMRect): CursorTargetBounds {
+  const targetRect = rect ?? el.getBoundingClientRect();
   const customPadding = Number(el.getAttribute('data-cursor-padding'));
   const resolvedPadding = Number.isFinite(customPadding) ? customPadding : padding;
   return {
-    x: rect.left + rect.width / 2,
-    y: rect.top + rect.height / 2,
-    w: rect.width + resolvedPadding,
-    h: rect.height + resolvedPadding,
+    x: targetRect.left + targetRect.width / 2,
+    y: targetRect.top + targetRect.height / 2,
+    w: targetRect.width + resolvedPadding,
+    h: targetRect.height + resolvedPadding,
   };
 }
 
@@ -88,23 +88,26 @@ export function findClosestInteractiveElement(
   pointerY: number,
 ) {
   let closestElement: HTMLElement | null = null;
+  let closestRect: DOMRect | null = null;
   let closestDistance = Infinity;
 
-  elements.forEach((el) => {
-    if (!isCursorInteractive(el)) return;
-
-    const bounds = getCursorTargetBounds(el);
+  for (const el of elements) {
+    if (!el.isConnected) continue;
+    const rect = el.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) continue;
+    const bounds = getCursorTargetBounds(el, 0, rect);
     const dx = Math.max(Math.abs(pointerX - bounds.x) - bounds.w / 2, 0);
     const dy = Math.max(Math.abs(pointerY - bounds.y) - bounds.h / 2, 0);
     const distance = Math.hypot(dx, dy);
 
-    if (distance < MAGNETIC_DISTANCE && distance < closestDistance) {
+    if (distance < MAGNETIC_DISTANCE && distance < closestDistance && isCursorInteractive(el, rect)) {
       closestDistance = distance;
       closestElement = el;
+      closestRect = rect;
     }
-  });
+  }
 
-  if (!closestElement) {
+  if (!closestElement || !closestRect) {
     return null;
   }
 
@@ -112,6 +115,6 @@ export function findClosestInteractiveElement(
   return {
     element,
     distance: closestDistance,
-    rect: element.getBoundingClientRect(),
+    rect: closestRect,
   };
 }

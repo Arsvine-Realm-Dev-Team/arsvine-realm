@@ -59,8 +59,6 @@ const CustomCursor = dynamic(
 
 interface MainLayoutProps {
   children: ReactNode;
-  /** @deprecated Locale is resolved from the live App Router pathname. */
-  appLocale?: Locale;
 }
 
 export default function MainLayout({ children }: MainLayoutProps) {
@@ -198,11 +196,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
           <RainMorimeEffect onContextLost={handleWebglContextLost} />
         )}
         <HomeLoadingScreen onComplete={handleLoadingComplete} />
-        {clientEffectsReady && isTesseractActivated && allow3DTesseract && !effectiveStandalone && (
+        {clientEffectsReady && isTesseractActivated && allow3DTesseract && (
           <TesseractExperience
             chargeBattery={chargeBattery}
             isActivated={isTesseractActivated}
             isInverted={isInverted}
+            paused={effectiveStandalone}
             onDraggingChange={setIsTesseractDragging}
             powerDisplayRef={powerDisplayRef}
             batteryIconRef={batteryIconRef}

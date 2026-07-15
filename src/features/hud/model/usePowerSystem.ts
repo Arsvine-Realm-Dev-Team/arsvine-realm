@@ -11,6 +11,23 @@ const DISCHARGE_INTERVAL_MS = 50;
 const DEFAULT_POWER_LEVEL = 67;
 const DEFAULT_TESSERACT_ACTIVATED = false;
 const DEFAULT_DISCHARGING = false;
+const PERSIST_DELAY_MS = 250;
+
+interface PersistedPowerState {
+  powerLevel: number;
+  isTesseractActivated: boolean;
+  isDischarging: boolean;
+}
+
+function persistPowerState(state: PersistedPowerState) {
+  try {
+    const serialized = JSON.stringify(state);
+    window.sessionStorage.setItem(POWER_SYSTEM_STORAGE_KEY, serialized);
+    window.localStorage.setItem(POWER_SYSTEM_STORAGE_KEY, serialized);
+  } catch {
+    // Storage can be unavailable in private browsing or under strict browser policies.
+  }
+}
 
 function readPersistedPowerState() {
   if (typeof window === 'undefined') {
@@ -47,6 +64,12 @@ export default function usePowerSystem(mainVisible: boolean): PowerSystemState {
   const [isDischarging, setIsDischarging] = useState(DEFAULT_DISCHARGING);
   const dischargeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isDischargingRef = useRef(DEFAULT_DISCHARGING);
+  const persistTimeoutRef = useRef<number | null>(null);
+  const latestPersistedStateRef = useRef<PersistedPowerState>({
+    powerLevel: DEFAULT_POWER_LEVEL,
+    isTesseractActivated: DEFAULT_TESSERACT_ACTIVATED,
+    isDischarging: DEFAULT_DISCHARGING,
+  });
 
   // Inverted mode is purely derived from power state — no separate state needed.
   const isInverted = powerLevel === 100 && !isDischarging;
@@ -74,20 +97,38 @@ export default function usePowerSystem(mainVisible: boolean): PowerSystemState {
       return;
     }
 
-    const serialized = JSON.stringify({
+    const nextState = {
       powerLevel,
       isTesseractActivated,
       isDischarging,
-    });
+    };
+    latestPersistedStateRef.current = nextState;
 
-    window.sessionStorage.setItem(POWER_SYSTEM_STORAGE_KEY, serialized);
-    window.localStorage.setItem(POWER_SYSTEM_STORAGE_KEY, serialized);
+    if (persistTimeoutRef.current !== null) return;
+    persistTimeoutRef.current = window.setTimeout(() => {
+      persistTimeoutRef.current = null;
+      persistPowerState(latestPersistedStateRef.current);
+    }, PERSIST_DELAY_MS);
+  }, [powerLevel, isTesseractActivated, isDischarging]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
     const themeMode = isInverted ? 'inverted' : 'default';
-    window.sessionStorage.setItem(THEME_MODE_STORAGE_KEY, themeMode);
-    window.localStorage.setItem(THEME_MODE_STORAGE_KEY, themeMode);
+    try {
+      window.sessionStorage.setItem(THEME_MODE_STORAGE_KEY, themeMode);
+      window.localStorage.setItem(THEME_MODE_STORAGE_KEY, themeMode);
+    } catch {
+      // Theme persistence is optional when browser storage is unavailable.
+    }
     document.documentElement.setAttribute('data-theme-mode', themeMode);
-  }, [powerLevel, isTesseractActivated, isDischarging, isInverted]);
+  }, [isInverted]);
+
+  useEffect(() => () => {
+    if (persistTimeoutRef.current !== null) {
+      window.clearTimeout(persistTimeoutRef.current);
+    }
+    persistPowerState(latestPersistedStateRef.current);
+  }, []);
 
   const stopDischarge = useCallback(() => {
     if (dischargeIntervalRef.current) {

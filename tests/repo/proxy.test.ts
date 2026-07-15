@@ -63,6 +63,12 @@ describe('pickLocaleFromAcceptLanguage', () => {
     expect(pickLocaleFromAcceptLanguage('en;q=0.1,zh-CN;q=0.9')).toBe('zh-CN');
   });
 
+  it('ignores explicitly unacceptable and malformed q-values', () => {
+    expect(pickLocaleFromAcceptLanguage('en;q=0,zh-CN;q=0.8')).toBe('zh-CN');
+    expect(pickLocaleFromAcceptLanguage('en;q=invalid,zh-TW;q=0.5')).toBe('zh-TW');
+    expect(pickLocaleFromAcceptLanguage('en;q=2,zh-CN;q=0')).toBe('zh-CN');
+  });
+
   it('falls back to defaultLocale for unknown tags', () => {
     expect(pickLocaleFromAcceptLanguage('fr-FR,de;q=0.9')).toBe('zh-CN');
     expect(pickLocaleFromAcceptLanguage('ja-JP')).toBe('zh-CN');

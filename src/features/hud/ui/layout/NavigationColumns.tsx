@@ -4,7 +4,7 @@ import styles from '../../../../app/styles/Shell.module.scss';
 import VerticalShinyText from '../../../../shared/ui/VerticalShinyText';
 import ActivationLever from '../ActivationLever';
 import { useHudAnimation, useHudPower, useHudTyping } from '../../model/HudProvider';
-import { useResponsive } from '@/shared/hooks/useMediaQuery';
+import { useReducedMotion, useResponsive } from '@/shared/hooks/useMediaQuery';
 import type { ColumnPhase } from '@/features/hud/contracts/state';
 
 const sectionNames = ["PORTFOLIO", "EXPERIENCE", "BLOG", "LIFE", "CONTACT", "ABOUT"];
@@ -56,6 +56,7 @@ export default function NavigationColumns({
   const { leversVisible, mainVisible } = useHudAnimation();
   const { displayedFateText, isFateTypingActive } = useHudTyping();
   const { isMobile } = useResponsive();
+  const reducedMotion = useReducedMotion();
 
   const rightPanelRef = useRef<HTMLDivElement>(null);
   const chargeLeverLabel = isTesseractActivated ? 'CHARGING' : 'START CHARGE';
@@ -66,7 +67,7 @@ export default function NavigationColumns({
       : 'FULL CHARGE REQUIRED';
 
   useEffect(() => {
-    if (!mainVisible) return;
+    if (!mainVisible || reducedMotion) return;
     if (!isMobile || !rightPanelRef.current) return;
 
     const panel = rightPanelRef.current;
@@ -93,7 +94,7 @@ export default function NavigationColumns({
       if (mobilePanel) gsap.set(mobilePanel, { clearProps: 'all' });
       columns.forEach(col => gsap.set(col, { clearProps: 'all' }));
     };
-  }, [mainVisible, isMobile]);
+  }, [mainVisible, isMobile, reducedMotion]);
 
   return (
     <main
@@ -188,11 +189,20 @@ export default function NavigationColumns({
               key={name}
               className={`${styles.column} ${styles['column' + index]} ${!animationsComplete ? styles.nonInteractive : ''}`}
               onClick={animationsComplete ? () => handleColumnClick(index) : undefined}
+              onKeyDown={animationsComplete ? (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  handleColumnClick(index);
+                }
+              } : undefined}
               onPointerDown={animationsComplete ? (event) => {
                 if (event.button === 0) handleColumnNavigateIntent?.(index);
               } : undefined}
               onMouseEnter={() => handleColumnMouseEnter(index)}
               onMouseLeave={() => handleColumnMouseLeave(index)}
+              role="button"
+              tabIndex={animationsComplete ? 0 : -1}
+              aria-label={name}
             >
               <div className={styles.verticalText}>
                 {name.split('').map((char, charIdx) => {

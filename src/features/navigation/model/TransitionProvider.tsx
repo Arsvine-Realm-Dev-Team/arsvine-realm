@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useCallback, useRef, useEffect, useState } from 'react';
 import { useHudAnimation } from '../../../features/hud/model/HudProvider';
-import { useResponsive } from '@/shared/hooks/useMediaQuery';
+import { useReducedMotion, useResponsive } from '@/shared/hooks/useMediaQuery';
 import {
   createContentHashNavigationRequest,
   type ContentHashNavigationRequest,
@@ -81,6 +81,13 @@ const DIAG_COLLAPSE_OPTS: KeyframeAnimationOptions = {
   easing: 'ease-in',
   fill: 'forwards',
 };
+
+function resetTransitionSurface(wrapper: HTMLDivElement) {
+  wrapper.style.opacity = '';
+  wrapper.style.transform = '';
+  wrapper.style.clipPath = '';
+  wrapper.style.transition = '';
+}
 
 interface NavStrategyCtx {
   wrapper: HTMLDivElement;
@@ -193,6 +200,7 @@ export function TransitionProvider({ children }: TransitionProviderProps) {
   const { pathname, asPath, query, push } = useNavigationRuntime();
   const { retractColumns, expandColumns } = useHudAnimation();
   const { isMobile: hookIsMobile } = useResponsive();
+  const reducedMotion = useReducedMotion();
   const { align: alignContentHash, cancel: cancelContentHashAlignment } = useLayoutAnchors();
   const runControllerRef = useRef(new AnimationRunController());
   const transitionSurfaceRef = useRef<HTMLDivElement | null>(null);
@@ -243,6 +251,20 @@ export function TransitionProvider({ children }: TransitionProviderProps) {
       return;
     }
 
+    if (reducedMotion) {
+      pendingCommitRef.current?.();
+      runControllerRef.current.cancel();
+      const wrapper = transitionSurfaceRef.current;
+      if (wrapper) resetTransitionSurface(wrapper);
+      setPendingUrl(url);
+      void push(url, { scroll: false, ...options })
+        .catch((error) => {
+          console.error('[navigation] reduced-motion navigation failed:', error);
+        })
+        .finally(() => setPendingUrl(null));
+      return;
+    }
+
     if (!runControllerRef.current.startOrQueue({ url, options })) {
       return;
     }
@@ -280,6 +302,7 @@ export function TransitionProvider({ children }: TransitionProviderProps) {
       removeCleanup = runControllerRef.current.addCleanup(cleanup);
       timeoutId = window.setTimeout(() => {
         if (pendingCommitRef.current === onComplete) {
+          resetTransitionSurface(wrapper);
           cleanup();
           runControllerRef.current.cancel();
           processQueue();
@@ -287,9 +310,7 @@ export function TransitionProvider({ children }: TransitionProviderProps) {
       }, NAVIGATION_COMMIT_TIMEOUT_MS);
       void push(target, { scroll: false, ...pushOpts }).catch((error) => {
         console.error('[navigation] route push failed:', error);
-        wrapper.style.opacity = '';
-        wrapper.style.transform = '';
-        wrapper.style.clipPath = '';
+        resetTransitionSurface(wrapper);
         cleanup();
         processQueue();
       });
@@ -347,6 +368,7 @@ export function TransitionProvider({ children }: TransitionProviderProps) {
     retractColumns,
     expandColumns,
     hookIsMobile,
+    reducedMotion,
     revealAfterContentHashAligned,
   ]);
 

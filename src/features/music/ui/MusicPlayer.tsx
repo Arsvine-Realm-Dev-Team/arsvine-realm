@@ -114,9 +114,11 @@ const MusicPlayer = ({ powerLevel }: { powerLevel: number }) => {
       return;
     }
 
-    safeTimers.setTimeout(() => {
+    const timeoutId = safeTimers.setTimeout(() => {
       setIsOpen(true);
     }, 1500);
+
+    return () => safeTimers.clearTimeout(timeoutId);
   }, [isMobile, safeTimers]);
 
   useEffect(() => {

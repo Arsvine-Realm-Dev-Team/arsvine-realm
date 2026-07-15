@@ -193,7 +193,7 @@ describe('MainLayout adaptive performance gates', () => {
     }));
 
     render(
-      <MainLayout appLocale="zh-CN">
+      <MainLayout>
         <div>child</div>
       </MainLayout>,
     );
@@ -209,7 +209,7 @@ describe('MainLayout adaptive performance gates', () => {
 
   it('renders optional desktop effects when full mode allows them', () => {
     render(
-      <MainLayout appLocale="zh-CN">
+      <MainLayout>
         <div>child</div>
       </MainLayout>,
     );
@@ -231,7 +231,7 @@ describe('MainLayout adaptive performance gates', () => {
     ['interactive', recordTesseractProps],
   ])('disables all WebGL effects after an %s context loss', (_kind, recordProps) => {
     const { rerender } = render(
-      <MainLayout appLocale="zh-CN">
+      <MainLayout>
         <div>child</div>
       </MainLayout>,
     );
@@ -254,7 +254,7 @@ describe('MainLayout adaptive performance gates', () => {
     }));
 
     rerender(
-      <MainLayout appLocale="zh-CN">
+      <MainLayout>
         <div>updated child</div>
       </MainLayout>,
     );
@@ -273,7 +273,7 @@ describe('MainLayout adaptive performance gates', () => {
     useNotFoundPresenceMock.mockReturnValue(true);
 
     render(
-      <MainLayout appLocale="zh-CN">
+      <MainLayout>
         <div>not found</div>
       </MainLayout>,
     );
@@ -288,7 +288,7 @@ describe('MainLayout adaptive performance gates', () => {
     }));
   });
 
-  it('keeps the full shell hidden on a valid standalone detail route', () => {
+  it('keeps the Tesseract mounted but paused on a valid standalone detail route', () => {
     layoutRouteModeMock.mockReturnValue({
       isHome: false,
       isContentPage: false,
@@ -297,7 +297,7 @@ describe('MainLayout adaptive performance gates', () => {
     });
 
     render(
-      <MainLayout appLocale="zh-CN">
+      <MainLayout>
         <div>detail</div>
       </MainLayout>,
     );
@@ -306,7 +306,8 @@ describe('MainLayout adaptive performance gates', () => {
       vi.runOnlyPendingTimers();
     });
 
-    expect(screen.queryByTestId('tesseract-experience')).toBeNull();
+    expect(screen.getByTestId('tesseract-experience')).toBeTruthy();
+    expect(recordTesseractProps).toHaveBeenLastCalledWith(expect.objectContaining({ paused: true }));
     expect(recordLeftPanelProps).toHaveBeenLastCalledWith(expect.objectContaining({
       isStandalone: true,
     }));

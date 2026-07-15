@@ -37,13 +37,6 @@ const Noise = ({
     const patternData = patternCtx.createImageData(patternSize, patternSize);
     const patternPixelDataLength = patternSize * patternSize * 4; // RGBA
 
-    // (resize 函数当前未被积极使用，画布尺寸主要由 CSS 控制)
-    // const resize = () => {
-      // canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-      // canvas.height = canvas.offsetHeight * window.devicePixelRatio;
-      // ctx.scale(patternScaleX * window.devicePixelRatio, patternScaleY * window.devicePixelRatio);
-    // };
-
     // 更新离屏 Canvas 中的噪点图案数据
     const updatePattern = () => {
       for (let i = 0; i < patternPixelDataLength; i += 4) {
@@ -87,16 +80,12 @@ const Noise = ({
     };
 
     // 初始化
-    // resize(); // 如果需要基于JS调整尺寸，则取消注释
     updatePattern(); // 生成初始图案
     drawGrain();     // 立即绘制第一帧
     loop();          // 启动动画
 
-    // window.addEventListener('resize', resize); // 如果需要响应窗口大小变化，则取消注释
-
     // 清理函数
     return () => {
-      // window.removeEventListener('resize', resize);
       if (animationFrameId) {
         window.cancelAnimationFrame(animationFrameId); // 取消动画帧
       }

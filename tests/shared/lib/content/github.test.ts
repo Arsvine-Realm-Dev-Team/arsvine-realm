@@ -154,6 +154,19 @@ describe('getContentBlogIndex', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it('falls back to bundled content when the remote index shape is invalid', async () => {
+    vi.stubGlobal('fetch', async () => new Response(JSON.stringify({ version: 1, posts: [] }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }));
+    const { getContentBlogIndex } = await import('@/shared/lib/content/github');
+
+    await expect(getContentBlogIndex()).resolves.toMatchObject({
+      version: 1,
+      posts: [expect.objectContaining({ slug: 'init' })],
+    });
+  });
+
   it('falls back to stale cache when subsequent fetch fails', async () => {
     let callCount = 0;
     const fetchMock = vi.fn(async () => {

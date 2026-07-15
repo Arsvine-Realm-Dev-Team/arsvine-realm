@@ -19,6 +19,40 @@ let blogIndexCache: { data: ContentBlogIndex; ts: number } | null = null;
 const BLOG_INDEX_TTL_MS = 60_000;
 let bundledFallbackCache: ContentBlogIndex | null = null;
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === 'string');
+}
+
+function isContentBlogIndex(value: unknown): value is ContentBlogIndex {
+  if (!isRecord(value) || typeof value.version !== 'number' || typeof value.updatedAt !== 'string' || !Array.isArray(value.posts)) {
+    return false;
+  }
+
+  return value.posts.every((post) => {
+    if (!isRecord(post) || typeof post.slug !== 'string' || typeof post.date !== 'string'
+      || typeof post.updatedAt !== 'string' || !isStringArray(post.tags)
+      || typeof post.pinned !== 'boolean' || !isStringArray(post.availableLocales)
+      || !isRecord(post.access) || !isRecord(post.variants)) {
+      return false;
+    }
+    if (post.access.mode !== 'public' && post.access.mode !== 'totp') return false;
+    if (post.access.mode === 'totp' && typeof post.access.group !== 'string') return false;
+
+    return Object.values(post.variants).every((variant) => (
+      isRecord(variant)
+      && typeof variant.title === 'string'
+      && typeof variant.excerpt === 'string'
+      && (variant.tags === undefined || isStringArray(variant.tags))
+      && (variant.originLocale === undefined || typeof variant.originLocale === 'string')
+      && (variant.readingMinutes === undefined || typeof variant.readingMinutes === 'number')
+    ));
+  });
+}
+
 export function hasContentRepoConfig() {
   return Boolean(OWNER && REPO && READ_TOKEN);
 }
@@ -213,7 +247,10 @@ export async function getContentBlogIndex(): Promise<ContentBlogIndex> {
     return blogIndexCache.data;
   }
   try {
-    const data = await fetchGitHubJson<ContentBlogIndex>('blog-index.json');
+    const data = await fetchGitHubJson<unknown>('blog-index.json');
+    if (!isContentBlogIndex(data)) {
+      throw new Error('Invalid blog-index.json shape');
+    }
     blogIndexCache = { data, ts: Date.now() };
     return data;
   } catch (error) {

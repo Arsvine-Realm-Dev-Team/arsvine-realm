@@ -108,6 +108,28 @@ describe('ContentPage detail closing', () => {
     expect(screen.queryByText('Game One detail')).toBeNull();
   });
 
+  it('clears the back override when the detail page unmounts', () => {
+    const { unmount } = render(<ContentPage
+      locale="en"
+      messages={{}}
+      blogPosts={[]}
+      webProjects={[]}
+      gameProjects={[]}
+      earlyProjects={[]}
+      experienceData={[]}
+      gameData={[]}
+      travelData={[]}
+      otherData={[]}
+      alsoPlayGames={[]}
+      artPlaceholderText=""
+      skillCategories={[]}
+      pageDescription=""
+    />);
+
+    unmount();
+    expect(setBackOverrideMock).toHaveBeenLastCalledWith(null);
+  });
+
   it('prefetches only routed public content after navigation intent', () => {
     (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
     const webProject: Project = {

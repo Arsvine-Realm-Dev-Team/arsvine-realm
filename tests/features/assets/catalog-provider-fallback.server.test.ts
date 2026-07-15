@@ -50,13 +50,13 @@ describe('catalog provider remote validation fallback', () => {
     restore('COS_PRIVATE_LOCAL_ROOT', previousEnv.localRoot);
   });
 
-  it('warns and uses the validated local artifact when a remote section is invalid', async () => {
+  it('warns and uses the validated local artifact when a remote pointer is invalid', async () => {
     const audio = await getAudioAssets();
 
     expect(audio.map((item) => item.id)).toEqual(['track-one', 'track-two']);
     expect(warn).toHaveBeenCalledWith(
       expect.stringContaining('remote audio is invalid; using local fallback'),
-      expect.stringContaining('missing objectKey'),
+      expect.stringContaining('version pointer'),
     );
   });
 });

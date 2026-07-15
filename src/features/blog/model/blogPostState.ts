@@ -91,7 +91,8 @@ const loadVariant = fromPromise<
 });
 
 function initialAuthState(input: BlogPostArticleInput): BlogPostMachineContext['authState'] {
-  return input.requiresAuth && input.accessGroup ? 'checking' : 'granted';
+  if (!input.requiresAuth) return 'granted';
+  return input.accessGroup ? 'checking' : 'required';
 }
 
 export const blogPostMachine = setup({

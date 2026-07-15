@@ -105,7 +105,7 @@ Context loss 通过共享 listener 捕获，阻止默认恢复风暴并通知能
 patches/@react-three__fiber@9.6.1.patch
 ```
 
-补丁把 built dist 中的 `THREE.Clock` 替换为 `THREE.Timer` compatibility clock，使 render loop 能被 performance tier pause。
+补丁把 built dist 中的 `THREE.Clock` 替换为 `THREE.Timer` compatibility clock，使 Canvas 可安全切换 `frameloop`；详情页暂停 Tesseract 时使用 `frameloop="never"`，恢复后切回 `"always"`。
 
 升级流程：
 

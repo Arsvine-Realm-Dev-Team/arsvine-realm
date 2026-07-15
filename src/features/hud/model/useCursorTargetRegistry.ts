@@ -1,4 +1,4 @@
-import { useEffect, useRef, type RefObject } from 'react';
+import { useEffect, type MutableRefObject, type RefObject } from 'react';
 
 import {
   collectInteractiveElements,
@@ -7,6 +7,7 @@ import {
 import { subscribeCursorTargetsDirty } from '@/shared/lib/cursor-targets';
 
 interface UseCursorTargetRegistryOptions {
+  interactiveElsRef: MutableRefObject<HTMLElement[]>;
   hoverElRef: RefObject<HTMLElement | null>;
   onEnter: (element: HTMLElement) => void;
   onLeave: (event: MouseEvent, currentTarget: HTMLElement) => void;
@@ -14,13 +15,12 @@ interface UseCursorTargetRegistryOptions {
 }
 
 export default function useCursorTargetRegistry({
+  interactiveElsRef,
   hoverElRef,
   onEnter,
   onLeave,
   onHoverTargetRemoved,
 }: UseCursorTargetRegistryOptions) {
-  const interactiveElsRef = useRef<HTMLElement[]>([]);
-
   useEffect(() => {
     const refreshTargets = () => {
       interactiveElsRef.current = collectInteractiveElements();
@@ -60,7 +60,7 @@ export default function useCursorTargetRegistry({
       window.removeEventListener('resize', refreshTargets);
       unsubscribeDirty();
     };
-  }, [hoverElRef, onEnter, onHoverTargetRemoved, onLeave]);
+  }, [hoverElRef, interactiveElsRef, onEnter, onHoverTargetRemoved, onLeave]);
 
   return interactiveElsRef;
 }

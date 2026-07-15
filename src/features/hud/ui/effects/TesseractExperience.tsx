@@ -142,6 +142,7 @@ interface TesseractExperienceProps {
   chargeBattery: () => void;
   isActivated: boolean;
   isInverted: boolean;
+  paused: boolean;
   onDraggingChange?: (dragging: boolean) => void;
   powerDisplayRef: React.RefObject<HTMLDivElement | null>;
   batteryIconRef: React.RefObject<HTMLDivElement | null>;
@@ -153,6 +154,7 @@ const TesseractExperience = ({
   chargeBattery,
   isActivated,
   isInverted,
+  paused,
   onDraggingChange,
   powerDisplayRef,
   batteryIconRef,
@@ -175,6 +177,11 @@ const TesseractExperience = ({
   }, [powerDisplayRef]);
 
   useEffect(() => {
+    if (paused) {
+      batteryElementRef.current?.style.removeProperty('transform');
+      return;
+    }
+
     const batteryElement = powerDisplayRef.current ?? null;
     batteryElementRef.current = batteryElement;
 
@@ -230,11 +237,11 @@ const TesseractExperience = ({
       batteryIconRectRef.current = null;
       batteryElementRef.current = null;
     };
-  }, [batteryIconRef, powerDisplayRef, scrollContainerRef]);
+  }, [batteryIconRef, paused, powerDisplayRef, scrollContainerRef]);
 
   useEffect(() => {
-    onDraggingChange?.(isTesseractDragging);
-  }, [isTesseractDragging, onDraggingChange]);
+    onDraggingChange?.(paused ? false : isTesseractDragging);
+  }, [isTesseractDragging, onDraggingChange, paused]);
 
   return (
     <div
@@ -246,9 +253,12 @@ const TesseractExperience = ({
         height: '65vh',
         zIndex: 7,
         pointerEvents: 'none',
+        visibility: paused ? 'hidden' : 'visible',
       }}
+      aria-hidden={paused}
     >
       <Canvas
+        frameloop={paused ? 'never' : 'always'}
         shadows="percentage"
         camera={{ position: [-3, -1, 8], fov: 50 }}
         style={{

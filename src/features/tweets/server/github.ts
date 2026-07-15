@@ -6,6 +6,32 @@ const STRESS_TEST_YEARS = parsePositiveInt(process.env.TWEETS_STRESS_YEARS, 6);
 const STRESS_TEST_MONTHS_PER_YEAR = parsePositiveInt(process.env.TWEETS_STRESS_MONTHS_PER_YEAR, 12);
 const STRESS_TEST_TWEETS_PER_MONTH = parsePositiveInt(process.env.TWEETS_STRESS_TWEETS_PER_MONTH, 24);
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isTweetIndex(value: unknown): value is TweetIndexItem[] {
+  return Array.isArray(value) && value.every((item) => (
+    isRecord(item)
+    && typeof item.month === 'string'
+    && typeof item.path === 'string'
+    && (item.count === undefined || typeof item.count === 'number')
+    && (item.updatedAt === undefined || typeof item.updatedAt === 'string')
+  ));
+}
+
+function isTweetList(value: unknown): value is TweetItem[] {
+  return Array.isArray(value) && value.every((item) => (
+    isRecord(item)
+    && typeof item.id === 'string'
+    && typeof item.createdAt === 'string'
+    && typeof item.content === 'string'
+    && (item.updatedAt === undefined || typeof item.updatedAt === 'string')
+    && (item.tags === undefined || (Array.isArray(item.tags) && item.tags.every((tag) => typeof tag === 'string')))
+    && (item.visibility === undefined || item.visibility === 'public' || item.visibility === 'hidden' || item.visibility === 'private')
+  ));
+}
+
 function parsePositiveInt(rawValue: string | undefined, fallback: number) {
   const parsed = Number(rawValue);
   if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
@@ -119,7 +145,9 @@ function buildStressMonthGroups(): TweetMonthGroup[] {
 async function getTweetIndex(): Promise<TweetIndexItem[]> {
   let index: TweetIndexItem[];
   try {
-    index = await fetchGitHubJson<TweetIndexItem[]>('tweets/index.json');
+    const data = await fetchGitHubJson<unknown>('tweets/index.json');
+    if (!isTweetIndex(data)) throw new Error('Invalid tweets/index.json shape');
+    index = data;
   } catch (error) {
     const message = error instanceof Error ? error.message : '';
     // Fresh private repos may not have tweets/index.json yet; treat that as "no tweets".
@@ -151,7 +179,9 @@ export async function getTweetMonthGroups(): Promise<TweetMonthGroup[]> {
   const monthlyTweets = await Promise.all(
     index.map(async (item): Promise<TweetMonthGroup | null> => {
       try {
-        const tweets = await fetchGitHubJson<TweetItem[]>(item.path);
+        const data = await fetchGitHubJson<unknown>(item.path);
+        if (!isTweetList(data)) throw new Error(`Invalid tweet document: ${item.path}`);
+        const tweets = data;
         const visibleTweets = sortTweets(
           tweets.filter((tweet) => (tweet.visibility ?? 'public') === 'public'),
         );

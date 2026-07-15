@@ -154,12 +154,16 @@ function extractCurrentVersion(pointer: CatalogCurrentPointer | string) {
   return pointer.version || pointer.current || pointer.path?.replace(/\/+$/, '').split('/').pop() || null;
 }
 
+function isCatalogVersion(value: string): boolean {
+  return /^\d{8}T\d{6}Z$/.test(value);
+}
+
 async function loadCurrentVersion(read: (relativeKey: string) => Promise<string | null>) {
   const currentRaw = await read(`${PROJECT_NAMESPACE}/catalog/current.json`);
   if (currentRaw == null) return null;
   const current = readJson<CatalogCurrentPointer | string>(currentRaw);
   const version = extractCurrentVersion(current);
-  if (!version) {
+  if (!version || !isCatalogVersion(version)) {
     throw new Error('Catalog current.json does not contain a version pointer');
   }
   return version;

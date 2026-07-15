@@ -275,6 +275,7 @@ export default function ContentPage({
     if (isDetailMounted && !isClosing) {
       setBackOverride(handleBackFromDetail);
     }
+    return () => setBackOverride(null);
   }, [isDetailMounted, isClosing, setBackOverride, handleBackFromDetail]);
 
   const handleDetailAnimEnd = useCallback((e: React.AnimationEvent) => {

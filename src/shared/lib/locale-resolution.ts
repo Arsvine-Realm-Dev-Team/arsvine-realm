@@ -15,9 +15,11 @@ export function shouldBypassLocaleProxy(pathname: string): boolean {
 
 export function pickLocaleFromAcceptLanguage(acceptLanguage: string | null): Locale {
   if (!acceptLanguage) return defaultLocale;
-  const tags = acceptLanguage.split(',').map((part) => {
+  const tags = acceptLanguage.split(',').flatMap((part) => {
     const [tag, qStr] = part.trim().split(';q=');
-    return { tag: tag.toLowerCase(), q: qStr ? Number(qStr) : 1 };
+    const q = qStr === undefined ? 1 : Number(qStr);
+    if (!tag || !Number.isFinite(q) || q <= 0 || q > 1) return [];
+    return [{ tag: tag.toLowerCase(), q }];
   }).sort((a, b) => b.q - a.q);
 
   for (const { tag } of tags) {

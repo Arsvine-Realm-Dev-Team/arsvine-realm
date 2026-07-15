@@ -56,6 +56,16 @@ describe('blogPostMachine', () => {
     actor.stop();
   });
 
+  it('fails closed when a protected article lacks an access group', () => {
+    const actor = createActor(blogPostMachine, {
+      input: input({ requiresAuth: true, variants: {} }),
+    }).start();
+
+    expect(actor.getSnapshot().matches('authRequired')).toBe(true);
+    expect(actor.getSnapshot().context.authState).toBe('required');
+    actor.stop();
+  });
+
   it('cancels a stale variant actor when another locale is selected', async () => {
     const aborted = vi.fn();
     const machine = blogPostMachine.provide({

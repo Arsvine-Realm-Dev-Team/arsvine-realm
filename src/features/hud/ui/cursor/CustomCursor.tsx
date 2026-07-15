@@ -29,6 +29,8 @@ const CustomCursor = () => {
   const dotSize = useRef({ w: 24, h: 24 });
   const rafId = useRef<number>(0);
   const runningRef = useRef(false);
+  const magneticScanPendingRef = useRef(false);
+  const interactiveElsRef = useRef<HTMLElement[]>([]);
   const tickRef = useRef<() => void>(() => {});
   const isHovering = useRef(false);
   const snapTarget = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
@@ -81,10 +83,11 @@ const CustomCursor = () => {
 
   const syncHoverTarget = useCallback(() => {
     const el = hoverEl.current;
-    if (!el || !isCursorInteractive(el)) return null;
+    if (!el) return null;
 
     const rect = el.getBoundingClientRect();
-    const target = getCursorTargetBounds(el, 12);
+    if (!isCursorInteractive(el, rect)) return null;
+    const target = getCursorTargetBounds(el, 12, rect);
 
     snapTarget.current = target;
     dotSize.current = { w: target.w, h: target.h };
@@ -129,8 +132,20 @@ const CustomCursor = () => {
 
   useEffect(() => {
     const tick = () => {
-      if (isHovering.current && (!hoverEl.current || !isCursorInteractive(hoverEl.current))) {
-        resetHoverState();
+      if (!isHovering.current && magneticScanPendingRef.current) {
+        magneticScanPendingRef.current = false;
+        const closest = findClosestInteractiveElement(
+          interactiveElsRef.current,
+          mouse.current.x,
+          mouse.current.y,
+        );
+        if (closest) {
+          const cx = closest.rect.left + closest.rect.width / 2;
+          const cy = closest.rect.top + closest.rect.height / 2;
+          const pull = (1 - closest.distance / MAGNETIC_DISTANCE) * MAGNETIC_STRENGTH;
+          mouse.current.x = lerp(mouse.current.x, cx, pull);
+          mouse.current.y = lerp(mouse.current.y, cy, pull);
+        }
       }
 
       let hoverRect: DOMRect | null = null;
@@ -180,7 +195,7 @@ const CustomCursor = () => {
     runningRef.current = true;
     rafId.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId.current);
-  }, [applyPosition, resetHoverState, syncHoverTarget]);
+  }, [applyPosition, interactiveElsRef, resetHoverState, syncHoverTarget]);
 
   const handleRegisteredEnter = useCallback((el: HTMLElement) => {
     if (!isCursorInteractive(el)) return;
@@ -218,7 +233,8 @@ const CustomCursor = () => {
     resetHoverState();
   }, [resetHoverState]);
 
-  const interactiveElsRef = useCursorTargetRegistry({
+  useCursorTargetRegistry({
+    interactiveElsRef,
     hoverElRef: hoverEl,
     onEnter: handleRegisteredEnter,
     onLeave: handleRegisteredLeave,
@@ -236,21 +252,7 @@ const CustomCursor = () => {
         rafId.current = requestAnimationFrame(tickRef.current);
       }
 
-      if (isHovering.current) return;
-
-      const closest = findClosestInteractiveElement(
-        interactiveElsRef.current,
-        e.clientX,
-        e.clientY,
-      );
-
-      if (closest) {
-        const cx = closest.rect.left + closest.rect.width / 2;
-        const cy = closest.rect.top + closest.rect.height / 2;
-        const pull = (1 - closest.distance / MAGNETIC_DISTANCE) * MAGNETIC_STRENGTH;
-        mouse.current.x = lerp(e.clientX, cx, pull);
-        mouse.current.y = lerp(e.clientY, cy, pull);
-      }
+      if (!isHovering.current) magneticScanPendingRef.current = true;
     };
 
     window.addEventListener('mousemove', onMouseMove);

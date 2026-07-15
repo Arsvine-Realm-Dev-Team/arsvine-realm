@@ -227,7 +227,7 @@ package.json: @react-three/fiber = 9.6.1
 pnpm-workspace.yaml: patches/@react-three__fiber@9.6.1.patch
 ```
 
-补丁把 Fiber built dist 的 `THREE.Clock` 改成 `THREE.Timer` compatibility clock，使 adaptive tier 能 pause render loop。
+补丁把 Fiber built dist 的 `THREE.Clock` 改成 `THREE.Timer` compatibility clock，使 Tesseract 在详情页可安全切换 `frameloop="never"` 暂停、恢复后继续渲染。
 
 不能用 caret。dist filename 含内容 hash，自动 patch upgrade 可能只产生 warning 并静默退回 Clock。
 

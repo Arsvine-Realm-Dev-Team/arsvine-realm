@@ -43,4 +43,10 @@ describe('tweet GitHub source', () => {
       }),
     ]);
   });
+
+  it('falls back to an empty list when the remote index shape is invalid', async () => {
+    fetchGitHubJsonMock.mockResolvedValue({ month: '2026-07' });
+
+    await expect(getTweetMonthGroups()).resolves.toEqual([]);
+  });
 });
