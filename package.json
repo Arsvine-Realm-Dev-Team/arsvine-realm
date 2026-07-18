@@ -44,7 +44,7 @@
     "react-dom": "^19.2.7",
     "sass": "^1.72.0",
     "three": "^0.185.1",
-    "xstate": "^5.32.4"
+    "xstate": "^5.32.5"
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^16.2.7",
@@ -54,7 +54,7 @@
     "@types/react-dom": "^19.2.3",
     "@types/three": "^0.185.1",
     "cross-env": "^10.1.0",
-    "eslint": "^9.39.4",
+    "eslint": "^9.39.5",
     "eslint-config-next": "^16.2.7",
     "globals": "^17.7.0",
     "jsdom": "^29.1.1",
