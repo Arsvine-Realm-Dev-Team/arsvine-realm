@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const ORIGINAL_ENV = { ...process.env };
 
-// 默认把 env 抹平，每个 case 自己 setUpstashEnv/clearEnv。
+// 默认把 env 抹平，每个 case 自己 setContentEnv/clearContentEnv。
 function setContentEnv() {
   process.env.GITHUB_OWNER = 'acme';
   process.env.GITHUB_REPO = 'content';
@@ -119,7 +119,7 @@ describe('getContentBlogIndex', () => {
     vi.resetModules();
   });
 
-  it('returns an empty index when content repo is not configured', async () => {
+  it('returns the bundled fallback index when content repo is not configured', async () => {
     clearContentEnv();
     vi.resetModules();
     const { getContentBlogIndex } = await import('@/shared/lib/content/github');

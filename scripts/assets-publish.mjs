@@ -2,6 +2,7 @@ import { execFile } from 'node:child_process';
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
@@ -19,7 +20,7 @@ function required(name) {
   return value;
 }
 
-function redactCliSecrets(message) {
+export function redactCliSecrets(message) {
   return message
     .replace(/(-i\s+)\S+/g, '$1[REDACTED]')
     .replace(/(-k\s+)\S+/g, '$1[REDACTED]')
@@ -33,9 +34,15 @@ function clientArgs(region) {
 }
 
 async function cos(region, commandArgs) {
-  const printable = [path.basename(coscli), ...commandArgs].join(' ');
+  const printable = redactCliSecrets([path.basename(coscli), ...commandArgs].join(' '));
   if (dryRun) { console.log(`[assets:publish] dry-run ${printable}`); return; }
-  await execFileAsync(coscli, [...clientArgs(region), ...commandArgs], { cwd: root, windowsHide: true });
+  return execFileAsync(coscli, [...clientArgs(region), ...commandArgs], { cwd: root, windowsHide: true });
+}
+
+export function assertRemoteObjectListed(result, bucket, objectKey) {
+  const stdout = typeof result?.stdout === 'string' ? result.stdout : String(result?.stdout ?? '');
+  if (stdout.includes(objectKey) || stdout.includes(path.posix.basename(objectKey))) return;
+  throw new Error(`[assets:publish] verification failed: missing cos://${bucket}/${objectKey}`);
 }
 
 async function revalidate() {
@@ -86,14 +93,22 @@ async function main() {
     : ['-r', '--exclude', 'current.json', '--exclude', 'current.next.json'];
   await cos(publicRegion, [uploadCmd, path.join(root, 'dist', 'cos-upload', 'public-root') + path.sep, `cos://${publicBucket}/`, ...uploadFlags]);
   await cos(privateRegion, [uploadCmd, path.join(root, 'dist', 'cos-upload', 'private-root') + path.sep, `cos://${privateBucket}/`, ...uploadFlags]);
-  await cos(publicRegion, ['ls', `cos://${publicBucket}/realm/site-catalog/versions/${version}/assets.json`]);
-  await cos(privateRegion, ['ls', `cos://${privateBucket}/realm/catalog/versions/${version}/static-assets.json`]);
+  const publicAssetKey = `realm/site-catalog/versions/${version}/assets.json`;
+  const privateAssetKey = `realm/catalog/versions/${version}/static-assets.json`;
+  const publicListing = await cos(publicRegion, ['ls', `cos://${publicBucket}/${publicAssetKey}`]);
+  const privateListing = await cos(privateRegion, ['ls', `cos://${privateBucket}/${privateAssetKey}`]);
+  if (!dryRun) {
+    assertRemoteObjectListed(publicListing, publicBucket, publicAssetKey);
+    assertRemoteObjectListed(privateListing, privateBucket, privateAssetKey);
+  }
   await writePointer(version);
   await revalidate();
   console.log(`[assets:publish] ${dryRun ? 'dry-run complete for' : 'published'} ${version}`);
 }
 
-main().catch((error) => {
-  console.error('[assets:publish] FAILED:', redactCliSecrets(error instanceof Error ? error.message : String(error)));
-  process.exit(1);
-});
+if (path.resolve(process.argv[1] ?? '') === path.resolve(fileURLToPath(import.meta.url))) {
+  main().catch((error) => {
+    console.error('[assets:publish] FAILED:', redactCliSecrets(error instanceof Error ? error.message : String(error)));
+    process.exit(1);
+  });
+}
